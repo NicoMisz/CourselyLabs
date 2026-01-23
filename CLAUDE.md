@@ -94,49 +94,61 @@ Esta plataforma es un sistema de cursos online con un modelo de negocio mixto (p
 ### 3.1 Stack Tecnológico
 
 #### Frontend
-- **Framework**: Vue usando Quasar
-- **Lenguaje**: [JavaScript / TypeScript]
-- **Estilos**: [Tailwind CSS / Bootstrap / CSS Modules / Styled Components]
-- **Reproductor de vídeo**: TBD
-- **Estado global**: TBD
+- **Framework**: Vue 3 con Quasar Framework 2.x
+- **Lenguaje**: TypeScript
+- **Estilos**: Quasar (SCSS integrado) + Tailwind CSS (opcional para personalización)
+- **Reproductor de vídeo**: Video.js con plugin HLS
+- **Estado global**: Pinia (gestor de estado oficial para Vue 3)
+- **HTTP Client**: Axios
 
 #### Backend
-- **Framework**: Java con Spring Boot
-- **Lenguaje**: [JavaScript/TypeScript / Python / PHP / Ruby]
-- **API**: [REST / GraphQL / tRPC]
-- **Autenticación**: [JWT / OAuth2 / Passport.js / NextAuth]
+- **Framework**: Spring Boot 3.x
+- **Lenguaje**: Java 17+
+- **API**: REST (Spring MVC)
+- **Autenticación**: Spring Security con JWT + OAuth2 (para login social opcional)
+- **ORM**: Spring Data JPA con Hibernate
+- **Validación**: Jakarta Bean Validation
 
 #### Base de Datos
 - **Principal**: PostgreSQL 15+
-- **Cache**: [Redis / Memcached] (opcional)
-- **Búsqueda**: [Elasticsearch / PostgreSQL Full-Text Search]
+- **Cache**: Redis (para sesiones y cache de consultas)
+- **Búsqueda**: PostgreSQL Full-Text Search (inicial), Elasticsearch (futuro opcional)
+- **Migraciones**: Flyway / Liquibase
 
 #### Almacenamiento
-- **Archivos estáticos**: [AWS S3 / Cloudflare R2 / Local Storage]
-- **CDN**: [Cloudflare / AWS CloudFront / Bunny CDN]
-- **Vídeos**: [AWS S3 + CloudFront / Vimeo API / Bunny Stream]
+- **Archivos estáticos**: AWS S3 (producción) / MinIO (desarrollo local)
+- **CDN**: Cloudflare CDN
+- **Vídeos**: AWS S3 + CloudFront con signed URLs
 
 #### Procesamiento
-- **Cola de trabajos**: [Bull (Redis) / RabbitMQ / AWS SQS]
-- **Procesamiento de vídeo**: [FFmpeg / AWS Elastic Transcoder / Cloudflare Stream]
-- **Email**: [SendGrid / AWS SES / Resend / Mailgun]
+- **Cola de trabajos**: RabbitMQ
+- **Procesamiento de vídeo**: FFmpeg (en contenedor dedicado)
+- **Email**: SendGrid
+- **Tareas programadas**: Spring Scheduler + Quartz
 
 #### DevOps
-- **Hosting**: [AWS / DigitalOcean / Vercel / Railway]
-- **Contenedores**: [Docker / Docker Compose]
-- **CI/CD**: [GitHub Actions / GitLab CI / Jenkins]
-- **Monitoreo**: [Sentry / New Relic / Datadog]
+- **Hosting**: AWS (EC2/ECS) o DigitalOcean
+- **Contenedores**: Docker + Docker Compose
+- **CI/CD**: GitHub Actions
+- **Monitoreo**: Sentry (errores) + Spring Boot Actuator (métricas)
 
 ### 3.2 Arquitectura
 
 #### Patrón arquitectónico
-- **Tipo**: [Monolito / Microservicios / Modular Monolith]
-- **Estructura**: [MVC / Clean Architecture / Hexagonal / Layered]
+- **Tipo**: Modular Monolith (con posibilidad de evolucionar a microservicios)
+- **Estructura**: Layered Architecture (Controller → Service → Repository)
+- **Módulos principales**:
+  - Módulo de Autenticación y Usuarios
+  - Módulo de Cursos y Contenido
+  - Módulo de Evaluaciones
+  - Módulo de Pagos y Suscripciones
+  - Módulo de Foros y Mensajería
+  - Módulo de Afiliados
 
 #### Comunicación
 - **API REST**: Endpoints RESTful para operaciones CRUD
-- **WebSockets**: [Socket.io / WS] para notificaciones en tiempo real y mensajería
-- **Server-Sent Events**: (Opcional) Para actualizaciones de progreso
+- **WebSockets**: Spring WebSocket (STOMP) para notificaciones en tiempo real y mensajería
+- **Server-Sent Events**: Spring MVC SSE para actualizaciones de progreso de vídeo
 
 ### 3.3 Seguridad
 
@@ -163,16 +175,62 @@ Esta plataforma es un sistema de cursos online con un modelo de negocio mixto (p
 
 ### 3.5 Testing
 
-- **Unit Tests**: [Jest / Vitest / Pytest / PHPUnit]
-- **Integration Tests**: [Supertest / Playwright / Cypress]
-- **E2E Tests**: [Playwright / Cypress / Selenium]
+**Frontend**:
+- **Unit Tests**: Vitest + Vue Test Utils
+- **Component Tests**: Vitest + @vue/test-utils
+- **E2E Tests**: Playwright
+
+**Backend**:
+- **Unit Tests**: JUnit 5 + Mockito
+- **Integration Tests**: Spring Boot Test + Testcontainers (PostgreSQL, Redis)
+- **API Tests**: REST Assured + Spring MockMvc
 - **Cobertura objetivo**: 70%+
 
 ### 3.6 Versionado y Documentación
 
-- **Control de versiones**: Git (GitHub / GitLab / Bitbucket)
-- **Documentación API**: [Swagger / OpenAPI / Postman]
-- **Convenciones**: [Conventional Commits / Semantic Versioning]
+- **Control de versiones**: Git con GitHub
+- **Documentación API**: Swagger / OpenAPI 3.0 (Springdoc)
+- **Convenciones**: Conventional Commits + Semantic Versioning
+- **README**: Documentación de configuración y deployment
+- **Diagramas**: PlantUML para diagramas de arquitectura
+
+### 3.7 Pagos y Facturación
+
+- **Pasarela de pago**: Stripe
+- **Gestión de suscripciones**: Stripe Subscriptions
+- **Webhooks**: Stripe Webhooks para eventos de pago
+- **Facturación**: Stripe Invoicing
+- **Monedas soportadas**: EUR (principal), USD (opcional)
+- **Cupones de descuento**: Sistema propio integrado con Stripe Coupons
+
+### 3.8 Configuración del Entorno
+
+#### Variables de Entorno Principales
+
+**Base de Datos**:
+- `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`
+- `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`
+
+**Almacenamiento**:
+- `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
+- `AWS_S3_BUCKET`, `AWS_REGION`
+- `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN`
+
+**Autenticación**:
+- `JWT_SECRET`, `JWT_EXPIRATION`
+- `OAUTH2_GOOGLE_CLIENT_ID`, `OAUTH2_GOOGLE_CLIENT_SECRET` (opcional)
+
+**Pagos**:
+- `STRIPE_PUBLIC_KEY`, `STRIPE_SECRET_KEY`
+- `STRIPE_WEBHOOK_SECRET`
+
+**Email y Notificaciones**:
+- `SENDGRID_API_KEY`, `SENDGRID_FROM_EMAIL`
+
+**Frontend**:
+- `VUE_APP_API_BASE_URL`
+- `VUE_APP_STRIPE_PUBLIC_KEY`
+- `VUE_APP_CDN_URL`
 
 ---
 
