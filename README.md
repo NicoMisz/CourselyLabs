@@ -203,6 +203,22 @@ npm run dev
 - Verifica que Docker esté corriendo: `docker ps`
 - Reinicia el contenedor: `docker compose restart`
 
+**Error: "./mvnw: No existe el fichero o el directorio: ./.mvn/wrapper/maven-wrapper.properties"**
+- El Maven Wrapper no está completamente configurado. Solucionarlo con:
+  ```bash
+  cd CourselyLabs-back
+  mkdir -p .mvn/wrapper
+
+  # Crear archivo de propiedades
+  cat > .mvn/wrapper/maven-wrapper.properties << 'EOF'
+  distributionUrl=https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/3.9.6/apache-maven-3.9.6-bin.zip
+  wrapperUrl=https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-wrapper/3.2.0/maven-wrapper-3.2.0.jar
+  EOF
+
+  # Descargar el JAR del wrapper
+  curl -o .mvn/wrapper/maven-wrapper.jar https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-wrapper/3.2.0/maven-wrapper-3.2.0.jar
+  ```
+
 ### Frontend
 
 **Error: "Cannot find module '@quasar/vite-plugin'"**
