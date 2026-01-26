@@ -1,5 +1,4 @@
-package com.courselylabs.CourselyLabs.entity;
-
+package com.courselylabs.courselylab.entity;
 import java.sql.Timestamp;
 
 import jakarta.persistence.Column;
