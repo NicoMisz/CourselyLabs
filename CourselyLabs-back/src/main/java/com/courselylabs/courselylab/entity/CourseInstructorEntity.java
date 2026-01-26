@@ -12,22 +12,26 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "categories")
-public class CategoriaEntity {
+@Table(name = "course_instructors", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"course_id", "instructor_id"})
+})
+public class CourseInstructorEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Integer id;
 
-    @Column(name = "name", nullable = false, unique = true, length = 100)
-    private String name;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "course_id", nullable = false)
+    private CourseEntity course;
 
-    @Column(name = "slug", nullable = false, unique = true, length = 100)
-    private String slug;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "instructor_id", nullable = false)
+    private UserEntity instructor;
 
-    @Column(name = "description", columnDefinition = "TEXT")
-    private String description;
+    @Column(name = "is_main")
+    private Boolean isMain = false;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

@@ -1,0 +1,112 @@
+package com.courselylabs.courselylab.service;
+
+import com.courselylabs.courselylab.dto.EnrollmentDTO;
+import com.courselylabs.courselylab.entity.CourseEntity;
+import com.courselylabs.courselylab.entity.EnrollmentEntity;
+import com.courselylabs.courselylab.entity.UserEntity;
+import com.courselylabs.courselylab.exception.BadRequestException;
+import com.courselylabs.courselylab.exception.ResourceNotFoundException;
+import com.courselylabs.courselylab.mapper.EnrollmentMapper;
+import com.courselylabs.courselylab.repository.CourseRepository;
+import com.courselylabs.courselylab.repository.EnrollmentRepository;
+import com.courselylabs.courselylab.repository.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+
+@Service
+@Transactional
+public class EnrollmentService {
+
+    private final EnrollmentRepository enrollmentRepository;
+    private final UserRepository userRepository;
+    private final CourseRepository courseRepository;
+    private final EnrollmentMapper enrollmentMapper;
+
+    public EnrollmentService(EnrollmentRepository enrollmentRepository, UserRepository userRepository,
+                             CourseRepository courseRepository, EnrollmentMapper enrollmentMapper) {
+        this.enrollmentRepository = enrollmentRepository;
+        this.userRepository = userRepository;
+        this.courseRepository = courseRepository;
+        this.enrollmentMapper = enrollmentMapper;
+    }
+
+    @Transactional(readOnly = true)
+    public List<EnrollmentDTO> findByUserId(UUID userId) {
+        return enrollmentMapper.toDTOList(enrollmentRepository.findByUserId(userId));
+    }
+
+    @Transactional(readOnly = true)
+    public Page<EnrollmentDTO> findByUserId(UUID userId, Pageable pageable) {
+        return enrollmentRepository.findByUserId(userId, pageable)
+                .map(enrollmentMapper::toDTO);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<EnrollmentDTO> findByCourseId(UUID courseId, Pageable pageable) {
+        return enrollmentRepository.findByCourseId(courseId, pageable)
+                .map(enrollmentMapper::toDTO);
+    }
+
+    @Transactional(readOnly = true)
+    public EnrollmentDTO findById(UUID id) {
+        EnrollmentEntity entity = enrollmentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Enrollment", "id", id));
+        return enrollmentMapper.toDTO(entity);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isEnrolled(UUID userId, UUID courseId) {
+        return enrollmentRepository.existsByUserIdAndCourseId(userId, courseId);
+    }
+
+    public EnrollmentDTO enroll(EnrollmentDTO dto) {
+        if (enrollmentRepository.existsByUserIdAndCourseId(dto.getUserId(), dto.getCourseId())) {
+            throw new BadRequestException("User is already enrolled in this course");
+        }
+
+        UserEntity user = userRepository.findById(dto.getUserId())
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", dto.getUserId()));
+
+        CourseEntity course = courseRepository.findById(dto.getCourseId())
+                .orElseThrow(() -> new ResourceNotFoundException("Course", "id", dto.getCourseId()));
+
+        if (!course.getIsPublished()) {
+            throw new BadRequestException("Cannot enroll in an unpublished course");
+        }
+
+        EnrollmentEntity entity = new EnrollmentEntity();
+        entity.setUser(user);
+        entity.setCourse(course);
+        entity.setAccessType(course.getIsFree() ? "free" : "paid");
+
+        entity = enrollmentRepository.save(entity);
+        return enrollmentMapper.toDTO(entity);
+    }
+
+    public EnrollmentDTO updateLastAccessed(UUID id) {
+        EnrollmentEntity entity = enrollmentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Enrollment", "id", id));
+        entity.setLastAccessedAt(LocalDateTime.now());
+        entity = enrollmentRepository.save(entity);
+        return enrollmentMapper.toDTO(entity);
+    }
+
+    public void unenroll(UUID userId, UUID courseId) {
+        EnrollmentEntity entity = enrollmentRepository.findByUserIdAndCourseId(userId, courseId)
+                .orElseThrow(() -> new ResourceNotFoundException("Enrollment not found"));
+        enrollmentRepository.delete(entity);
+    }
+
+    public void delete(UUID id) {
+        if (!enrollmentRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Enrollment", "id", id);
+        }
+        enrollmentRepository.deleteById(id);
+    }
+}

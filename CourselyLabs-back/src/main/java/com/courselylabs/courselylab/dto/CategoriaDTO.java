@@ -1,27 +1,29 @@
 package com.courselylabs.courselylab.dto;
 
-import java.security.Timestamp;
-
-import jakarta.annotation.Nonnull;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class CategoriaDTO {
-    private Long id;
 
-    @Nonnull
+    private Integer id;
+
+    @NotBlank(message = "Name is required")
+    @Size(max = 100, message = "Name must be less than 100 characters")
     private String name;
 
-    @Nonnull    
+    @NotBlank(message = "Slug is required")
+    @Size(max = 100, message = "Slug must be less than 100 characters")
     private String slug;
 
     private String description;
 
-    @Nonnull
-    private Timestamp createdAt;
+    private LocalDateTime createdAt;
 }
