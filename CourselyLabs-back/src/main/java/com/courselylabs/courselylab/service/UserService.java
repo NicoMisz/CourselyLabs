@@ -1,5 +1,11 @@
 package com.courselylabs.courselylab.service;
 
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.courselylabs.courselylab.dto.UserCreateDTO;
 import com.courselylabs.courselylab.dto.UserDTO;
 import com.courselylabs.courselylab.entity.UserEntity;
@@ -7,11 +13,6 @@ import com.courselylabs.courselylab.exception.BadRequestException;
 import com.courselylabs.courselylab.exception.ResourceNotFoundException;
 import com.courselylabs.courselylab.mapper.UserMapper;
 import com.courselylabs.courselylab.repository.UserRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.UUID;
 
 @Service
 @Transactional
@@ -85,6 +86,7 @@ public class UserService {
         userRepository.deleteById(id);
     }
 
+    // TODO quiero entender
     public UserDTO deactivate(UUID id) {
         UserEntity entity = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
@@ -93,6 +95,7 @@ public class UserService {
         return userMapper.toDTO(entity);
     }
 
+    // TODO quiero entender
     public UserDTO verify(UUID id) {
         UserEntity entity = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));

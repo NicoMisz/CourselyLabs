@@ -1,22 +1,34 @@
 package com.courselylabs.courselylab.mapper;
 
-import com.courselylabs.courselylab.dto.EnrollmentDTO;
-import com.courselylabs.courselylab.entity.EnrollmentEntity;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import com.courselylabs.courselylab.dto.EnrollmentDTO;
+import com.courselylabs.courselylab.entity.EnrollmentEntity;
 
 @Component
 public class EnrollmentMapper {
 
     private final ModelMapper modelMapper;
 
+    //TODO quiero entender
     public EnrollmentMapper(ModelMapper modelMapper) {
         this.modelMapper = modelMapper;
     }
 
+    public EnrollmentEntity toEntity (EnrollmentDTO dto) {
+        EnrollmentEntity entity = new EnrollmentEntity();
+        entity.setId(dto.getId());
+        entity.setAccessType(dto.getAccessType());
+        entity.setEnrolledAt(dto.getEnrolledAt());
+        entity.setLastAccessedAt(dto.getLastAccessedAt());
+        // Note: User and Course entities should be set separately in the service layer
+        return entity;
+    }
+    
     public EnrollmentDTO toDTO(EnrollmentEntity entity) {
         EnrollmentDTO dto = new EnrollmentDTO();
         dto.setId(entity.getId());

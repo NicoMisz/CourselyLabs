@@ -1,5 +1,14 @@
 package com.courselylabs.courselylab.service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.courselylabs.courselylab.dto.EnrollmentDTO;
 import com.courselylabs.courselylab.entity.CourseEntity;
 import com.courselylabs.courselylab.entity.EnrollmentEntity;
@@ -10,14 +19,6 @@ import com.courselylabs.courselylab.mapper.EnrollmentMapper;
 import com.courselylabs.courselylab.repository.CourseRepository;
 import com.courselylabs.courselylab.repository.EnrollmentRepository;
 import com.courselylabs.courselylab.repository.UserRepository;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
 
 @Service
 @Transactional
@@ -60,11 +61,13 @@ public class EnrollmentService {
         return enrollmentMapper.toDTO(entity);
     }
 
+    //TODO quiero entender
     @Transactional(readOnly = true)
     public boolean isEnrolled(UUID userId, UUID courseId) {
         return enrollmentRepository.existsByUserIdAndCourseId(userId, courseId);
     }
 
+    //TODO quiero entender
     public EnrollmentDTO enroll(EnrollmentDTO dto) {
         if (enrollmentRepository.existsByUserIdAndCourseId(dto.getUserId(), dto.getCourseId())) {
             throw new BadRequestException("User is already enrolled in this course");
