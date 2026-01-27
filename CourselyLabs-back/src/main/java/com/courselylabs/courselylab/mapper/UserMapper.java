@@ -1,13 +1,14 @@
 package com.courselylabs.courselylab.mapper;
 
-import com.courselylabs.courselylab.dto.UserCreateDTO;
-import com.courselylabs.courselylab.dto.UserDTO;
-import com.courselylabs.courselylab.entity.UserEntity;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import com.courselylabs.courselylab.dto.UserCreateDTO;
+import com.courselylabs.courselylab.dto.UserDTO;
+import com.courselylabs.courselylab.entity.UserEntity;
 
 @Component
 public class UserMapper {
@@ -37,12 +38,14 @@ public class UserMapper {
         return entity;
     }
 
+    // TODO quiero entender
     public List<UserDTO> toDTOList(List<UserEntity> entities) {
         return entities.stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
 
+    // TODO quiero entender
     public void updateEntityFromDTO(UserDTO dto, UserEntity entity) {
         if (dto.getFirstName() != null) {
             entity.setFirstName(dto.getFirstName());
