@@ -61,15 +61,15 @@ public class EnrollmentService {
         return enrollmentMapper.toDTO(entity);
     }
 
-    //TODO quiero entender
+    
     @Transactional(readOnly = true)
     public boolean isEnrolled(UUID userId, UUID courseId) {
         return enrollmentRepository.existsByUserIdAndCourseId(userId, courseId);
     }
 
-    //TODO quiero entender
+    
     public EnrollmentDTO enroll(EnrollmentDTO dto) {
-        if (enrollmentRepository.existsByUserIdAndCourseId(dto.getUserId(), dto.getCourseId())) {
+        if (isEnrolled(dto.getUserId(), dto.getCourseId())) {
             throw new BadRequestException("User is already enrolled in this course");
         }
 

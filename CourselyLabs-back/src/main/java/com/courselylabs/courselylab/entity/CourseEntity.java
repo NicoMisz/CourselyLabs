@@ -47,7 +47,7 @@ public class CourseEntity {
     @Column(name = "thumbnail_url", length = 500)
     private String thumbnailUrl;
 
-    @ManyToOne(fetch = FetchType.LAZY)//TODO quiero entender
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     private CategoriaEntity category;
 

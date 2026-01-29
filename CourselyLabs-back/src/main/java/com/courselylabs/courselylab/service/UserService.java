@@ -86,7 +86,7 @@ public class UserService {
         userRepository.deleteById(id);
     }
 
-    // TODO quiero entender
+    
     public UserDTO deactivate(UUID id) {
         UserEntity entity = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
@@ -95,7 +95,7 @@ public class UserService {
         return userMapper.toDTO(entity);
     }
 
-    // TODO quiero entender
+    
     public UserDTO verify(UUID id) {
         UserEntity entity = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));

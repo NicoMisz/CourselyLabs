@@ -17,7 +17,7 @@ CREATE TABLE users (
     password_hash VARCHAR(255) NOT NULL,
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
-    role VARCHAR(20) NOT NULL DEFAULT 'student' CHECK (role IN ('admin', 'instructor', 'student')), -- TODO quiero entender como se asocian a los cursos
+    role VARCHAR(20) NOT NULL DEFAULT 'student' CHECK (role IN ('admin', 'instructor', 'student')), -- TODO cambiar los roles a Admin, user y premium (actualizar DTOs y demas)
     bio TEXT,
     profile_picture_url VARCHAR(500),
     is_verified BOOLEAN DEFAULT FALSE,
@@ -93,7 +93,7 @@ CREATE TABLE course_instructors (
     id SERIAL PRIMARY KEY,
     course_id UUID NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
     instructor_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    is_main BOOLEAN DEFAULT FALSE, -- TODO quiero entender
+    is_main BOOLEAN DEFAULT FALSE, 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(course_id, instructor_id)
 );

@@ -17,12 +17,12 @@ public interface EnrollmentRepository extends JpaRepository<EnrollmentEntity, UU
     
     List<EnrollmentEntity> findByUserId(UUID userId);
 
-    //TODO quiero entender
+    
     Page<EnrollmentEntity> findByUserId(UUID userId, Pageable pageable);
 
     List<EnrollmentEntity> findByCourseId(UUID courseId);
 
-    //TODO quiero entender
+    
     Page<EnrollmentEntity> findByCourseId(UUID courseId, Pageable pageable);
 
     Optional<EnrollmentEntity> findByUserIdAndCourseId(UUID userId, UUID courseId);
