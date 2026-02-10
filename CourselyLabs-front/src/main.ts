@@ -1,3 +1,6 @@
+// src/main.ts
+import './css/app.scss'  // Añade esta línea al inicio
+
 import './assets/main.css'
 
 import { createApp } from 'vue'
