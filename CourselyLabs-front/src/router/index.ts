@@ -1,7 +1,11 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
+//import { route } from 'quasar/wrappers';
+import { 
+  createRouter,
+  createWebHistory, } from 'vue-router';
+import routes from './routes';
+//import HomeView from '../views/HomeView.vue'
 
-const router = createRouter({
+/* const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
@@ -31,6 +35,13 @@ const router = createRouter({
       component: () => import('../views/CoursesView.vue'),
     },
   ],
-})
+}) */
 
-export default router
+const router = createRouter({
+  history: createWebHistory(import.meta.env.BASE_URL),
+  routes,
+});
+
+export default router;
+
+//export default router

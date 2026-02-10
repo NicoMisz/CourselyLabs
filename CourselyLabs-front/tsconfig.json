@@ -10,5 +10,81 @@
     {
       "path": "./tsconfig.vitest.json"
     }
-  ]
+  ],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "layouts/*": [
+        "src/layouts/*"
+      ],
+      "pages/*": [
+        "src/pages/*"
+      ],
+      "components/*": [
+        "src/components/*"
+      ]
+    }
+  },
+  // "compilerOptions": {
+  //   "target": "ES2020",
+  //   "module": "ES2020",
+  //   "moduleResolution": "node",
+  //   "strict": true,
+  //   "jsx": "preserve",
+  //   "sourceMap": true,
+  //   "resolveJsonModule": true,
+  //   "esModuleInterop": true,
+  //   "lib": [
+  //     "ES2020",
+  //     "DOM",
+  //     "DOM.Iterable"
+  //   ],
+  //   "skipLibCheck": true,
+  //   "types": [
+  //     "vite/client",
+  //     "node"
+  //   ],
+  //   "baseUrl": ".",
+  //   "paths": {
+  //     "src/*": [
+  //       "src/*"
+  //     ],
+  //     "app/*": [
+  //       "*"
+  //     ],
+  //     "components/*": [
+  //       "src/components/*"
+  //     ],
+  //     "layouts/*": [
+  //       "src/layouts/*"
+  //     ],
+  //     "pages/*": [
+  //       "src/pages/*"
+  //     ],
+  //     "assets/*": [
+  //       "src/assets/*"
+  //     ],
+  //     "boot/*": [
+  //       "src/boot/*"
+  //     ],
+  //     "stores/*": [
+  //       "src/stores/*"
+  //     ],
+  //     "router/*": [
+  //       "src/router/*"
+  //     ]
+  //   },
+  //   "allowSyntheticDefaultImports": true,
+  //   "forceConsistentCasingInFileNames": true,
+  //   "isolatedModules": true
+  // },
+  // "include": [
+  //   "src/**/*.ts",
+  //   "src/**/*.tsx",
+  //   "src/**/*.vue"
+  // ],
+  // "exclude": [
+  //   "node_modules",
+  //   "dist"
+  // ]
 }
