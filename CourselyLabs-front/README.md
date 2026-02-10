@@ -127,6 +127,7 @@ onMounted(async () => {
 - Define a TypeScript `interface` matching the backend DTO fields.
 - Use `ref()` for reactive state and `onMounted()` to fetch on page load.
 - Handle loading and error states.
+- Use Quasar components (`q-spinner`, `q-banner`, `q-list`, etc.) for UI - see [README-QUASAR.md](README-QUASAR.md) for complete component reference.
 
 ### 2. Add a Route
 
@@ -180,17 +181,15 @@ Then open `http://localhost:5173/example`.
 | Enrollments | `/api/enrollments/user/{userId}`  | GET    | User's enrollments   |
 | Reviews     | `/api/reviews/course/{courseId}`   | GET    | Reviews for a course |
 
-## Common Quasar Components
+## Quasar Framework
 
-| Component   | Use for                |
-|-------------|------------------------|
-| `q-card`    | Content cards          |
-| `q-list`    | Lists of items         |
-| `q-table`   | Data tables with pagination |
-| `q-spinner` | Loading indicators     |
-| `q-banner`  | Error/info messages    |
-| `q-badge`   | Labels and tags        |
-| `q-btn`     | Buttons                |
-| `q-input`   | Form inputs            |
+This project uses Quasar Framework for UI components. For detailed information about customizing Quasar (colors, variables, plugins, icons, dark mode, etc.), see:
 
-Full component docs: https://quasar.dev/vue-components
+**[README-QUASAR.md](README-QUASAR.md)** - Complete Quasar customization guide
+
+### Quick Reference
+
+- **Component docs**: https://quasar.dev/vue-components
+- **Color customization**: Edit [src/quasar-variables.sass](src/quasar-variables.sass)
+- **Plugin configuration**: Edit [src/main.ts](src/main.ts)
+- **Theme builder**: https://quasar.dev/style/theme-builder

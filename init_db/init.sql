@@ -17,7 +17,7 @@ CREATE TABLE users (
     password_hash VARCHAR(255) NOT NULL,
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
-    role VARCHAR(20) NOT NULL DEFAULT 'student' CHECK (role IN ('admin', 'instructor', 'student')), -- TODO cambiar los roles a Admin, user y premium (actualizar DTOs y demas)
+    role VARCHAR(20) NOT NULL DEFAULT 'user' CHECK (role IN ('admin', 'user', 'premium')), -- TODO cambiar los roles a admin, user y premium (actualizar DTOs y demas)
     bio TEXT,
     profile_picture_url VARCHAR(500),
     is_verified BOOLEAN DEFAULT FALSE,
@@ -30,7 +30,7 @@ CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_role ON users(role);
 CREATE INDEX idx_users_is_active ON users(is_active);
 
-COMMENT ON TABLE users IS 'Usuaris del sistema: admins, instructors i estudiants';
+COMMENT ON TABLE users IS 'Usuaris del sistema: admins, users i premium';
 
 -- ============================================
 -- 2. CATEGORIES - Categories de cursos
