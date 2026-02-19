@@ -19,20 +19,22 @@ Esta guía explica cómo personalizar Quasar Framework en el proyecto CourselyLa
 
 Las variables de color de Quasar se definen en [src/quasar-variables.sass](src/quasar-variables.sass).
 
-### Colores por Defecto
+### Colores del Proyecto
+
+La paleta de CourselyLabs usa teal como color principal, naranja como acento y escala de grises para el resto. Para la guia completa de colores, accesibilidad y logo, ver [DESIGN.md](DESIGN.md).
 
 ```sass
-$primary   : #1976D2  // Azul principal
-$secondary : #26A69A  // Verde azulado
-$accent    : #9C27B0  // Morado
+$primary   : #0F766E  // Teal 700 - Header, navegacion, botones principales
+$secondary : #4B5563  // Gray 600 - Elementos secundarios
+$accent    : #EA580C  // Orange 600 - Detalles, CTAs, destacados
 
-$dark      : #1D1D1D  // Gris oscuro
-$dark-page : #121212  // Negro para páginas en modo oscuro
+$dark      : #1F2937  // Gray 800 - Modo oscuro, texto principal
+$dark-page : #111827  // Gray 900 - Fondo en modo oscuro
 
-$positive  : #21BA45  // Verde (éxito)
-$negative  : #C10015  // Rojo (error)
-$info      : #31CCEC  // Azul claro (información)
-$warning   : #F2C037  // Amarillo (advertencia)
+$positive  : #059669  // Emerald 600 - Exito
+$negative  : #DC2626  // Red 600 - Error
+$info      : #0891B2  // Cyan 600 - Informacion
+$warning   : #D97706  // Amber 600 - Advertencia
 ```
 
 ### Cómo Cambiar los Colores
@@ -40,14 +42,7 @@ $warning   : #F2C037  // Amarillo (advertencia)
 1. Abre [src/quasar-variables.sass](src/quasar-variables.sass)
 2. Modifica los valores hexadecimales de los colores
 3. Guarda el archivo (Vite recargará automáticamente)
-
-**Ejemplo**: Cambiar a una paleta verde corporativa:
-
-```sass
-$primary   : #00A86B  // Verde corporativo
-$secondary : #004D40  // Verde oscuro
-$accent    : #FFB300  // Dorado
-```
+4. Actualiza [DESIGN.md](DESIGN.md) para mantener la documentación sincronizada
 
 ### Usar el Theme Builder
 
