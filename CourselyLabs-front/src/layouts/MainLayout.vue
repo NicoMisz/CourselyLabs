@@ -1,7 +1,6 @@
 <template>
     <q-layout
         view="hHr LpR lff"
-
     >
         <q-header elevated>
             <q-toolbar>
@@ -72,6 +71,12 @@
             caption: 'quasar.dev',
             icon: 'las la-cash-register',
             link: '/#/carrito',
+        },
+        {
+            title: 'Cursos',
+            caption: 'quasar.dev',
+            icon: 'las la-cash-register',
+            link: 'cursos',
         },
         {
             title: 'Sortir',

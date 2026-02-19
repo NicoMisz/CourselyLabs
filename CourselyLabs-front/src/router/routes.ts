@@ -9,7 +9,7 @@ const routes: RouteRecordRaw[] = [
         //{ path: '', redirect: '/home' },
         
         { path: '', component: () => import('../views/HomeView.vue')},
-        { path: 'carrito', component: () => import('../views/CoursesView.vue') },
+        { path: 'cursos', component: () => import('../views/CoursesView.vue') },
         ],
     },
 

@@ -1,16 +1,49 @@
-// Resetear estilos base
-html,
-body,
-#q-app,
-#app {
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
+// Resetear TODO el grid y padding
+* {
+    box-sizing: border-box;
 }
 
-// Sobrescribir el grid problemático
+html,
+body {
+    width: 100vw !important;
+    height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow-x: hidden !important;
+}
+
+#q-app,
+#app {
+    width: 100vw !important;
+    height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: block !important;
+    grid-template-columns: unset !important;
+}
+
+// Forzar layout completo
+.q-layout {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.q-header {
+    width: 100% !important;
+}
+
+.q-page-container {
+    width: 100% !important;
+}
+
+// Drawer blanco
+.q-drawer {
+    background-color: white !important;
+}
+
+// Eliminar cualquier media query problemática
 @media (min-width: 1024px) {
 
     #app,
@@ -19,19 +52,4 @@ body,
         grid-template-columns: unset !important;
         padding: 0 !important;
     }
-}
-
-// Asegurar layout completo
-.q-layout {
-    width: 100% !important;
-    max-width: 100% !important;
-}
-
-.q-page-container {
-    width: 100%;
-}
-
-// Drawer con fondo blanco
-.q-drawer {
-    background-color: white !important;
 }
