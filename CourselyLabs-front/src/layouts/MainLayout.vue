@@ -8,7 +8,8 @@
 
                 <q-toolbar-title> CourselyLab - Header</q-toolbar-title>
 
-                <div>Quasar v{{ $q.version }}</div>
+                <div class="q-pr-xl">Quasar v{{ $q.version }}</div>
+                <q-btn flat round dense icon="account_circle" @click="$router.push('/login')"/>
             </q-toolbar>
         </q-header>
 
@@ -33,6 +34,7 @@
         <q-page-container class="container">
             <router-view />
         </q-page-container>
+
     </q-layout>
 
 </template>
@@ -41,7 +43,7 @@
     import { ref } from 'vue';
     import { useQuasar } from 'quasar';
     import EssentialLink from '../components/EssentialLinks.vue';
-    
+
     interface Link {
         title: string;
         caption: string;
@@ -52,7 +54,8 @@
     const $q = useQuasar();
     const drawerLeft =  ref(false); 
     const miniState = ref<boolean>(true);
-
+    
+    
     const linksList = ref<Link[]>([
         {
             title: 'Docs',

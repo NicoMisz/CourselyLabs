@@ -10,6 +10,7 @@ const routes: RouteRecordRaw[] = [
         
         { path: '', component: () => import('../views/HomeView.vue')},
         { path: 'cursos', component: () => import('../views/CoursesView.vue') },
+        { path: 'login' , component: () => import('../views/formView.vue') },
         ],
     },
 
