@@ -17,7 +17,7 @@ CREATE TABLE users (
     password_hash VARCHAR(255) NOT NULL,
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
-    role VARCHAR(20) NOT NULL DEFAULT 'user' CHECK (role IN ('admin', 'user', 'premium')), -- TODO cambiar los roles a admin, user y premium (actualizar DTOs y demas)
+    role VARCHAR(20) NOT NULL DEFAULT 'user' CHECK (role IN ('admin', 'user', 'premium')),
     bio TEXT,
     profile_picture_url VARCHAR(500),
     is_verified BOOLEAN DEFAULT FALSE,
@@ -262,10 +262,9 @@ SELECT
     COALESCE(AVG(c.average_rating), 0) AS average_rating,
     u.created_at AS instructor_since
 FROM users u
-LEFT JOIN course_instructors ci ON u.id = ci.instructor_id
+INNER JOIN course_instructors ci ON u.id = ci.instructor_id
 LEFT JOIN courses c ON ci.course_id = c.id
 LEFT JOIN enrollments e ON c.id = e.course_id
-WHERE u.role = 'instructor'
 GROUP BY u.id, u.first_name, u.last_name, u.email, u.profile_picture_url, u.bio, u.created_at;
 
 COMMENT ON VIEW v_instructor_stats IS 'Estadístiques dels instructors';
@@ -356,13 +355,13 @@ INSERT INTO users (email, password_hash, first_name, last_name, role, is_verifie
 -- Email: instructor@cursos.com
 -- Password: instructor123
 INSERT INTO users (email, password_hash, first_name, last_name, role, bio, is_verified, is_active) VALUES
-('instructor@cursos.com', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5lMjH.UPA4C.m', 'Joan', 'Garcia', 'instructor', 'Instructor de programació amb 10 anys d''experiència', TRUE, TRUE);
+('instructor@cursos.com', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5lMjH.UPA4C.m', 'Joan', 'Garcia', 'user', 'Instructor de programació amb 10 anys d''experiència', TRUE, TRUE);
 
 -- Inserir estudiant d'exemple
 -- Email: student@cursos.com
 -- Password: student123
 INSERT INTO users (email, password_hash, first_name, last_name, role, is_verified, is_active) VALUES
-('student@cursos.com', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5lMjH.UPA4C.m', 'Maria', 'López', 'student', TRUE, TRUE);
+('student@cursos.com', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5lMjH.UPA4C.m', 'Maria', 'López', 'user', TRUE, TRUE);
 
 -- Inserir curs d'exemple
 INSERT INTO courses (title, slug, description, short_description, category_id, level, is_free, price, status, is_published, published_at)
@@ -385,6 +384,210 @@ INSERT INTO course_instructors (course_id, instructor_id, is_main)
 SELECT c.id, u.id, TRUE
 FROM courses c, users u
 WHERE c.slug = 'introduccio-postgresql' AND u.email = 'instructor@cursos.com';
+
+-- ============================================
+-- DADES DE PROVA
+-- ============================================
+
+-- Usuaris addicionals
+-- Password de tots: test123 (hash bcrypt)
+INSERT INTO users (email, password_hash, first_name, last_name, role, bio, is_verified, is_active) VALUES
+('sara.martin@cursos.com',   '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5lMjH.UPA4C.m', 'Sara',   'Martín',   'user', 'Dissenyadora UX/UI amb 7 anys d''experiència en producte digital.',      TRUE,  TRUE),
+('pau.roca@cursos.com',      '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5lMjH.UPA4C.m', 'Pau',    'Roca',     'user', 'Expert en màrqueting digital i estratègies de creixement per a startups.', TRUE,  TRUE),
+('laia.font@cursos.com',     '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5lMjH.UPA4C.m', 'Laia',   'Font',     'user', NULL,                                                                      TRUE,  TRUE),
+('marc.puig@cursos.com',     '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5lMjH.UPA4C.m', 'Marc',   'Puig',     'user', NULL,                                                                      TRUE,  TRUE),
+('ana.vidal@cursos.com',     '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5lMjH.UPA4C.m', 'Ana',    'Vidal',    'user', NULL,                                                                      FALSE, TRUE),
+('jordi.mas@cursos.com',     '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5lMjH.UPA4C.m', 'Jordi',  'Mas',      'user', NULL,                                                                      TRUE,  TRUE),
+('clara.soler@cursos.com',   '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5lMjH.UPA4C.m', 'Clara',  'Soler',    'user', NULL,                                                                      TRUE,  TRUE),
+('inactive@cursos.com',      '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5lMjH.UPA4C.m', 'Usuari', 'Inactiu',  'user', NULL,                                                                      FALSE, FALSE);
+
+-- Cursos addicionals
+INSERT INTO courses (title, slug, description, short_description, category_id, level, is_free, price, status, is_published, published_at) VALUES
+
+-- Programació
+('Python per a principiants',
+ 'python-principiants',
+ 'Aprèn Python des de zero. Cobrim variables, funcions, llistes, diccionaris, orientació a objectes i projectes pràctics reals.',
+ 'El millor punt de partida per aprendre a programar',
+ 1, 'beginner', TRUE, NULL, 'published', TRUE, CURRENT_TIMESTAMP - INTERVAL '30 days'),
+
+('Desenvolupament web amb Vue 3',
+ 'vue3-desenvolupament-web',
+ 'Curs complet de Vue 3 amb Composition API, Pinia, Vue Router i integració amb backends REST. Inclou projecte final.',
+ 'Domina Vue 3 i construeix aplicacions web modernes',
+ 1, 'intermediate', FALSE, 49.99, 'published', TRUE, CURRENT_TIMESTAMP - INTERVAL '15 days'),
+
+('Algorismes i estructures de dades',
+ 'algorismes-estructures-dades',
+ 'Estudi profund d''algorismes de cerca, ordenació, grafos i estructures com piles, cues i arbres. Exercicis en Python.',
+ 'Prepara''t per a entrevistes tècniques i millora el teu codi',
+ 1, 'advanced', FALSE, 79.99, 'published', TRUE, CURRENT_TIMESTAMP - INTERVAL '60 days'),
+
+-- Disseny
+('Disseny UI/UX des de zero',
+ 'disseny-ui-ux',
+ 'Aprèn els fonaments del disseny d''interfícies i experiència d''usuari. Figma, prototipat, tests d''usabilitat i disseny centrat en la persona.',
+ 'Crea productes digitals que la gent estima',
+ 2, 'beginner', FALSE, 59.99, 'published', TRUE, CURRENT_TIMESTAMP - INTERVAL '20 days'),
+
+-- Marketing
+('Marketing digital per a negocis',
+ 'marketing-digital-negocis',
+ 'Estratègies de màrqueting digital: SEO, SEM, xarxes socials, email màrqueting i analítica web. Casos reals de negoci.',
+ 'Fes créixer el teu negoci al món digital',
+ 4, 'beginner', FALSE, 39.99, 'published', TRUE, CURRENT_TIMESTAMP - INTERVAL '10 days'),
+
+-- Esborrany (no publicat)
+('Introducció a la Intel·ligència Artificial',
+ 'introduccio-ia',
+ 'Curs en preparació sobre IA i machine learning per a no tècnics.',
+ 'Entén la IA sense necessitat de programar',
+ 1, 'beginner', FALSE, 69.99, 'draft', FALSE, NULL);
+
+-- Assignar instructors als nous cursos
+INSERT INTO course_instructors (course_id, instructor_id, is_main)
+SELECT c.id, u.id, TRUE
+FROM courses c, users u
+WHERE (c.slug = 'python-principiants'            AND u.email = 'instructor@cursos.com')
+   OR (c.slug = 'vue3-desenvolupament-web'        AND u.email = 'instructor@cursos.com')
+   OR (c.slug = 'algorismes-estructures-dades'    AND u.email = 'instructor@cursos.com')
+   OR (c.slug = 'disseny-ui-ux'                   AND u.email = 'sara.martin@cursos.com')
+   OR (c.slug = 'marketing-digital-negocis'       AND u.email = 'pau.roca@cursos.com')
+   OR (c.slug = 'introduccio-ia'                  AND u.email = 'instructor@cursos.com');
+
+-- Co-instructor en Vue 3
+INSERT INTO course_instructors (course_id, instructor_id, is_main)
+SELECT c.id, u.id, FALSE
+FROM courses c, users u
+WHERE c.slug = 'vue3-desenvolupament-web' AND u.email = 'sara.martin@cursos.com';
+
+-- Inscripcions (enrollments)
+INSERT INTO enrollments (user_id, course_id, access_type, enrolled_at, last_accessed_at)
+SELECT u.id, c.id, 'free',
+       CURRENT_TIMESTAMP - INTERVAL '25 days',
+       CURRENT_TIMESTAMP - INTERVAL '2 days'
+FROM users u, courses c
+WHERE u.email = 'student@cursos.com' AND c.slug = 'introduccio-postgresql';
+
+INSERT INTO enrollments (user_id, course_id, access_type, enrolled_at, last_accessed_at)
+SELECT u.id, c.id, 'free',
+       CURRENT_TIMESTAMP - INTERVAL '20 days',
+       CURRENT_TIMESTAMP - INTERVAL '1 day'
+FROM users u, courses c
+WHERE u.email = 'student@cursos.com' AND c.slug = 'python-principiants';
+
+INSERT INTO enrollments (user_id, course_id, access_type, enrolled_at, last_accessed_at)
+SELECT u.id, c.id, 'paid',
+       CURRENT_TIMESTAMP - INTERVAL '12 days',
+       CURRENT_TIMESTAMP - INTERVAL '3 days'
+FROM users u, courses c
+WHERE u.email = 'student@cursos.com' AND c.slug = 'vue3-desenvolupament-web';
+
+INSERT INTO enrollments (user_id, course_id, access_type, enrolled_at, last_accessed_at)
+SELECT u.id, c.id, 'free',
+       CURRENT_TIMESTAMP - INTERVAL '18 days',
+       CURRENT_TIMESTAMP - INTERVAL '5 days'
+FROM users u, courses c
+WHERE u.email = 'laia.font@cursos.com' AND c.slug = 'python-principiants';
+
+INSERT INTO enrollments (user_id, course_id, access_type, enrolled_at, last_accessed_at)
+SELECT u.id, c.id, 'paid',
+       CURRENT_TIMESTAMP - INTERVAL '14 days',
+       CURRENT_TIMESTAMP - INTERVAL '1 day'
+FROM users u, courses c
+WHERE u.email = 'laia.font@cursos.com' AND c.slug = 'disseny-ui-ux';
+
+INSERT INTO enrollments (user_id, course_id, access_type, enrolled_at, last_accessed_at)
+SELECT u.id, c.id, 'free',
+       CURRENT_TIMESTAMP - INTERVAL '8 days',
+       CURRENT_TIMESTAMP
+FROM users u, courses c
+WHERE u.email = 'marc.puig@cursos.com' AND c.slug = 'introduccio-postgresql';
+
+INSERT INTO enrollments (user_id, course_id, access_type, enrolled_at, last_accessed_at)
+SELECT u.id, c.id, 'paid',
+       CURRENT_TIMESTAMP - INTERVAL '6 days',
+       CURRENT_TIMESTAMP - INTERVAL '2 days'
+FROM users u, courses c
+WHERE u.email = 'marc.puig@cursos.com' AND c.slug = 'marketing-digital-negocis';
+
+INSERT INTO enrollments (user_id, course_id, access_type, enrolled_at, last_accessed_at)
+SELECT u.id, c.id, 'free',
+       CURRENT_TIMESTAMP - INTERVAL '55 days',
+       CURRENT_TIMESTAMP - INTERVAL '10 days'
+FROM users u, courses c
+WHERE u.email = 'jordi.mas@cursos.com' AND c.slug = 'algorismes-estructures-dades';
+
+INSERT INTO enrollments (user_id, course_id, access_type, enrolled_at, last_accessed_at)
+SELECT u.id, c.id, 'paid',
+       CURRENT_TIMESTAMP - INTERVAL '9 days',
+       CURRENT_TIMESTAMP - INTERVAL '1 day'
+FROM users u, courses c
+WHERE u.email = 'clara.soler@cursos.com' AND c.slug = 'disseny-ui-ux';
+
+-- Valoracions (reviews)
+INSERT INTO reviews (course_id, user_id, rating, comment, created_at)
+SELECT c.id, u.id, 5,
+       'Excel·lent curs! Molt clar i ben estructurat. El recomano a tothom que vulgui aprendre PostgreSQL.',
+       CURRENT_TIMESTAMP - INTERVAL '20 days'
+FROM courses c, users u
+WHERE c.slug = 'introduccio-postgresql' AND u.email = 'student@cursos.com';
+
+INSERT INTO reviews (course_id, user_id, rating, comment, created_at)
+SELECT c.id, u.id, 4,
+       'Molt bon curs. Les explicacions són clares però alguns exercicis podrien tenir més detall.',
+       CURRENT_TIMESTAMP - INTERVAL '10 days'
+FROM courses c, users u
+WHERE c.slug = 'introduccio-postgresql' AND u.email = 'marc.puig@cursos.com';
+
+INSERT INTO reviews (course_id, user_id, rating, comment, created_at)
+SELECT c.id, u.id, 5,
+       'El millor curs de Python que he fet. Molt pràctic i amb exemples del món real.',
+       CURRENT_TIMESTAMP - INTERVAL '15 days'
+FROM courses c, users u
+WHERE c.slug = 'python-principiants' AND u.email = 'student@cursos.com';
+
+INSERT INTO reviews (course_id, user_id, rating, comment, created_at)
+SELECT c.id, u.id, 5,
+       'Perfecte per començar! L''instructor explica molt bé i el ritme és ideal.',
+       CURRENT_TIMESTAMP - INTERVAL '12 days'
+FROM courses c, users u
+WHERE c.slug = 'python-principiants' AND u.email = 'laia.font@cursos.com';
+
+INSERT INTO reviews (course_id, user_id, rating, comment, created_at)
+SELECT c.id, u.id, 4,
+       'Molt complet. M''ha ajudat a entendre Vue 3 amb profunditat. Falta un capítol de testing.',
+       CURRENT_TIMESTAMP - INTERVAL '8 days'
+FROM courses c, users u
+WHERE c.slug = 'vue3-desenvolupament-web' AND u.email = 'student@cursos.com';
+
+INSERT INTO reviews (course_id, user_id, rating, comment, created_at)
+SELECT c.id, u.id, 5,
+       'El curs de disseny UX/UI és brutal. Molt pràctic, amb projectes reals i feedback constant.',
+       CURRENT_TIMESTAMP - INTERVAL '7 days'
+FROM courses c, users u
+WHERE c.slug = 'disseny-ui-ux' AND u.email = 'laia.font@cursos.com';
+
+INSERT INTO reviews (course_id, user_id, rating, comment, created_at)
+SELECT c.id, u.id, 4,
+       'Molt útil per al meu negoci. Aplicaré les estratègies de SEO i email màrqueting de seguida.',
+       CURRENT_TIMESTAMP - INTERVAL '4 days'
+FROM courses c, users u
+WHERE c.slug = 'marketing-digital-negocis' AND u.email = 'marc.puig@cursos.com';
+
+INSERT INTO reviews (course_id, user_id, rating, comment, created_at)
+SELECT c.id, u.id, 3,
+       'El contingut és bo però el ritme és massa ràpid per a nivell avançat. Cal més material de pràctica.',
+       CURRENT_TIMESTAMP - INTERVAL '30 days'
+FROM courses c, users u
+WHERE c.slug = 'algorismes-estructures-dades' AND u.email = 'jordi.mas@cursos.com';
+
+INSERT INTO reviews (course_id, user_id, rating, comment, created_at)
+SELECT c.id, u.id, 5,
+       'Impressionant. Molt ben estructurat, amb exercicis progressius i molt bon suport al fòrum.',
+       CURRENT_TIMESTAMP - INTERVAL '5 days'
+FROM courses c, users u
+WHERE c.slug = 'disseny-ui-ux' AND u.email = 'clara.soler@cursos.com';
 
 -- ============================================
 -- QUERIES D'EXEMPLE
