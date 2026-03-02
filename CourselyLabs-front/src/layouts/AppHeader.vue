@@ -12,6 +12,7 @@
       />
 
       <q-toolbar-title>CourselyLabs</q-toolbar-title>
+      <q-btn flat round dense icon="account_circle" @click="$router.push('/login')"/>
     </q-toolbar>
   </q-header>
 </template>
