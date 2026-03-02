@@ -13,6 +13,16 @@ const routes: RouteRecordRaw[] = [
         ],
     },
 
+  // Rutas con AltLayout (sin sidebar) — login, registro, etc.
+    // {
+    //     path: '/auth',
+    //     component: () => import('../layouts/AltLayout.vue'),
+    //     children: [
+    //         { path: 'login', component: () => import('../views/LoginView.vue') },
+    //         { path: 'registro', component: () => import('../views/RegistroView.vue') },
+    //     ],
+    // },
+
   // Ruta 404
     {
         path: '/:catchAll(.*)*',

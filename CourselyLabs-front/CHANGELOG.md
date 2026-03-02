@@ -6,6 +6,22 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es/1.1.0/).
 
 ---
 
+## [Sin version] - 2026-03-02
+
+### Agregado
+
+- **AppHeader.vue**: Componente de header extraido de MainLayout, con prop `showMenuButton` para controlar visibilidad del boton hamburguesa
+- **AppSidebar.vue**: Componente de sidebar/drawer extraido de MainLayout, usa `EssentialLinks.vue` para los links de navegacion, soporta v-model y estado mini
+- **AppFooter.vue**: Componente de footer extraido de MainLayout
+- **AltLayout.vue**: Layout alternativo sin sidebar, pensado para paginas como login, registro, etc.
+
+### Modificado
+
+- **MainLayout.vue**: Refactorizado para componer AppHeader, AppSidebar y AppFooter en vez de tener todo inline
+- **routes.ts**: Ejemplo comentado de como usar AltLayout para futuras rutas de autenticacion
+
+---
+
 ## [Sin version] - 2026-02-10
 
 ### Agregado
