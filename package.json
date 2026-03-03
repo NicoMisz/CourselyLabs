@@ -1,1 +1,17 @@
-{}
+{
+  "name": "courselylabs",
+  "private": true,
+  "scripts": {
+    "start": "npm run docker:up && concurrently --names \"BACK,FRONT\" --prefix-colors \"blue.bold,green.bold\" \"npm run dev:back\" \"npm run dev:front\"",
+    "dev:back": "wait-on tcp:localhost:4321 && cd CourselyLabs-back && ./mvnw spring-boot:run",
+    "dev:front": "npm --prefix CourselyLabs-front run dev",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "stop": "docker compose down"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "wait-on": "^8.0.3"
+  }
+}

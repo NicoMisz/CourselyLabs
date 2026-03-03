@@ -1,124 +1,74 @@
 <template>
     <div class="formRegister">
 
-        <h1 class="h1Registrar"> Crear tu cuenta </h1>
+        <h1 class="h1Registrar">Crear tu cuenta</h1>
+
+        <q-banner v-if="errorMessage" class="bg-negative text-white q-mb-md rounded-borders">
+          {{ errorMessage }}
+        </q-banner>
+
         <q-form @submit="onSubmit" class="q-gutter-md">
-          
+
           <div class="row justify-between">
-              <q-input
-              v-model="name"
-              label="Your name *"
+            <q-input
+              v-model="firstName"
+              label="Nombre *"
               lazy-rules
-              :rules="[
-                val => val !== null && val !== '' || 'Please type your name'
-              ]"
+              :rules="[val => val !== null && val !== '' || 'Introduce tu nombre']"
               class="inputNameSurname"
             />
 
             <q-input
-              v-model="surnames"
-              label="Your surnames *"
+              v-model="lastName"
+              label="Apellidos *"
               lazy-rules
-              :rules="[
-                val => val !== null && val !== '' || 'Please type your surnames'
-              ]"
+              :rules="[val => val !== null && val !== '' || 'Introduce tus apellidos']"
               class="inputNameSurname"
             />
           </div>
-          
-          <div class="row justify-between">
-            <q-input
-              type="date"
-              v-model="Birthday"
-              label="Your date birth *"
-              lazy-rules
-              :rules="[   
-                val => val !== null && val !== '' || 'Please type your age',
-                val => val > 0 && val < 100 || 'Please type a real age'
-              ]"
-              class="inputBirthAge"
-            />
 
-            <q-input
-              type="number"
-              v-model="age"
-              label="Your age *"
-              lazy-rules
-              :rules="[   
-                val => val !== null && val !== '' || 'Please type your age',
-                val => val > 0 && val < 100 || 'Please type a real age'
-              ]"
-              class="inputBirthAge"
-            />
-          </div>
-            
-            <q-input
-                v-model="city"
-                label="Your city"
-                lazy-rules
-                :rules="[
-                  val => val === null || val === '' || val.length > 0 || 'Please type something'
-                ]"
-            />
           <div class="row justify-between">
-            <q-input
-              type="tel"
-              v-model="phone"
-              label="Your phone number"
-              lazy-rules
-              :rules="[
-                val => val === null || val === '' || /^\d{9}$/.test(val) || 'Please type a valid phone number'
-              ]"
-              class="inputPhoneMail"
-            />
-          
-
             <q-input
               type="email"
               v-model="email"
-              label="Your email *"
+              label="Tu email *"
               lazy-rules
               :rules="[
-                val => val !== null && val !== '' || 'Please type your email',
-                val => /.+@.+\..+/.test(val) || 'Please type a valid email'
+                val => val !== null && val !== '' || 'Introduce tu email',
+                val => /.+@.+\..+/.test(val) || 'Introduce un email válido'
               ]"
-              class="inputPhoneMail"
-            />
-          </div>
-          <div class="row justify-between">
-            <q-input
-              type="text"
-              v-model="name"
-              label="Your user name *"
-              lazy-rules
-              :rules="[
-                val => val !== null && val !== '' || 'Please type your password',
-                val => val.length >= 6 || 'Password must be at least 6 characters'
-              ]"
-              class="inputUsePassword"
+              class="inputNameSurname"
             />
 
             <q-input
               type="password"
               v-model="password"
-              label="Your password *"
+              label="Tu contraseña *"
               lazy-rules
               :rules="[
-                val => val !== null && val !== '' || 'Please type your password',
-                val => val.length >= 6 || 'Password must be at least 6 characters'
+                val => val !== null && val !== '' || 'Introduce tu contraseña',
+                val => val.length >= 8 || 'Mínimo 8 caracteres'
               ]"
-              class="inputUsePassword"
+              class="inputNameSurname"
             />
           </div>
-          <q-toggle v-model="accept" label="I accept the license and terms" />
+
+          <q-input
+            v-model="bio"
+            label="Sobre ti (opcional)"
+            type="textarea"
+            autogrow
+            :rules="[val => !val || val.length <= 500 || 'Máximo 500 caracteres']"
+          />
+
+          <q-toggle v-model="accept" label="Acepto los términos y condiciones" />
 
             <div class="row">
-                <q-btn type="submit" color="primary">Registrate</q-btn>
+                <q-btn type="submit" color="primary" :loading="loading">Registrarme</q-btn>
                 <span class="row items-center q-ml-md">
-                    <p class="q-ma-sm">Ya tienes cuenta?</p>
-                    <q-btn label="Iniciar sessión" type="reset" color="primary" flat class="q-ml-sm " @click="inicioSession"/>
+                    <p class="q-ma-sm">¿Ya tienes cuenta?</p>
+                    <q-btn label="Iniciar sesión" color="primary" flat class="q-ml-sm" @click="goLogin"/>
                 </span>
-                
             </div>
         </q-form>
     </div>
@@ -128,40 +78,56 @@
 import { useQuasar } from 'quasar'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
 
-    const $q = useQuasar()
+const $q = useQuasar()
 
-    const name = ref(null)
-    const surnames = ref(null)
-    const Birthday = ref(null)
-    const age = ref(null)
-    const city = ref(null)
-    const phone = ref(null)
-    const email = ref(null)
-    const password = ref(null)
-    const accept = ref(false)
+const firstName = ref('')
+const lastName = ref('')
+const email = ref('')
+const password = ref('')
+const bio = ref('')
+const accept = ref(false)
+const loading = ref(false)
+const errorMessage = ref('')
 
-    function onSubmit () {
-        if (accept.value !== true) {
-          $q.notify({
-            color: 'red-5',
-            textColor: 'white',
-            message: 'You must accept the license and terms to submit the form'
-          })
-          return
-        }
+const router = useRouter()
+const authStore = useAuthStore()
 
-        $q.notify({
-          color: 'green-5',
-          textColor: 'white',
-          message: `Form submitted successfully! Name: ${name.value} ${surnames.value}, Age: ${age.value}, City: ${city.value}, Phone: ${phone.value}, Email: ${email.value}`
-        })
+async function onSubmit() {
+  if (!accept.value) {
+    $q.notify({ color: 'red-5', textColor: 'white', message: 'Debes aceptar los términos y condiciones.' })
+    return
+  }
+
+  errorMessage.value = ''
+  loading.value = true
+  try {
+    await authStore.register({
+      email: email.value,
+      password: password.value,
+      firstName: firstName.value,
+      lastName: lastName.value,
+      bio: bio.value || undefined,
+    })
+    router.push('/')
+  } catch (err: unknown) {
+    const response = (err as { response?: { data?: { message?: string }; status?: number } })?.response
+    if (response?.status === 400 && response?.data?.message) {
+      errorMessage.value = response.data.message
+    } else if (response?.status === 409) {
+      errorMessage.value = 'Ya existe una cuenta con ese email.'
+    } else {
+      errorMessage.value = 'Error al crear la cuenta. Inténtalo de nuevo.'
     }
+  } finally {
+    loading.value = false
+  }
+}
 
-    const router = useRouter()
-    function inicioSession() {
-        router.push('/iniSession')
-    }
+function goLogin() {
+  router.push('/login')
+}
 </script>
 
 <style scoped>
@@ -176,10 +142,9 @@ import { useRouter } from 'vue-router'
     max-width: 75%;
     height: 92vh;
     margin: 0 auto;
-
   }
 
-  .inputNameSurname, .inputPhoneMail, .inputUsePassword, .inputBirthAge {
+  .inputNameSurname {
     width: 48%;
   }
 
