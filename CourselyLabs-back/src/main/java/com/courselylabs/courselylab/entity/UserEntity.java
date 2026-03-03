@@ -35,7 +35,7 @@ public class UserEntity {
     private String lastName;
 
     @Column(name = "role", nullable = false, length = 20)
-    private String role = "student";
+    private String role = "user";
 
     @Column(name = "bio", columnDefinition = "TEXT")
     private String bio;

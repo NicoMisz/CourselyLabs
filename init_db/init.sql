@@ -33,7 +33,24 @@ CREATE INDEX idx_users_is_active ON users(is_active);
 COMMENT ON TABLE users IS 'Usuaris del sistema: admins, users i premium';
 
 -- ============================================
--- 2. CATEGORIES - Categories de cursos
+-- 2. REFRESH TOKENS - Tokens de refresc JWT
+-- ============================================
+CREATE TABLE refresh_tokens (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token VARCHAR(500) UNIQUE NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    revoked BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_refresh_tokens_token ON refresh_tokens(token);
+CREATE INDEX idx_refresh_tokens_user ON refresh_tokens(user_id);
+
+COMMENT ON TABLE refresh_tokens IS 'Refresh tokens JWT per renovar access tokens';
+
+-- ============================================
+-- 3. CATEGORIES - Categories de cursos
 -- ============================================
 CREATE TABLE categories (
     id SERIAL PRIMARY KEY,

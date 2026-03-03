@@ -3,6 +3,7 @@ package com.courselylabs.courselylab.service;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,10 +21,12 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository, UserMapper userMapper) {
+    public UserService(UserRepository userRepository, UserMapper userMapper, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional(readOnly = true)
@@ -50,19 +53,13 @@ public class UserService {
         return userMapper.toDTOList(userRepository.findByRole(role));
     }
 
-    @Transactional(readOnly = true)
-    public List<UserDTO> findInstructors() {
-        return userMapper.toDTOList(userRepository.findByRoleAndIsActiveTrue("instructor"));
-    }
-
     public UserDTO create(UserCreateDTO dto) {
         if (userRepository.existsByEmail(dto.getEmail())) {
             throw new BadRequestException("User with email '" + dto.getEmail() + "' already exists");
         }
 
         UserEntity entity = userMapper.toEntity(dto);
-        // In a real app, you would hash the password here
-        entity.setPasswordHash(dto.getPassword()); // TODO: Hash password
+        entity.setPasswordHash(passwordEncoder.encode(dto.getPassword()));
         entity.setIsVerified(false);
         entity.setIsActive(true);
 
@@ -86,7 +83,6 @@ public class UserService {
         userRepository.deleteById(id);
     }
 
-    
     public UserDTO deactivate(UUID id) {
         UserEntity entity = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
@@ -95,7 +91,6 @@ public class UserService {
         return userMapper.toDTO(entity);
     }
 
-    
     public UserDTO verify(UUID id) {
         UserEntity entity = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));

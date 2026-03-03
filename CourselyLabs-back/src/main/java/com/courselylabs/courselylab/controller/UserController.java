@@ -51,11 +51,6 @@ public class UserController {
         return ResponseEntity.ok(userService.findByRole(role));
     }
 
-    @GetMapping("/instructors")
-    public ResponseEntity<List<UserDTO>> findInstructors() {
-        return ResponseEntity.ok(userService.findInstructors());
-    }
-
     @PostMapping
     public ResponseEntity<UserDTO> create(@Valid @RequestBody UserCreateDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.create(dto));

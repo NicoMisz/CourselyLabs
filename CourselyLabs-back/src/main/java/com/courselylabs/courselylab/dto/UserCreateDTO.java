@@ -28,7 +28,7 @@ public class UserCreateDTO {
     @Size(max = 100, message = "Last name must be less than 100 characters")
     private String lastName;
 
-    private String role = "student";
+    private String role = "user";
 
     private String bio;
 
