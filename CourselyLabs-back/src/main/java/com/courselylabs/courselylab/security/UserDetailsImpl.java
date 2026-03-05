@@ -1,12 +1,13 @@
 package com.courselylabs.courselylab.security;
 
-import com.courselylabs.courselylab.entity.UserEntity;
+import java.util.Collection;
+import java.util.List;
+
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.Collection;
-import java.util.List;
+import com.courselylabs.courselylab.entity.UserEntity;
 
 public class UserDetailsImpl implements UserDetails {
 

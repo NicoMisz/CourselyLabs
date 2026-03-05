@@ -62,7 +62,7 @@
           />
 
           <q-toggle v-model="accept" label="Acepto los términos y condiciones" />
-
+          
             <div class="row">
                 <q-btn type="submit" color="primary" :loading="loading">Registrarme</q-btn>
                 <span class="row items-center q-ml-md">
