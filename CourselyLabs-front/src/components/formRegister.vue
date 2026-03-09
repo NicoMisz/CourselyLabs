@@ -61,8 +61,18 @@
             :rules="[val => !val || val.length <= 500 || 'Máximo 500 caracteres']"
           />
 
-          <q-toggle v-model="accept" label="Acepto los términos y condiciones" />
+          <!-- <q-toggle v-model="accept" label="Acepto los términos y condiciones" /> -->
           
+          <div class="row items-center">
+              <q-toggle v-model="accept" />
+              <span>
+                Acepto los
+                <a href="#" @click.prevent="showTerms = true" class="text-primary">
+                  términos y condiciones
+                </a>
+              </span>
+          </div>
+
             <div class="row">
                 <q-btn type="submit" color="primary" :loading="loading">Registrarme</q-btn>
                 <span class="row items-center q-ml-md">
@@ -72,6 +82,8 @@
             </div>
         </q-form>
     </div>
+
+    <cardTerm v-model="showTerms" @accepted="accept = true" />
 </template>
 
 <script setup lang="ts">
@@ -79,6 +91,8 @@ import { useQuasar } from 'quasar'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+
+import cardTerm from './cardTerminosCondiciones.vue'
 
 const $q = useQuasar()
 
@@ -93,6 +107,8 @@ const errorMessage = ref('')
 
 const router = useRouter()
 const authStore = useAuthStore()
+
+const showTerms = ref(false)
 
 async function onSubmit() {
   if (!accept.value) {
