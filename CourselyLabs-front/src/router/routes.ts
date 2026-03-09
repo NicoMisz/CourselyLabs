@@ -13,6 +13,7 @@ const routes: RouteRecordRaw[] = [
         { path: 'login' , component: () => import('../views/formView.vue') },
         { path: 'iniSession', component: () => import('../components/formLogin.vue') },
         { path: 'register' , component: () => import('../components/formRegister.vue') },
+        { path: 'terminios', component: () => import('../components/cardTerminosCondiciones.vue')},
         {
           path: 'profile',
           component: () => import('../views/ProfileView.vue'),
