@@ -10,7 +10,7 @@
 
     <div v-else class="row q-col-gutter-md">
       <div v-for="course in courses" :key="course.id" class="col-12 col-sm-6 col-md-4">
-        <q-card>
+        <q-card class="cursor-pointer" @click="$router.push(`/cursos/${course.slug}`)">
           <q-card-section>
             <div class="text-h6">{{ course.title }}</div>
             <div class="text-subtitle2 text-grey">{{ course.level }}</div>
@@ -37,6 +37,7 @@ import axios from 'axios'
 
 interface Course {
   id: string
+  slug: string
   title: string
   shortDescription: string
   level: string
