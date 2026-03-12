@@ -1,5 +1,5 @@
 <template>
-    <div class="formLogin">
+    <div class="formLogin" :class="{ shake: shaking }">
 
         <h1 class="h1Registrar">Iniciar sesión</h1>
 
@@ -54,9 +54,15 @@ const email = ref('')
 const password = ref('')
 const loading = ref(false)
 const errorMessage = ref('')
+const shaking = ref(false)
 
 const router = useRouter()
 const authStore = useAuthStore()
+
+function triggerShake() {
+  shaking.value = true
+  setTimeout(() => { shaking.value = false }, 500)
+}
 
 async function onSubmit() {
   errorMessage.value = ''
@@ -66,11 +72,12 @@ async function onSubmit() {
     router.push('/')
   } catch (err: unknown) {
     const status = (err as { response?: { status?: number } })?.response?.status
-    if (status === 401 || status === 500) {
+    if (status === 401) {
       errorMessage.value = 'Email o contraseña incorrectos.'
     } else {
       errorMessage.value = 'Error de conexión. Inténtalo de nuevo.'
     }
+    triggerShake()
   } finally {
     loading.value = false
   }
@@ -97,6 +104,18 @@ function goRegister() {
 
   .inputUsePassword{
     width: 48%;
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%       { transform: translateX(-8px); }
+    40%       { transform: translateX(8px); }
+    60%       { transform: translateX(-6px); }
+    80%       { transform: translateX(6px); }
+  }
+
+  .shake {
+    animation: shake 0.5s ease;
   }
 
 </style>
