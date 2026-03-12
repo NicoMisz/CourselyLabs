@@ -1,21 +1,32 @@
 package com.courselylabs.courselylab.service;
 
-import com.courselylabs.courselylab.dto.CourseDTO;
-import com.courselylabs.courselylab.entity.CategoriaEntity;
-import com.courselylabs.courselylab.entity.CourseEntity;
-import com.courselylabs.courselylab.exception.BadRequestException;
-import com.courselylabs.courselylab.exception.ResourceNotFoundException;
-import com.courselylabs.courselylab.mapper.CourseMapper;
-import com.courselylabs.courselylab.repository.CategoriaRepository;
-import com.courselylabs.courselylab.repository.CourseRepository;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
+import com.courselylabs.courselylab.dto.CourseDTO;
+import com.courselylabs.courselylab.dto.CourseDetailDTO;
+import com.courselylabs.courselylab.dto.InstructorSummaryDTO;
+import com.courselylabs.courselylab.entity.CategoriaEntity;
+import com.courselylabs.courselylab.entity.CourseEntity;
+import com.courselylabs.courselylab.entity.CourseInstructorEntity;
+import com.courselylabs.courselylab.entity.UserEntity;
+import com.courselylabs.courselylab.exception.BadRequestException;
+import com.courselylabs.courselylab.exception.ResourceNotFoundException;
+import com.courselylabs.courselylab.mapper.CourseMapper;
+import com.courselylabs.courselylab.repository.CategoriaRepository;
+import com.courselylabs.courselylab.repository.CourseInstructorRepository;
+import com.courselylabs.courselylab.repository.CourseRepository;
+import com.courselylabs.courselylab.repository.EnrollmentRepository;
+import com.courselylabs.courselylab.repository.ReviewRepository;
 
 @Service
 @Transactional
@@ -25,10 +36,23 @@ public class CourseService {
     private final CategoriaRepository categoriaRepository;
     private final CourseMapper courseMapper;
 
-    public CourseService(CourseRepository courseRepository, CategoriaRepository categoriaRepository, CourseMapper courseMapper) {
+    private final ReviewRepository reviewRepository;
+    private final EnrollmentRepository enrollmentRepository;
+    private final CourseInstructorRepository courseInstructorRepository;
+
+    public CourseService(
+            CourseRepository courseRepository,
+            CategoriaRepository categoriaRepository,
+            CourseMapper courseMapper,
+            ReviewRepository reviewRepository,
+            EnrollmentRepository enrollmentRepository,
+            CourseInstructorRepository courseInstructorRepository) {
         this.courseRepository = courseRepository;
         this.categoriaRepository = categoriaRepository;
         this.courseMapper = courseMapper;
+        this.reviewRepository = reviewRepository;
+        this.enrollmentRepository = enrollmentRepository;
+        this.courseInstructorRepository = courseInstructorRepository;
     }
 
     @Transactional(readOnly = true)
@@ -43,17 +67,26 @@ public class CourseService {
     }
 
     @Transactional(readOnly = true)
-    public CourseDTO findById(UUID id) {
+    public CourseDetailDTO findById(UUID id) {
         CourseEntity entity = courseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Course", "id", id));
-        return courseMapper.toDTO(entity);
+        return buildCourseDetail(entity);
     }
 
     @Transactional(readOnly = true)
-    public CourseDTO findBySlug(String slug) {
+    public CourseDetailDTO findBySlug(String slug) {
         CourseEntity entity = courseRepository.findBySlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException("Course", "slug", slug));
-        return courseMapper.toDTO(entity);
+        return buildCourseDetail(entity);
+    }
+
+    @Transactional(readOnly = true)
+    public List<InstructorSummaryDTO> findInstructorsByCourseId(UUID courseId) {
+        if (!courseRepository.existsById(courseId)) {
+            throw new ResourceNotFoundException("Course", "id", courseId);
+        }
+
+        return mapInstructors(courseInstructorRepository.findByCourseId(courseId));
     }
 
     @Transactional(readOnly = true)
@@ -148,5 +181,63 @@ public class CourseService {
             throw new ResourceNotFoundException("Course", "id", id);
         }
         courseRepository.deleteById(id);
+    }
+
+    private CourseDetailDTO buildCourseDetail(CourseEntity entity) {
+        CourseDetailDTO dto = new CourseDetailDTO();
+
+        dto.setId(entity.getId());
+        dto.setTitle(entity.getTitle());
+        dto.setSlug(entity.getSlug());
+        dto.setDescription(entity.getDescription());
+        dto.setShortDescription(entity.getShortDescription());
+        dto.setThumbnailUrl(entity.getThumbnailUrl());
+
+        if (entity.getCategory() != null) {
+            dto.setCategoryId(entity.getCategory().getId());
+            dto.setCategoryName(entity.getCategory().getName());
+        }
+
+        dto.setLevel(entity.getLevel());
+        dto.setIsFree(entity.getIsFree());
+        dto.setPrice(entity.getPrice());
+        dto.setStatus(entity.getStatus());
+        dto.setIsPublished(entity.getIsPublished());
+        dto.setPublishedAt(entity.getPublishedAt());
+        dto.setCreatedAt(entity.getCreatedAt());
+        dto.setUpdatedAt(entity.getUpdatedAt());
+
+        long students = enrollmentRepository.countByCourseId(entity.getId());
+        dto.setTotalStudents((int) students);
+
+        Double avg = reviewRepository.getAverageRatingByCourseId(entity.getId());
+        BigDecimal avgRating = avg == null
+                ? BigDecimal.ZERO
+                : BigDecimal.valueOf(avg).setScale(2, RoundingMode.HALF_UP);
+        dto.setAverageRating(avgRating);
+
+        List<CourseInstructorEntity> links = courseInstructorRepository.findByCourseId(entity.getId());
+        dto.setInstructors(mapInstructors(links));
+
+        return dto;
+    }
+
+    private List<InstructorSummaryDTO> mapInstructors(List<CourseInstructorEntity> links) {
+        List<InstructorSummaryDTO> instructors = new ArrayList<>();
+
+        for (CourseInstructorEntity link : links) {
+            UserEntity user = link.getInstructor();
+            String first = user.getFirstName() == null ? "" : user.getFirstName().trim();
+            String last = user.getLastName() == null ? "" : user.getLastName().trim();
+            String fullName = (first + " " + last).trim();
+
+            instructors.add(new InstructorSummaryDTO(
+                    user.getId(),
+                    fullName,
+                    user.getBio(),
+                    user.getProfilePictureUrl()));
+        }
+
+        return instructors;
     }
 }
