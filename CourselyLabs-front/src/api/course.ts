@@ -1,5 +1,5 @@
 import api from './axios';
-import type { CourseDetail, InstructorSummary } from '../types/course';
+import type { CourseDetail, InstructorSummary } from '@/types/course';
 
 export async function getCourseBySlug(slug: string): Promise<CourseDetail> {
   const { data } = await api.get(`/api/courses/slug/${slug}`);

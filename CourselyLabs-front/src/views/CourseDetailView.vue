@@ -114,11 +114,11 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import CourseHero from '../components/CourseHero.vue';
-import CourseSidebar from '../components/CourseSidebar.vue';
-import CourseBreadcrumb from '../components/CourseBreadcrumb.vue';
-import { getCourseBySlug, getCourseInstructors } from '../api/course';
-import type { CourseDetail } from '../types/course';
+import CourseHero from '@/components/CourseHero.vue';
+import CourseSidebar from '@/components/CourseSidebar.vue';
+import CourseBreadcrumb from '@/components/CourseBreadcrumb.vue';
+import { getCourseBySlug, getCourseInstructors } from '@/api/course';
+import type { CourseDetail } from '@/types/course';
 
 const route = useRoute();
 const tab = ref('descripcion');

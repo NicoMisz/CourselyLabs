@@ -47,8 +47,8 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '../stores/auth'
+import { useRouter, useRoute } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
 const email = ref('')
 const password = ref('')
@@ -57,6 +57,7 @@ const errorMessage = ref('')
 const shaking = ref(false)
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 
 function triggerShake() {
@@ -69,7 +70,8 @@ async function onSubmit() {
   loading.value = true
   try {
     await authStore.login({ email: email.value, password: password.value })
-    router.push('/')
+    const redirect = route.query.redirect as string | undefined
+    router.push(redirect || '/')
   } catch (err: unknown) {
     const status = (err as { response?: { status?: number } })?.response?.status
     if (status === 401) {

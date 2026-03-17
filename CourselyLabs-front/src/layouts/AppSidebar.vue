@@ -13,18 +13,26 @@
   >
     <q-list>
       <q-item-label header>Navegacion</q-item-label>
-      <EssentialLink
+      <q-item
         v-for="link in linksList"
         :key="link.title"
-        v-bind="link"
-      />
+        clickable
+        :to="link.link"
+        active-class="text-primary"
+      >
+        <q-item-section avatar>
+          <q-icon :name="link.icon" />
+        </q-item-section>
+        <q-item-section>
+          <q-item-label>{{ link.title }}</q-item-label>
+          <q-item-label caption>{{ link.caption }}</q-item-label>
+        </q-item-section>
+      </q-item>
     </q-list>
   </q-drawer>
 </template>
 
 <script setup lang="ts">
-import EssentialLink from '../components/EssentialLinks.vue'
-
 defineProps<{
   modelValue: boolean
   mini: boolean
