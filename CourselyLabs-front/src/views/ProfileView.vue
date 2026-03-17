@@ -126,6 +126,7 @@ async function saveProfile() {
   saving.value = true
   try {
     const { data } = await api.put(`/api/users/${user.value?.id}`, {
+      email: user.value?.email,
       firstName: form.firstName,
       lastName: form.lastName,
       bio: form.bio,
@@ -133,7 +134,9 @@ async function saveProfile() {
     authStore.user = data
     editing.value = false
     $q.notify({ type: 'positive', message: 'Perfil actualizado' })
-  } catch {
+  } catch (err: unknown) {
+    const resp = (err as { response?: { status?: number; data?: unknown } })?.response
+    console.error('Profile update error:', resp?.status, resp?.data)
     $q.notify({ type: 'negative', message: 'Error al actualizar el perfil' })
   } finally {
     saving.value = false
