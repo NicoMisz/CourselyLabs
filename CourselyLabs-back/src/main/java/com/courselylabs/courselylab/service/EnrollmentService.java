@@ -1,6 +1,7 @@
 package com.courselylabs.courselylab.service;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
@@ -9,6 +10,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.courselylabs.courselylab.dto.EnrollRequestDTO;
+import com.courselylabs.courselylab.dto.EnrolledCourseDTO;
 import com.courselylabs.courselylab.dto.EnrollmentDTO;
 import com.courselylabs.courselylab.entity.CourseEntity;
 import com.courselylabs.courselylab.entity.EnrollmentEntity;
@@ -92,6 +95,82 @@ public class EnrollmentService {
         return enrollmentMapper.toDTO(entity);
     }
 
+    @Transactional(readOnly = true)
+    public boolean isCurrentUserEnrolled(String email, UUID courseId) {
+        UserEntity user = getUserByEmail(email);
+        return enrollmentRepository.existsByUserIdAndCourseId(user.getId(), courseId);
+    }
+
+    public EnrollmentDTO enrollCurrentUser(String email, EnrollRequestDTO request) {
+        UserEntity user = getUserByEmail(email);
+
+        CourseEntity course = courseRepository.findById(request.getCourseId())
+            .orElseThrow(() -> new ResourceNotFoundException("Course", "id", request.getCourseId()));
+
+        if (!Boolean.TRUE.equals(course.getIsPublished())) {
+        throw new BadRequestException("No puedes inscribirte en un curso no publicado");
+        }
+
+        if (!Boolean.TRUE.equals(course.getIsFree())) {
+        throw new BadRequestException("Este curso requiere pago previo antes de la inscripcion");
+        }
+
+        if (enrollmentRepository.existsByUserIdAndCourseId(user.getId(), course.getId())) {
+        throw new BadRequestException("Ya estas inscrito en este curso");
+        }
+
+        EnrollmentEntity enrollment = new EnrollmentEntity();
+        enrollment.setUser(user);
+        enrollment.setCourse(course);
+        enrollment.setAccessType("free");
+
+        EnrollmentEntity saved = enrollmentRepository.save(enrollment);
+        course.setTotalStudents((course.getTotalStudents() == null ? 0 : course.getTotalStudents()) + 1);
+
+        return enrollmentMapper.toDTO(saved);
+    }
+
+    @Transactional(readOnly = true)
+    public List<EnrolledCourseDTO> findMyCourses(String email) {
+        UserEntity user = getUserByEmail(email);
+
+        return enrollmentRepository.findAllByUserIdOrderByLastAccessedAtDesc(user.getId())
+            .stream()
+            .map(this::toEnrolledCourseDTO)
+            .sorted(Comparator.comparing(
+                EnrolledCourseDTO::getLastAccessedAt,
+                Comparator.nullsLast(Comparator.reverseOrder())
+            ))
+            .toList();
+    }
+
+    private UserEntity getUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+            .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
+    }
+
+    private EnrolledCourseDTO toEnrolledCourseDTO(EnrollmentEntity entity) {
+        CourseEntity course = entity.getCourse();
+        int progressPercent = 0;
+        String progressStatus = "nuevo";
+
+        return new EnrolledCourseDTO(
+            entity.getId(),
+            course.getId(),
+            course.getSlug(),
+            course.getTitle(),
+            course.getShortDescription(),
+            course.getThumbnailUrl(),
+            course.getLevel(),
+            course.getIsFree(),
+            course.getPrice(),
+            progressPercent,
+            progressStatus,
+            entity.getEnrolledAt(),
+            entity.getLastAccessedAt()
+        );
+    }
+
     public EnrollmentDTO updateLastAccessed(UUID id) {
         EnrollmentEntity entity = enrollmentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Enrollment", "id", id));
@@ -111,5 +190,15 @@ public class EnrollmentService {
             throw new ResourceNotFoundException("Enrollment", "id", id);
         }
         enrollmentRepository.deleteById(id);
+    }
+
+    public void updateLastAccessForCurrentUser(String email, UUID courseId) {
+    UserEntity user = getUserByEmail(email);
+
+    EnrollmentEntity enrollment = enrollmentRepository.findByUserIdAndCourseId(user.getId(), courseId)
+        .orElseThrow(() -> new ResourceNotFoundException("Enrollment", "courseId", courseId));
+
+    enrollment.setLastAccessedAt(LocalDateTime.now());
+    enrollmentRepository.save(enrollment);
     }
 }
