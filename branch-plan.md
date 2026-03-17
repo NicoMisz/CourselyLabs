@@ -19,12 +19,14 @@ Cada sección corresponde a una rama de git independiente desde `develop`. Las r
 - [x] **JWT + Spring Security**: access token (15 min) + refresh token (7 días en DB), filtro stateless, RBAC
 - [x] **Control de acceso**: rutas admin-only (listar usuarios, verificar, eliminar), rutas públicas (cursos, categorías)
 - [x] **GlobalExceptionHandler**: handlers para `ResourceNotFoundException`, `BadRequestException`, `UnauthorizedException`, validación Jakarta
+- [x] **Flyway**: migración V1 con schema completo (7 tablas), `baseline-on-migrate=true`
+- [x] **JWT secret**: fallback para dev, sobreescribir con `JWT_SECRET` en produccion
 
 ### Frontend — Implementado ✅
 
 - [x] **Auth store (Pinia)** — `stores/auth.ts`: estado, acciones (login, register, logout), persistencia en localStorage
 - [x] **Axios configurado** — `api/axios.ts`: baseURL desde `.env`, interceptor Bearer token, interceptor de refresh automático en 401
-- [x] **Router guards** — `router/index.ts`: `meta.requiresAuth`, `beforeEach` con redirección a `/login`
+- [x] **Router guards** — `router/index.ts`: `meta.requiresAuth`, `beforeEach` con redirección a `/login?redirect=`, `afterEach` para `document.title`
 - [x] **formLogin.vue**: conectado con `authStore.login()`, validación, manejo de errores, shake animation
 - [x] **formRegister.vue**: conectado con `authStore.register()`, aceptación de T&C
 - [x] **cardTerminosCondiciones.vue**: modal de términos y condiciones (8 secciones)
@@ -32,9 +34,20 @@ Cada sección corresponde a una rama de git independiente desde `develop`. Las r
 - [x] **AppSidebar.vue**: navegación lateral (Home, Cursos, Carrito)
 - [x] **AppFooter.vue**: footer con copyright
 - [x] **MainLayout.vue / AltLayout.vue**: layouts con header + sidebar + footer
-- [x] **ProfileView.vue**: vista de perfil con datos del usuario y badge de rol
-- [x] **CoursesView.vue**: listado de cursos en grid responsivo — *pendiente conectar al axios configurado*
+- [x] **ProfileView.vue**: vista de perfil con datos del usuario, badge de rol, formulario de edicion inline (PUT /api/users/{id})
+- [x] **CoursesView.vue**: listado de cursos con `CourseCard`, `q-skeleton`, composable `useCourses`
+- [x] **HomeView.vue**: landing real con hero, cursos destacados, categorias, CTA instructor, "Continuar aprendiendo"
+- [x] **NotFoundView.vue**: pagina 404 con boton "Volver al inicio"
+- [x] **CourseCard.vue**: card reutilizable con thumbnail fallback, LevelBadge, PriceBadge, rating, hover
+- [x] **composables/useCourses.ts**: logica de fetch separada del componente
 - [x] **Tipos TypeScript** — `types/auth.ts`: `User`, `AuthResponse`, `LoginRequest`, `RegisterRequest`
+- [x] **Tipos TypeScript** — `types/course.ts`: `Course`, `CourseDetail`, `InstructorSummary`
+- [x] **Imports**: todos migrados a alias `@` (sin `../`)
+- [x] **API course** — `api/course.ts`: `getCourseBySlug()`, `getCourseInstructors()` usando axios configurado
+- [x] **CourseDetailView.vue**: vista `/cursos/:slug` con skeleton, 404, error retry, tabs y sidebar
+- [x] **CourseHero.vue**: thumbnail con fallback gradiente, badges, contador formateado, fecha
+- [x] **CourseSidebar.vue**: resumen del curso con botón de inscripción (placeholder)
+- [x] **LevelBadge.vue** / **PriceBadge.vue** / **CourseBreadcrumb.vue**: componentes reutilizables
 
 ---
 
@@ -61,7 +74,79 @@ Cierre de vulnerabilidades de seguridad en backend y mejora del feedback de erro
 
 ---
 
-## 2. `feature/course-detail-page` 🆕 PENDIENTE
+## 2. `chore/codebase-cleanup` ✅ COMPLETADO
+
+**Prioridad:** Alta — fundacional, debe ir antes que cualquier feature
+**Dependencias:** `fix/security-improvements`
+
+### Descripción
+Limpieza del scaffold inicial de Vue, corrección de patrones de código y funcionalidades básicas de la app (HomeView real, 404, perfil editable) que no encajan en ninguna feature específica pero son necesarias antes de construir encima.
+
+### Diagnóstico del estado actual
+
+| Archivo | Estado |
+|---|---|
+| `CoursesView.vue` | ✅ Usa `useCourses` composable + `CourseCard` + `q-skeleton` |
+| `HomeView.vue` | ✅ Landing real: hero, cursos destacados, categorias, CTA instructor |
+| `router/routes.ts` | ✅ Lazy loading, `meta.title`, alias `@` en imports |
+| `router/index.ts` | ✅ `afterEach` para `document.title`, redirect after login con `?redirect=` |
+| Imports | ✅ Migrados a alias `@` en todo el proyecto |
+| Archivos scaffold | ✅ Eliminados (HelloWorld, TheWelcome, WelcomeItem, EssentialLinks, headerComp, icons/, pruebaView, AboutView) |
+| `ProfileView.vue` | ✅ Con formulario de edicion inline (PUT /api/users/{id}) |
+| `application.properties` | ✅ JWT secret con fallback para dev (sobreescribir en produccion) |
+| Flyway | ✅ Dependencia + V1 migration con schema completo |
+| Spring Boot | ℹ️ `4.1.0-M1` — se actualizará cuando salga la GA |
+
+### Tareas
+
+#### Frontend — Limpieza de archivos sin uso
+- [x] Eliminar `components/HelloWorld.vue`, `TheWelcome.vue`, `WelcomeItem.vue`, `EssentialLinks.vue`, `headerComp.vue`, carpeta `icons/`
+- [x] Eliminar `views/pruebaView.vue` (importa componentes que no existen — error en runtime)
+- [x] Reemplazar `views/AboutView.vue` con `views/NotFoundView.vue` — pagina 404 real con boton "Volver al inicio"
+
+#### Frontend — Arquitectura de imports
+- [x] Usar alias `@` en todos los imports del proyecto
+- [x] Añadir interfaz `Course` a `src/types/course.ts` (extraida de la inline en `CoursesView.vue`)
+- [x] Crear `src/composables/useCourses.ts` — logica de fetch separada del componente
+
+#### Frontend — CoursesView refactor
+- [x] Reemplazar `import axios from 'axios'` por composable `useCourses` (usa `api` de `@/api/axios`)
+- [x] Sustituir `q-spinner` por 6 `q-skeleton` cards animadas mientras carga
+- [x] Crear `components/CourseCard.vue` — componente reutilizable: thumbnail (con fallback), titulo, `LevelBadge`, `PriceBadge`, rating
+
+#### Frontend — Router
+- [x] Lazy loading con alias `@` en todas las rutas
+- [x] Añadir `meta: { title: 'Cursos — CourselyLabs' }` a cada ruta
+- [x] `router/index.ts`: `router.afterEach` que actualiza `document.title` con `to.meta.title`
+- [x] Redirect after login: `beforeEach` redirige a `/login?redirect=${to.fullPath}`; `formLogin.vue` usa `route.query.redirect`
+
+#### Frontend — HomeView real
+- [x] **Hero section**: titulo "Aprende con CourselyLabs", subtitulo, boton "Explorar cursos" (`$accent`)
+- [x] **Seccion "Cursos destacados"**: llamada a `/api/courses/all`, grid de `CourseCard` (primeros 4)
+- [x] **Seccion "Categorias"**: llamada a `/api/categories`, chips clickables → `/cursos?cat=id`
+- [x] **Seccion CTA instructor**: "¿Quieres enseñar?" + boton "Empieza aqui" → `/instructor`
+- [x] **Si autenticado**: seccion "Continuar aprendiendo" con el ultimo curso accedido
+
+#### Frontend — Perfil con edicion
+- [x] `ProfileView.vue`: toggle "Editar perfil" / "Cancelar"
+- [x] Formulario de edicion inline: `firstName`, `lastName`, `bio`
+- [x] Llamada `PUT /api/users/{id}` (con el token del usuario logueado)
+- [x] Validacion: nombre min 2 chars; `q-notify` "Perfil actualizado" al guardar exitoso
+
+#### Backend
+- [x] `application.properties`: JWT secret con fallback para dev, sobreescribir con `JWT_SECRET` en produccion
+- [x] Crear `src/main/resources/db/migration/V1__initial_schema.sql` con el DDL de las 7 tablas
+- [x] Añadir dependencia Flyway (`flyway-core` + `flyway-database-postgresql`) al `pom.xml` + `spring.flyway.enabled=true` + `baseline-on-migrate=true`
+
+#### Archivos creados
+- `views/NotFoundView.vue` ✅
+- `components/CourseCard.vue` ✅
+- `composables/useCourses.ts` ✅
+- `src/main/resources/db/migration/V1__initial_schema.sql` ✅
+
+---
+
+## 3. `feature/course-detail-page` ⚠️ ARREGLAR
 
 **Prioridad:** Alta — Página central del producto
 **Dependencias:** Ninguna
@@ -73,48 +158,53 @@ Página individual de un curso en `/cursos/:slug` con toda su información organ
 
 | Elemento | Estado |
 |---|---|
-| `GET /api/courses/slug/{slug}` | Existe en backend |
-| `GET /api/courses/{id}/instructors` | Revisar si está expuesto |
-| DTO enriquecido con media de reviews y total de estudiantes | Falta |
-| Vista `/cursos/:slug` en frontend | No existe — ruta no definida |
-| Tipo `Course` completo en `types/` | Solo campo inline en `CoursesView.vue` |
+| `GET /api/courses/slug/{slug}` | ✅ Existe — devuelve 404 si no existe |
+| `GET /api/courses/{id}/instructors` | ✅ Creado |
+| `CourseDetailDTO` con media de reviews, total de estudiantes e instructores | ✅ Implementado |
+| Vista `/cursos/:slug` en frontend | ✅ Creada (`CourseDetailView.vue`) |
+| `types/course.ts` con `CourseDetail` e `InstructorSummary` | ✅ Creado |
+| Tabs como componentes separados | ⚠️ Inline en `CourseDetailView.vue` — pendiente extraer |
+| Fecha de actualización relativa | ⚠️ Muestra fecha formateada, no relativa ("hace 3 días") |
+| Scroll suave a tabs | ❌ No implementado |
 
 ### Tareas
 
 #### Backend
-- [ ] Verificar o crear `GET /api/courses/{id}/instructors`
-- [ ] Añadir al DTO de curso: media de reviews, total de estudiantes inscritos, lista de instructores
-- [ ] `GET /api/courses/slug/{slug}` debe devolver 404 con mensaje claro si no existe
+- [x] Verificar o crear `GET /api/courses/{id}/instructors`
+- [x] Añadir al DTO de curso: media de reviews, total de estudiantes inscritos, lista de instructores
+- [x] `GET /api/courses/slug/{slug}` debe devolver 404 con mensaje claro si no existe
 
 #### Frontend — Tipos
-- [ ] Crear `types/course.ts` con interfaz `Course` completa (id, slug, title, shortDescription, description, level, isFree, price, thumbnailUrl, categoryId, totalStudents, avgRating, updatedAt, instructors)
+- [x] Crear `types/course.ts` con interfaz `CourseDetail` completa (id, slug, title, shortDescription, description, level, isFree, price, thumbnailUrl, categoryName, studentsCount, averageRating, updatedAt, instructors)
 
 #### Frontend — Ruta y vista
-- [ ] Añadir `{ path: '/cursos/:slug', component: () => import('views/CourseDetailView.vue') }` en `routes.ts`
-- [ ] Crear `views/CourseDetailView.vue` — contenedor principal con llamada a API y manejo de loading/error/404
+- [x] Añadir `{ path: '/cursos/:slug', component: () => import('views/CourseDetailView.vue') }` en `routes.ts`
+- [x] Crear `views/CourseDetailView.vue` — contenedor principal con llamada a API y manejo de loading/error/404
 
 #### Frontend — Componentes
-- [ ] `CourseHero.vue` — thumbnail (con fallback gradiente `$primary → $accent`), título, descripción corta, nivel badge, precio/gratis badge, botón de inscripción
-- [ ] `CourseSidebar.vue` — sticky (`top: 80px`), precio, nivel, nº estudiantes, duración total, botón de inscripción. En mobile se colapsa bajo el hero
-- [ ] `CourseTabDescription.vue` — descripción completa, "Lo que aprenderás", prerequisitos
-- [ ] `CourseTabContent.vue` — árbol de secciones/lecciones (placeholder colapsable hasta que existan secciones)
-- [ ] `CourseTabInstructors.vue` — cards con foto, nombre, bio de cada instructor
-- [ ] `CourseTabReviews.vue` — placeholder que se completará en `feature/reviews-frontend`
-- [ ] `LevelBadge.vue` — chip reutilizable (Principiante → `$positive`, Intermedio → `$warning`, Avanzado → `$negative`)
-- [ ] `PriceBadge.vue` — chip reutilizable (Gratis → `$positive`, precio → `$accent`)
+- [x] `CourseHero.vue` — thumbnail (con fallback gradiente `$primary → $accent`), título, descripción corta, nivel badge, precio/gratis badge, contador de estudiantes formateado
+- [x] `CourseSidebar.vue` — nivel, nº estudiantes, duración, valoración, botón inscripción (placeholder)
+- [ ] `CourseTabDescription.vue` — extraer del inline de `CourseDetailView`: descripción completa, "Lo que aprenderás", prerequisitos
+- [ ] `CourseTabContent.vue` — extraer del inline: árbol de secciones/lecciones (placeholder colapsable)
+- [ ] `CourseTabInstructors.vue` — extraer del inline: cards con foto, nombre, bio
+- [ ] `CourseTabReviews.vue` — extraer del inline: placeholder que se completará en `feature/reviews-frontend`
+- [x] `LevelBadge.vue` — chip reutilizable (Principiante → `$positive`, Intermedio → `$warning`, Avanzado → `$negative`)
+- [x] `PriceBadge.vue` — chip reutilizable (Gratis → `$positive`, precio → `$accent`)
+- [x] `CourseBreadcrumb.vue` — `Home > Cursos > [Categoría] > [Título]`
+- [x] `api/course.ts` — `getCourseBySlug()` y `getCourseInstructors()` usando axios configurado
 
 #### UX/UI
-- [ ] Skeleton loading con `q-skeleton` para hero, tabs y sidebar mientras carga la API (nunca spinner)
-- [ ] Breadcrumb: `Home > Cursos > [Categoría] > [Título]` con `q-breadcrumbs`
+- [x] Skeleton loading con `q-skeleton` para hero, tabs y sidebar mientras carga la API
+- [x] Breadcrumb con categoría
 - [ ] Scroll suave a las tabs con `scrollIntoView({ behavior: 'smooth' })` al hacer click
-- [ ] Meta tags OG dinámicos (`og:title`, `og:description`, `og:image`) para compartir en redes
-- [ ] Fecha de última actualización relativa ("Actualizado hace 3 días") con icono de reloj
-- [ ] Contador de estudiantes formateado ("1.2K estudiantes" si > 1000)
-- [ ] Página "Curso no encontrado" con botón "Explorar cursos" para slugs inexistentes
+- [x] Meta tags OG dinámicos (`og:title`, `og:description`, `og:image`)
+- [ ] Fecha de última actualización **relativa** ("Actualizado hace 3 días") — actualmente muestra la fecha formateada (`toLocaleDateString`)
+- [x] Contador de estudiantes formateado ("1.2K estudiantes" si > 1000)
+- [x] Página "Curso no encontrado" con botón "Explorar cursos"
 
 ---
 
-## 3. `feature/enrollment-flow` 🆕 PENDIENTE
+## 4. `feature/enrollment-flow` 🆕 PENDIENTE
 
 **Prioridad:** Alta
 **Dependencias:** `feature/course-detail-page`
@@ -154,7 +244,7 @@ Inscripción de usuarios en cursos gratuitos, vista "Mis cursos" y conexión del
 
 ---
 
-## 4. `feature/course-sections-lessons` 🆕 PENDIENTE
+## 5. `feature/course-sections-lessons` 🆕 PENDIENTE
 
 **Prioridad:** Alta
 **Dependencias:** `feature/enrollment-flow`
@@ -200,7 +290,7 @@ Entidades de secciones y lecciones en backend y vista de lección en frontend co
 
 ---
 
-## 5. `feature/downloadable-resources` 🆕 PENDIENTE
+## 6. `feature/downloadable-resources` 🆕 PENDIENTE
 
 **Prioridad:** Media
 **Dependencias:** `feature/course-sections-lessons`
@@ -240,7 +330,7 @@ Archivos descargables adjuntos a lecciones (PDFs, código fuente, assets). Desca
 
 ---
 
-## 6. `feature/student-progress` 🆕 PENDIENTE
+## 7. `feature/student-progress` 🆕 PENDIENTE
 
 **Prioridad:** Alta
 **Dependencias:** `feature/course-sections-lessons`
@@ -275,7 +365,7 @@ Tracking del progreso del estudiante: marcar lecciones como completadas, guardar
 
 ---
 
-## 7. `feature/course-prerequisites` 🆕 PENDIENTE
+## 8. `feature/course-prerequisites` 🆕 PENDIENTE
 
 **Prioridad:** Media
 **Dependencias:** `feature/student-progress`
@@ -312,7 +402,7 @@ Un curso puede requerir haber completado otro al 100% antes de permitir la inscr
 
 ---
 
-## 8. `feature/reviews-frontend` 🆕 PENDIENTE
+## 9. `feature/reviews-frontend` 🆕 PENDIENTE
 
 **Prioridad:** Media
 **Dependencias:** `feature/course-detail-page`, `feature/enrollment-flow`
@@ -345,7 +435,7 @@ Interfaz completa para el sistema de reviews (backend ya implementado en `Review
 
 ---
 
-## 9. `feature/assessments` 🆕 PENDIENTE
+## 10. `feature/assessments` 🆕 PENDIENTE
 
 **Prioridad:** Media
 **Dependencias:** `feature/course-sections-lessons`, `feature/student-progress`
@@ -400,13 +490,105 @@ Sistema de evaluación con cuestionarios autocorregidos y entregas de proyectos.
 
 ---
 
-## 10. `feature/payments-stripe` 🆕 PENDIENTE
+## 11. `feature/payments-stripe` 🆕 PENDIENTE
 
 **Prioridad:** Alta
 **Dependencias:** `feature/enrollment-flow`
 
 ### Descripción
 Integración completa con Stripe: pago único por curso, suscripciones mensuales/anuales y cupones de descuento. Al completar el pago se crea el enrollment automáticamente.
+
+### Configuración inicial — Stripe test mode
+
+Pasos para tener Stripe funcionando desde cero, antes de escribir ningún código.
+
+#### 1. Crear cuenta y obtener claves test
+1. Registrarse en [dashboard.stripe.com](https://dashboard.stripe.com)
+2. Activar **modo test** (toggle en el dashboard, esquina superior derecha)
+3. Ir a *Developers → API keys* y copiar:
+   - `pk_test_...` — Publishable key (va al frontend, puede ser pública)
+   - `sk_test_...` — Secret key (va al backend, **nunca** al frontend ni al repositorio)
+
+#### 2. Backend — Añadir dependencia al `pom.xml`
+```xml
+<dependency>
+    <groupId>com.stripe</groupId>
+    <artifactId>stripe-java</artifactId>
+    <version>26.3.0</version>
+</dependency>
+```
+
+#### 3. Backend — Variables de entorno (sin valores por defecto)
+```properties
+# application.properties — sin fallbacks; la app falla al arrancar si falta alguna
+stripe.secret-key=${STRIPE_SECRET_KEY}
+stripe.public-key=${STRIPE_PUBLIC_KEY}
+stripe.webhook-secret=${STRIPE_WEBHOOK_SECRET}
+stripe.monthly-price-id=${STRIPE_MONTHLY_PRICE_ID}
+stripe.annual-price-id=${STRIPE_ANNUAL_PRICE_ID}
+```
+Crear `.env.local` (en `.gitignore`) o exportar en el shell:
+```bash
+export STRIPE_SECRET_KEY=sk_test_...
+export STRIPE_PUBLIC_KEY=pk_test_...
+export STRIPE_WEBHOOK_SECRET=whsec_...   # se obtiene en el paso 5
+```
+
+#### 4. Backend — `StripeConfig.java`
+```java
+@Configuration
+public class StripeConfig {
+    @Value("${stripe.secret-key}")
+    private String secretKey;
+
+    @PostConstruct
+    public void init() {
+        Stripe.apiKey = secretKey;
+    }
+}
+```
+
+#### 5. Webhooks locales con Stripe CLI
+Necesario para probar el flujo completo (el evento `checkout.session.completed` que crea el enrollment).
+```bash
+# Instalar en Fedora
+sudo dnf install stripe
+# o descargar el binario de github.com/stripe/stripe-cli/releases
+
+# Autenticarse (abre el navegador)
+stripe login
+
+# Reenviar webhooks al backend local → imprime el webhook secret local
+stripe listen --forward-to localhost:8080/api/payments/webhook
+# → Copiar el  whsec_... que imprime y usarlo como STRIPE_WEBHOOK_SECRET
+```
+
+#### 6. Frontend — Variable de entorno
+```bash
+# CourselyLabs-front/.env.local
+VITE_STRIPE_PUBLIC_KEY=pk_test_xxxxx
+```
+> Con Stripe Checkout (redirect), el frontend solo redirige a la URL devuelta por el backend. No necesita el SDK de Stripe.js.
+
+#### 7. Flujo mínimo end-to-end para verificar que funciona
+```
+1. "Comprar curso"  →  POST /api/payments/checkout  →  recibe { url }
+2. Frontend redirige a url (página hosted de Stripe)
+3. Pagar con tarjeta de prueba (ver paso 8)
+4. Stripe → webhook checkout.session.completed → backend crea enrollment
+5. Stripe redirige a success_url (/pago/exito?session_id=...)
+```
+
+#### 8. Tarjetas de prueba
+| Escenario | Número |
+|---|---|
+| Pago correcto | `4242 4242 4242 4242` |
+| Requiere autenticación 3DS | `4000 0025 0000 3155` |
+| Tarjeta rechazada | `4000 0000 0000 9995` |
+
+> Fecha: cualquier futura · CVV: cualquier 3 dígitos · CP: cualquier 5 dígitos
+
+---
 
 ### Tareas
 
@@ -460,7 +642,7 @@ Integración completa con Stripe: pago único por curso, suscripciones mensuales
 
 ---
 
-## 11. `feature/instructor-dashboard` 🆕 PENDIENTE
+## 12. `feature/instructor-dashboard` 🆕 PENDIENTE
 
 **Prioridad:** Media-Alta
 **Dependencias:** `feature/course-sections-lessons`
@@ -495,7 +677,7 @@ Panel para que los instructores creen y gestionen sus cursos, secciones, leccion
 
 ---
 
-## 12. `feature/search-filters` 🆕 PENDIENTE
+## 13. `feature/search-filters` 🆕 PENDIENTE
 
 **Prioridad:** Media
 **Dependencias:** Ninguna
@@ -539,7 +721,7 @@ Búsqueda con debounce, filtros laterales (categoría, nivel, precio, rating), s
 
 ---
 
-## 13. `feature/forums` 🆕 PENDIENTE
+## 14. `feature/forums` 🆕 PENDIENTE
 
 **Prioridad:** Media
 **Dependencias:** `feature/course-detail-page`
@@ -581,7 +763,7 @@ Foro de discusión por curso. Un foro por curso, hilos con respuestas, posibilid
 
 ---
 
-## 14. `feature/messaging` 🆕 PENDIENTE
+## 15. `feature/messaging` 🆕 PENDIENTE
 
 **Prioridad:** Media
 **Dependencias:** Ninguna
@@ -628,7 +810,7 @@ Mensajería privada entre usuarios. Conversaciones bilaterales, mensajes en tiem
 
 ---
 
-## 15. `feature/notifications` 🆕 PENDIENTE
+## 16. `feature/notifications` 🆕 PENDIENTE
 
 **Prioridad:** Media
 **Dependencias:** `feature/forums`, `feature/messaging`
@@ -680,7 +862,7 @@ Sistema de notificaciones en tiempo real via WebSocket (STOMP). Campana en el he
 
 ---
 
-## 16. `feature/admin-dashboard` 🆕 PENDIENTE
+## 17. `feature/admin-dashboard` 🆕 PENDIENTE
 
 **Prioridad:** Media
 **Dependencias:** Ninguna técnica (puede hacerse en paralelo con otras features)
@@ -732,26 +914,84 @@ Panel de administración accesible solo para rol `ADMIN`. Gestión de usuarios, 
 
 ---
 
+## 18. `chore/deployment` 🆕 PENDIENTE
+
+**Prioridad:** Media — para cuando la app esté lista para mostrar
+**Dependencias:** Ninguna técnica (puede prepararse en paralelo)
+
+### Descripción
+Configuración para desplegar toda la stack en un VPS usando Docker Compose. Un único comando para levantar backend, frontend, base de datos y proxy inverso en producción.
+
+### Stack de despliegue propuesto
+
+| Componente | Tecnología |
+|---|---|
+| Servidor | VPS Linux — Hetzner CX21 (~5€/mes) o DigitalOcean Droplet |
+| Contenedores | Docker + Docker Compose |
+| Proxy inverso | Nginx (SSL termination, assets estáticos) |
+| SSL | Let's Encrypt con Certbot (gratuito, renovación automática) |
+| CI/CD | GitHub Actions (build → push imagen → deploy) |
+
+### Tareas
+
+#### Docker
+- [ ] `CourselyLabs-back/Dockerfile` — multi-stage: build con Maven + imagen final `eclipse-temurin:21-jre-alpine`
+- [ ] `CourselyLabs-front/Dockerfile` — multi-stage: build con Node + imagen final `nginx:alpine` con los estáticos
+- [ ] `docker-compose.prod.yml` en la raíz del monorepo con servicios:
+  - `db` (PostgreSQL 15)
+  - `redis` (Redis 7)
+  - `backend` (Spring Boot)
+  - `frontend` (Nginx sirviendo los estáticos del build de Vue)
+  - `nginx` (proxy inverso: 80→443, `/api/` → backend, `/` → frontend)
+- [ ] `.env.prod.example` — plantilla documentada con todas las variables de producción
+- [ ] `docker-compose.override.yml` para desarrollo local (hot-reload, puertos expuestos)
+
+#### Nginx
+- [ ] `nginx/nginx.conf` — proxy inverso con SSL, gzip, cache de assets estáticos, headers de seguridad (HSTS, X-Frame-Options, CSP)
+- [ ] `nginx/default.conf` — vhosts: `api.courselylabs.com → backend:8080`, `courselylabs.com → frontend:80`
+
+#### GitHub Actions
+- [ ] `.github/workflows/deploy.yml` — en push a `main`:
+  1. Build y test del backend (`mvn test`)
+  2. Build del frontend (`npm run build`)
+  3. Build de imágenes Docker y push a GHCR o Docker Hub
+  4. SSH al servidor y `docker compose pull && docker compose up -d`
+- [ ] Secrets en GitHub: `SERVER_HOST`, `SERVER_USER`, `SERVER_SSH_KEY`, `DOCKER_USERNAME`, `DOCKER_PASSWORD`
+
+#### Guía de primer despliegue
+- [ ] `DEPLOYMENT.md` con pasos completos:
+  1. Provisionar servidor VPS (Ubuntu 22.04 LTS)
+  2. Instalar Docker + Docker Compose
+  3. Clonar repositorio
+  4. Copiar `.env.prod.example` a `.env.prod` y rellenar variables
+  5. `docker compose -f docker-compose.prod.yml up -d`
+  6. Configurar DNS apuntando al servidor
+  7. Obtener SSL con Certbot: `certbot --nginx -d courselylabs.com`
+
+---
+
 ## Orden de merge sugerido
 
 ```
 develop
- ├── fix/security-improvements        ✅ Completado — merge inmediato
- ├── feature/course-detail-page       (merge 2)
- ├── feature/enrollment-flow          (merge 3, tras course-detail-page)
- ├── feature/course-sections-lessons  (merge 4, tras enrollment-flow)
- ├── feature/downloadable-resources   (merge 5, tras course-sections-lessons)
- ├── feature/student-progress         (merge 6, tras course-sections-lessons)
- ├── feature/course-prerequisites     (merge 7, tras student-progress)
- ├── feature/reviews-frontend         (merge 8, tras course-detail-page + enrollment-flow)
- ├── feature/assessments              (merge 9, tras course-sections-lessons + student-progress)
- ├── feature/payments-stripe          (merge 10, tras enrollment-flow)
- ├── feature/instructor-dashboard     (merge 11, tras course-sections-lessons)
- ├── feature/search-filters           (merge 12, independiente)
- ├── feature/forums                   (merge 13, tras course-detail-page)
- ├── feature/messaging                (merge 14, independiente)
- ├── feature/notifications            (merge 15, tras forums + messaging)
- └── feature/admin-dashboard          (merge 16, independiente)
+ ├── fix/security-improvements        ✅ Completado
+ ├── chore/codebase-cleanup           ✅ Completado
+ ├── feature/course-detail-page       ✅ Completado (pendiente arreglos menores)
+ ├── feature/enrollment-flow          (merge 4, tras course-detail-page)
+ ├── feature/course-sections-lessons  (merge 5, tras enrollment-flow)
+ ├── feature/downloadable-resources   (merge 6, tras course-sections-lessons)
+ ├── feature/student-progress         (merge 7, tras course-sections-lessons)
+ ├── feature/course-prerequisites     (merge 8, tras student-progress)
+ ├── feature/reviews-frontend         (merge 9, tras course-detail-page + enrollment-flow)
+ ├── feature/assessments              (merge 10, tras course-sections-lessons + student-progress)
+ ├── feature/payments-stripe          (merge 11, tras enrollment-flow)
+ ├── feature/instructor-dashboard     (merge 12, tras course-sections-lessons)
+ ├── feature/search-filters           (merge 13, independiente)
+ ├── feature/forums                   (merge 14, tras course-detail-page)
+ ├── feature/messaging                (merge 15, independiente)
+ ├── feature/notifications            (merge 16, tras forums + messaging)
+ ├── feature/admin-dashboard          (merge 17, independiente)
+ └── chore/deployment                 (merge 18 — en cualquier momento)
 ```
 
 ---
