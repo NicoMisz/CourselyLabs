@@ -1,62 +1,58 @@
 <template>
-  <div style="padding: 2rem;">
-    <h4>Cursos</h4>
+  <q-page class="q-pa-md q-pa-lg-lg">
+    <div class="content-wrap">
+      <h4 class="q-mt-none q-mb-md">Cursos</h4>
 
-    <q-spinner v-if="loading" size="3em" color="primary" />
+      <template v-if="loading">
+        <div class="row q-col-gutter-md">
+          <div v-for="n in 6" :key="n" class="col-12 col-sm-6 col-md-4">
+            <q-card>
+              <q-skeleton type="rect" height="160px" />
+              <q-card-section>
+                <q-skeleton type="text" width="70%" />
+                <q-skeleton type="text" width="90%" class="q-mt-xs" />
+              </q-card-section>
+              <q-card-section class="q-pt-none">
+                <q-skeleton type="QChip" width="60px" />
+              </q-card-section>
+            </q-card>
+          </div>
+        </div>
+      </template>
 
-    <q-banner v-else-if="error" class="bg-negative text-white q-mb-md">
-      {{ error }}
-    </q-banner>
+      <q-banner v-else-if="error" rounded class="bg-red-1 text-negative q-mb-md" inline-actions>
+        <template #avatar>
+          <q-icon name="warning" />
+        </template>
+        {{ error }}
+        <template #action>
+          <q-btn flat color="negative" label="Reintentar" @click="fetchCourses" />
+        </template>
+      </q-banner>
 
-    <div v-else class="row q-col-gutter-md">
-      <div v-for="course in courses" :key="course.id" class="col-12 col-sm-6 col-md-4">
-        <q-card class="cursor-pointer" @click="$router.push(`/cursos/${course.slug}`)">
-          <q-card-section>
-            <div class="text-h6">{{ course.title }}</div>
-            <div class="text-subtitle2 text-grey">{{ course.level }}</div>
-          </q-card-section>
-          <q-card-section>
-            <p>{{ course.shortDescription }}</p>
-            <q-badge :color="course.isFree ? 'green' : 'orange'">
-              {{ course.isFree ? 'Gratis' : `${course.price} €` }}
-            </q-badge>
-          </q-card-section>
-        </q-card>
-      </div>
+      <template v-else>
+        <div v-if="courses.length === 0" class="text-center q-pa-xl">
+          <q-icon name="sym_o_school" size="64px" color="grey-5" />
+          <div class="text-h6 text-grey-7 q-mt-md">No hay cursos disponibles</div>
+          <p class="text-grey-6">Vuelve pronto, estamos preparando nuevo contenido.</p>
+        </div>
 
-      <div v-if="courses.length === 0" class="col-12">
-        <p>No hay cursos disponibles.</p>
-      </div>
+        <div v-else class="row q-col-gutter-md">
+          <div v-for="course in courses" :key="course.id" class="col-12 col-sm-6 col-md-4">
+            <CourseCard :course="course" />
+          </div>
+        </div>
+      </template>
     </div>
-  </div>
+  </q-page>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import axios from 'axios'
+import { onMounted } from 'vue'
+import CourseCard from '@/components/CourseCard.vue'
+import { useCourses } from '@/composables/useCourses'
 
-interface Course {
-  id: string
-  slug: string
-  title: string
-  shortDescription: string
-  level: string
-  isFree: boolean
-  price: number
-}
+const { courses, loading, error, fetchCourses } = useCourses()
 
-const courses = ref<Course[]>([])
-const loading = ref(true)
-const error = ref('')
-
-onMounted(async () => {
-  try {
-    const { data } = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/courses/all`)
-    courses.value = data
-  } catch (e) {
-    error.value = 'Error al cargar los cursos. Asegúrate de que el backend esté corriendo.'
-  } finally {
-    loading.value = false
-  }
-})
+onMounted(fetchCourses)
 </script>

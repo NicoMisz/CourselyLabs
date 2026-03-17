@@ -58,6 +58,9 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/users").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PATCH, "/api/users/*/verify").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/users/*").hasRole("ADMIN")
+                // Cualquier usuario autenticado puede actualizar su propio perfil
+                .requestMatchers(HttpMethod.PUT, "/api/users/*").authenticated()
+                // El resto requiere autenticación
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
