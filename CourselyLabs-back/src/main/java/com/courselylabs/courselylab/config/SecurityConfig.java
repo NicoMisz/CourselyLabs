@@ -1,7 +1,8 @@
 package com.courselylabs.courselylab.config;
 
-import com.courselylabs.courselylab.security.JwtAuthenticationFilter;
-import com.courselylabs.courselylab.security.UserDetailsServiceImpl;
+import java.util.Arrays;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,8 +23,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays;
-import java.util.List;
+import com.courselylabs.courselylab.security.JwtAuthenticationFilter;
+import com.courselylabs.courselylab.security.UserDetailsServiceImpl;
 
 @Configuration
 @EnableWebSecurity
@@ -34,9 +35,11 @@ public class SecurityConfig {
     private final UserDetailsServiceImpl userDetailsService;
     private final String[] allowedOrigins;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
-                          UserDetailsServiceImpl userDetailsService,
-                          @Value("${cors.allowed-origins}") String[] allowedOrigins) {
+    public SecurityConfig(
+        JwtAuthenticationFilter jwtAuthenticationFilter,
+        UserDetailsServiceImpl userDetailsService,
+        @Value("${cors.allowed-origins}") String[] allowedOrigins
+    ) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.userDetailsService = userDetailsService;
         this.allowedOrigins = allowedOrigins;
@@ -49,12 +52,9 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // Rutas públicas de autenticación
                 .requestMatchers("/api/auth/**").permitAll()
-                // Listados públicos de cursos y categorías
                 .requestMatchers(HttpMethod.GET, "/api/courses/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
-                // Solo admin puede listar todos los usuarios o verificarlos
                 .requestMatchers(HttpMethod.GET, "/api/users").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PATCH, "/api/users/*/verify").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/users/*").hasRole("ADMIN")

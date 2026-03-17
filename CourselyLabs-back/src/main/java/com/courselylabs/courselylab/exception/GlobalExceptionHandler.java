@@ -1,5 +1,9 @@
 package com.courselylabs.courselylab.exception;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -9,9 +13,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
+import com.courselylabs.courselylab.dto.ApiErrorDTO;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -25,8 +27,40 @@ public class GlobalExceptionHandler {
         body.put("message", ex.getMessage());
         return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
     }
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ApiErrorDTO> handleBadRequestException(BadRequestException ex) {
+        ApiErrorDTO body = new ApiErrorDTO(
+            LocalDateTime.now(),
+            HttpStatus.BAD_REQUEST.value(),
+            "Bad Request",
+            "ENROLLMENT_BAD_REQUEST",
+            ex.getMessage()
+        );
+        return ResponseEntity.badRequest().body(body);
+    }
+
+    @ExceptionHandler(EnrollmentAlreadyExistsException.class)
+    public ResponseEntity<ApiErrorDTO> handleEnrollmentAlreadyExists(EnrollmentAlreadyExistsException ex) {
+        ApiErrorDTO body = new ApiErrorDTO(
+            LocalDateTime.now(),
+            HttpStatus.CONFLICT.value(),
+            "Conflict",
+            "ENROLLMENT_ALREADY_EXISTS",
+            ex.getMessage()
+        );
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
 
     @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<Map<String, Object>> handleBadRequest(BadRequestException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("message", ex.getMessage());
+        body.put("status", 400);
+        body.put("error", "BAD_REQUEST");
+        return ResponseEntity.badRequest().body(body);
+    }
+
+    /* @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<Map<String, Object>> handleBadRequestException(BadRequestException ex) {
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", LocalDateTime.now());
@@ -34,7 +68,7 @@ public class GlobalExceptionHandler {
         body.put("error", "Bad Request");
         body.put("message", ex.getMessage());
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
-    }
+    } */
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationExceptions(MethodArgumentNotValidException ex) {
