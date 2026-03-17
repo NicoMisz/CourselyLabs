@@ -53,8 +53,18 @@ const studentsLabel = computed(() => {
 
 const updatedLabel = computed(() => {
   if (!props.updatedAt) return 'Actualizacion no disponible';
-  const d = new Date(props.updatedAt);
-  return `Actualizado el ${d.toLocaleDateString('es-ES')}`;
+  const now = Date.now();
+  const then = new Date(props.updatedAt).getTime();
+  const diffMs = now - then;
+  const diffMin = Math.floor(diffMs / 60000);
+  const diffH = Math.floor(diffMin / 60);
+  const diffD = Math.floor(diffH / 24);
+
+  if (diffMin < 1) return 'Actualizado hace un momento';
+  if (diffMin < 60) return `Actualizado hace ${diffMin} min`;
+  if (diffH < 24) return `Actualizado hace ${diffH}h`;
+  if (diffD < 30) return `Actualizado hace ${diffD} ${diffD === 1 ? 'dia' : 'dias'}`;
+  return `Actualizado el ${new Date(props.updatedAt).toLocaleDateString('es-ES')}`;
 });
 </script>
 

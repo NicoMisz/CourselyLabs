@@ -45,12 +45,14 @@
             />
 
             <q-tabs
+              ref="tabsRef"
               v-model="tab"
               class="q-mt-lg"
               dense
               align="left"
               active-color="primary"
               indicator-color="primary"
+              @update:model-value="scrollToTabs"
             >
               <q-tab name="descripcion" label="Descripcion" />
               <q-tab name="contenido" label="Contenido" />
@@ -61,39 +63,10 @@
             <q-separator />
 
             <q-tab-panels v-model="tab" animated>
-              <q-tab-panel name="descripcion">
-                <p>{{ course.description || 'Sin descripcion completa por ahora.' }}</p>
-              </q-tab-panel>
-
-              <q-tab-panel name="contenido">
-                <q-banner class="bg-blue-1 text-info" rounded>
-                  Contenido del curso disponible proximamente.
-                </q-banner>
-              </q-tab-panel>
-
-              <q-tab-panel name="instructores">
-                <div v-if="course.instructors?.length" class="row q-col-gutter-md">
-                  <div
-                    v-for="i in course.instructors"
-                    :key="i.id"
-                    class="col-12 col-sm-6"
-                  >
-                    <q-card flat bordered class="q-pa-md">
-                      <div class="text-subtitle1 text-weight-medium">{{ i.name }}</div>
-                      <div class="text-body2 text-grey-7">{{ i.bio || 'Sin bio' }}</div>
-                    </q-card>
-                  </div>
-                </div>
-                <q-banner v-else class="bg-grey-2 text-grey-8" rounded>
-                  No hay instructores asignados.
-                </q-banner>
-              </q-tab-panel>
-
-              <q-tab-panel name="valoraciones">
-                <q-banner class="bg-grey-2 text-grey-8" rounded>
-                  Valoraciones disponibles en una siguiente iteracion.
-                </q-banner>
-              </q-tab-panel>
+              <CourseTabDescription :description="course.description" />
+              <CourseTabContent />
+              <CourseTabInstructors :instructors="course.instructors" />
+              <CourseTabReviews />
             </q-tab-panels>
           </div>
 
@@ -112,71 +85,80 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue';
-import { useRoute } from 'vue-router';
-import CourseHero from '@/components/CourseHero.vue';
-import CourseSidebar from '@/components/CourseSidebar.vue';
-import CourseBreadcrumb from '@/components/CourseBreadcrumb.vue';
-import { getCourseBySlug, getCourseInstructors } from '@/api/course';
-import type { CourseDetail } from '@/types/course';
+import { onMounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import CourseHero from '@/components/CourseHero.vue'
+import CourseSidebar from '@/components/CourseSidebar.vue'
+import CourseBreadcrumb from '@/components/CourseBreadcrumb.vue'
+import CourseTabDescription from '@/components/CourseTabDescription.vue'
+import CourseTabContent from '@/components/CourseTabContent.vue'
+import CourseTabInstructors from '@/components/CourseTabInstructors.vue'
+import CourseTabReviews from '@/components/CourseTabReviews.vue'
+import { getCourseBySlug, getCourseInstructors } from '@/api/course'
+import type { CourseDetail } from '@/types/course'
 
-const route = useRoute();
-const tab = ref('descripcion');
-const loading = ref(true);
-const notFound = ref(false);
-const errorMessage = ref('');
-const course = ref<CourseDetail | null>(null);
+const route = useRoute()
+const tab = ref('descripcion')
+const tabsRef = ref<{ $el: HTMLElement } | null>(null)
+const loading = ref(true)
+const notFound = ref(false)
+const errorMessage = ref('')
+const course = ref<CourseDetail | null>(null)
+
+function scrollToTabs() {
+  tabsRef.value?.$el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
 
 function setOgMeta(name: string, content: string) {
-  const selector = `meta[property="${name}"]`;
-  let meta = document.querySelector(selector) as HTMLMetaElement | null;
+  const selector = `meta[property="${name}"]`
+  let meta = document.querySelector(selector) as HTMLMetaElement | null
   if (!meta) {
-    meta = document.createElement('meta');
-    meta.setAttribute('property', name);
-    document.head.appendChild(meta);
+    meta = document.createElement('meta')
+    meta.setAttribute('property', name)
+    document.head.appendChild(meta)
   }
-  meta.setAttribute('content', content);
+  meta.setAttribute('content', content)
 }
 
 function updateSeo(c: CourseDetail) {
-  document.title = `${c.title} | CourselyLabs`;
-  setOgMeta('og:title', c.title);
-  setOgMeta('og:description', c.shortDescription || c.description || 'Curso en CourselyLabs');
-  setOgMeta('og:image', c.thumbnailUrl || '');
+  document.title = `${c.title} | CourselyLabs`
+  setOgMeta('og:title', c.title)
+  setOgMeta('og:description', c.shortDescription || c.description || 'Curso en CourselyLabs')
+  setOgMeta('og:image', c.thumbnailUrl || '')
 }
 
 async function fetchCourse() {
-  loading.value = true;
-  notFound.value = false;
-  errorMessage.value = '';
+  loading.value = true
+  notFound.value = false
+  errorMessage.value = ''
 
   try {
-    const slug = String(route.params.slug || '');
-    const data = await getCourseBySlug(slug);
+    const slug = String(route.params.slug || '')
+    const data = await getCourseBySlug(slug)
 
     if (!data || !data.id) {
-      notFound.value = true;
-      course.value = null;
-      return;
+      notFound.value = true
+      course.value = null
+      return
     }
 
-    const instructors = await getCourseInstructors(data.id).catch(() => []);
-    course.value = { ...data, instructors };
-    updateSeo(course.value);
+    const instructors = await getCourseInstructors(data.id).catch(() => [])
+    course.value = { ...data, instructors }
+    updateSeo(course.value)
   } catch (error: unknown) {
-    const maybeStatus = (error as { response?: { status?: number } })?.response?.status;
+    const maybeStatus = (error as { response?: { status?: number } })?.response?.status
     if (maybeStatus === 404) {
-      notFound.value = true;
+      notFound.value = true
     } else {
-      errorMessage.value = 'No se pudo cargar el curso. Intenta nuevamente.';
+      errorMessage.value = 'No se pudo cargar el curso. Intenta nuevamente.'
     }
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
-watch(() => route.params.slug, fetchCourse);
-onMounted(fetchCourse);
+watch(() => route.params.slug, fetchCourse)
+onMounted(fetchCourse)
 </script>
 
 <style scoped>
