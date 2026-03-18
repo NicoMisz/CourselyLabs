@@ -61,12 +61,12 @@ public class EnrollmentController {
         return ResponseEntity.ok(enrollmentService.findByCourseId(courseId, pageable));
     }
 
-    @GetMapping("/check")
+ /*    @GetMapping("/check/admin")
     public ResponseEntity<Boolean> isEnrolled(
             @RequestParam UUID userId,
             @RequestParam UUID courseId) {
         return ResponseEntity.ok(enrollmentService.isEnrolled(userId, courseId));
-    }
+    } */
 
     @GetMapping("/check")
     public ResponseEntity<Boolean> isCurrentUserEnrolled(
