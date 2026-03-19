@@ -27,7 +27,7 @@ export interface CourseDetail {
   description?: string;
   level?: 'PRINCIPIANTE' | 'INTERMEDIO' | 'AVANZADO' | string;
   price?: number;
-  free: boolean;
+  isFree: boolean;
   thumbnailUrl?: string;
   categoryName?: string;
   durationText?: string;

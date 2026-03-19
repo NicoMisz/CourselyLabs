@@ -4,6 +4,19 @@ const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
 })
 
+// --- Session sync callbacks (set by auth store to avoid circular imports) ---
+let onTokenRefreshed: ((accessToken: string, refreshToken?: string) => void) | null = null
+let onSessionExpired: (() => void) | null = null
+
+export function setSessionCallbacks(
+  refreshed: (accessToken: string, refreshToken?: string) => void,
+  expired: () => void,
+) {
+  onTokenRefreshed = refreshed
+  onSessionExpired = expired
+}
+
+// --- Request interceptor ---
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('accessToken')
   if (token) {
@@ -12,6 +25,7 @@ api.interceptors.request.use((config) => {
   return config
 })
 
+// --- Response interceptor (token refresh) ---
 let isRefreshing = false
 let failedQueue: { resolve: (token: string) => void; reject: (err: unknown) => void }[] = []
 
@@ -20,10 +34,11 @@ function processQueue(error: unknown, token: string | null) {
   failedQueue = []
 }
 
-function clearStorageAndRedirect() {
+function clearSessionAndRedirect() {
   localStorage.removeItem('accessToken')
   localStorage.removeItem('refreshToken')
   localStorage.removeItem('user')
+  onSessionExpired?.()
   window.location.href = '/login'
 }
 
@@ -32,7 +47,6 @@ api.interceptors.response.use(
   async (error) => {
     const original = error.config
 
-    // Skip refresh logic for auth endpoints or non-401 errors or already retried requests
     if (
       error.response?.status !== 401 ||
       original._retry ||
@@ -43,7 +57,7 @@ api.interceptors.response.use(
 
     const storedRefresh = localStorage.getItem('refreshToken')
     if (!storedRefresh) {
-      clearStorageAndRedirect()
+      clearSessionAndRedirect()
       return Promise.reject(error)
     }
 
@@ -64,14 +78,17 @@ api.interceptors.response.use(
         `${import.meta.env.VITE_API_BASE_URL}/api/auth/refresh`,
         { refreshToken: storedRefresh },
       )
+
       localStorage.setItem('accessToken', data.accessToken)
       if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken)
+      onTokenRefreshed?.(data.accessToken, data.refreshToken)
+
       processQueue(null, data.accessToken)
       original.headers.Authorization = `Bearer ${data.accessToken}`
       return api(original)
     } catch (err) {
       processQueue(err, null)
-      clearStorageAndRedirect()
+      clearSessionAndRedirect()
       return Promise.reject(err)
     } finally {
       isRefreshing = false
