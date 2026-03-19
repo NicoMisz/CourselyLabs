@@ -46,9 +46,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
+import { useAuthStore } from '../stores/auth'
 
 const email = ref('')
 const password = ref('')
@@ -60,28 +60,32 @@ const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 
-function triggerShake() {
+/* function triggerShake() {
   shaking.value = true
   setTimeout(() => { shaking.value = false }, 500)
-}
+} */
+
+const redirectTarget = computed(() => {
+  const redirect = route.query.redirect;
+  return typeof redirect === 'string' && redirect.length > 0 ? redirect : '/';
+});
 
 async function onSubmit() {
-  errorMessage.value = ''
-  loading.value = true
+  errorMessage.value = '';
+  loading.value = true;
+
   try {
-    await authStore.login({ email: email.value, password: password.value })
-    const redirect = route.query.redirect as string | undefined
-    router.push(redirect || '/')
+    await authStore.login({ email: email.value, password: password.value });
+    router.push(redirectTarget.value);
   } catch (err: unknown) {
-    const status = (err as { response?: { status?: number } })?.response?.status
+    const status = (err as { response?: { status?: number } })?.response?.status;
     if (status === 401) {
-      errorMessage.value = 'Email o contraseña incorrectos.'
+      errorMessage.value = 'Email o contraseña incorrectos.';
     } else {
-      errorMessage.value = 'Error de conexión. Inténtalo de nuevo.'
+      errorMessage.value = 'Error de conexión. Inténtalo de nuevo.';
     }
-    triggerShake()
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 

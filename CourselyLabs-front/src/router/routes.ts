@@ -44,6 +44,11 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/ProfileView.vue'),
         meta: { requiresAuth: true, title: 'Mi perfil — CourselyLabs' },
       },
+      {
+        path: 'mis-cursos',
+        component: () => import('../views/MyCoursesView.vue'),
+        meta: { requiresAuth: true },
+      }
     ],
   },
   {
