@@ -146,7 +146,7 @@ Limpieza del scaffold inicial de Vue, corrección de patrones de código y funci
 
 ---
 
-## 3. `feature/course-detail-page` ⚠️ ARREGLAR
+## 3. `feature/course-detail-page` ✅ COMPLETADO
 
 **Prioridad:** Alta — Página central del producto
 **Dependencias:** Ninguna
@@ -163,9 +163,9 @@ Página individual de un curso en `/cursos/:slug` con toda su información organ
 | `CourseDetailDTO` con media de reviews, total de estudiantes e instructores | ✅ Implementado |
 | Vista `/cursos/:slug` en frontend | ✅ Creada (`CourseDetailView.vue`) |
 | `types/course.ts` con `CourseDetail` e `InstructorSummary` | ✅ Creado |
-| Tabs como componentes separados | ⚠️ Inline en `CourseDetailView.vue` — pendiente extraer |
-| Fecha de actualización relativa | ⚠️ Muestra fecha formateada, no relativa ("hace 3 días") |
-| Scroll suave a tabs | ❌ No implementado |
+| Tabs como componentes separados | ✅ Extraidos (Description, Content, Instructors, Reviews) |
+| Fecha de actualización relativa | ✅ "Actualizado hace 3 dias" |
+| Scroll suave a tabs | ✅ `scrollIntoView({ behavior: 'smooth' })` |
 
 ### Tareas
 
@@ -182,23 +182,23 @@ Página individual de un curso en `/cursos/:slug` con toda su información organ
 - [x] Crear `views/CourseDetailView.vue` — contenedor principal con llamada a API y manejo de loading/error/404
 
 #### Frontend — Componentes
-- [x] `CourseHero.vue` — thumbnail (con fallback gradiente `$primary → $accent`), título, descripción corta, nivel badge, precio/gratis badge, contador de estudiantes formateado
+- [x] `CourseHero.vue` — thumbnail (con fallback gradiente), badges, contador formateado, fecha relativa
 - [x] `CourseSidebar.vue` — nivel, nº estudiantes, duración, valoración, botón inscripción (placeholder)
-- [ ] `CourseTabDescription.vue` — extraer del inline de `CourseDetailView`: descripción completa, "Lo que aprenderás", prerequisitos
-- [ ] `CourseTabContent.vue` — extraer del inline: árbol de secciones/lecciones (placeholder colapsable)
-- [ ] `CourseTabInstructors.vue` — extraer del inline: cards con foto, nombre, bio
-- [ ] `CourseTabReviews.vue` — extraer del inline: placeholder que se completará en `feature/reviews-frontend`
-- [x] `LevelBadge.vue` — chip reutilizable (Principiante → `$positive`, Intermedio → `$warning`, Avanzado → `$negative`)
-- [x] `PriceBadge.vue` — chip reutilizable (Gratis → `$positive`, precio → `$accent`)
+- [x] `CourseTabDescription.vue` — descripcion completa
+- [x] `CourseTabContent.vue` — placeholder (se completara en `feature/course-sections-lessons`)
+- [x] `CourseTabInstructors.vue` — cards con avatar (iniciales), nombre, bio
+- [x] `CourseTabReviews.vue` — placeholder (se completara en `feature/reviews-frontend`)
+- [x] `LevelBadge.vue` — chip reutilizable
+- [x] `PriceBadge.vue` — chip reutilizable
 - [x] `CourseBreadcrumb.vue` — `Home > Cursos > [Categoría] > [Título]`
 - [x] `api/course.ts` — `getCourseBySlug()` y `getCourseInstructors()` usando axios configurado
 
 #### UX/UI
 - [x] Skeleton loading con `q-skeleton` para hero, tabs y sidebar mientras carga la API
 - [x] Breadcrumb con categoría
-- [ ] Scroll suave a las tabs con `scrollIntoView({ behavior: 'smooth' })` al hacer click
+- [x] Scroll suave a las tabs con `scrollIntoView({ behavior: 'smooth' })` al hacer click
 - [x] Meta tags OG dinámicos (`og:title`, `og:description`, `og:image`)
-- [ ] Fecha de última actualización **relativa** ("Actualizado hace 3 días") — actualmente muestra la fecha formateada (`toLocaleDateString`)
+- [x] Fecha de última actualización relativa ("Actualizado hace 3 dias")
 - [x] Contador de estudiantes formateado ("1.2K estudiantes" si > 1000)
 - [x] Página "Curso no encontrado" con botón "Explorar cursos"
 
@@ -976,7 +976,7 @@ Configuración para desplegar toda la stack en un VPS usando Docker Compose. Un 
 develop
  ├── fix/security-improvements        ✅ Completado
  ├── chore/codebase-cleanup           ✅ Completado
- ├── feature/course-detail-page       ✅ Completado (pendiente arreglos menores)
+ ├── feature/course-detail-page       ✅ Completado
  ├── feature/enrollment-flow          (merge 4, tras course-detail-page)
  ├── feature/course-sections-lessons  (merge 5, tras enrollment-flow)
  ├── feature/downloadable-resources   (merge 6, tras course-sections-lessons)

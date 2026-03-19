@@ -165,21 +165,21 @@ const showEnrollSuccess = ref(false);
 const enrollError = ref('');
 
 function setOgMeta(name: string, content: string) {
-  const selector = `meta[property="${name}"]`;
-  let meta = document.querySelector(selector) as HTMLMetaElement | null;
+  const selector = `meta[property="${name}"]`
+  let meta = document.querySelector(selector) as HTMLMetaElement | null
   if (!meta) {
-    meta = document.createElement('meta');
-    meta.setAttribute('property', name);
-    document.head.appendChild(meta);
+    meta = document.createElement('meta')
+    meta.setAttribute('property', name)
+    document.head.appendChild(meta)
   }
-  meta.setAttribute('content', content);
+  meta.setAttribute('content', content)
 }
 
 function updateSeo(c: CourseDetail) {
-  document.title = `${c.title} | CourselyLabs`;
-  setOgMeta('og:title', c.title);
-  setOgMeta('og:description', c.shortDescription || c.description || 'Curso en CourselyLabs');
-  setOgMeta('og:image', c.thumbnailUrl || '');
+  document.title = `${c.title} | CourselyLabs`
+  setOgMeta('og:title', c.title)
+  setOgMeta('og:description', c.shortDescription || c.description || 'Curso en CourselyLabs')
+  setOgMeta('og:image', c.thumbnailUrl || '')
 }
 
 async function fetchCourse() {
@@ -190,22 +190,22 @@ async function fetchCourse() {
     const slug = String(route.params.slug || '');
     const data = await getCourseBySlug(slug);
     if (!data || !data.id) {
-      notFound.value = true;
-      course.value = null;
-      return;
+      notFound.value = true
+      course.value = null
+      return
     }
     const instructors = await getCourseInstructors(data.id).catch(() => []);
     course.value = { ...data, instructors };
     updateSeo(course.value);
   } catch (error: unknown) {
-    const maybeStatus = (error as { response?: { status?: number } })?.response?.status;
+    const maybeStatus = (error as { response?: { status?: number } })?.response?.status
     if (maybeStatus === 404) {
-      notFound.value = true;
+      notFound.value = true
     } else {
-      errorMessage.value = 'No se pudo cargar el curso. Intenta nuevamente.';
+      errorMessage.value = 'No se pudo cargar el curso. Intenta nuevamente.'
     }
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
