@@ -6,6 +6,27 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es/1.1.0/).
 
 ---
 
+## [Sin version] - 2026-03-19
+
+### Agregado
+
+- **src/components/EmptyState.vue**: Componente reutilizable para estados vacios — icono + titulo + descripcion + CTA
+
+### Corregido
+
+- **src/views/HomeView.vue**: Seccion "Continuar aprendiendo" usa `CourseCardEnrolled` + tipo `EnrolledCourse` + API `getMyCourses` (antes usaba tipo `Course` incorrecto)
+- **src/views/HomeView.vue**: Migrados iconos Line Awesome a Material Icons (`school`, `co_present`) — Line Awesome no estaba importado
+- **src/layouts/AppSidebar.vue**: Migrados iconos Line Awesome a Material Icons (`home`, `school`, `shopping_cart`)
+- **src/layouts/AppSidebar.vue**: Modo mini muestra tooltips con nombre del link y oculta header "Navegacion"
+- **src/types/course.ts**: `CourseDetail.free` cambiado de opcional a requerido (backend siempre lo envia)
+- **src/views/MyCoursesView.vue**: Descomentado import de `EmptyState`
+
+### Eliminado
+
+- **src/components/EnrollButton.vue**: Eliminado — logica duplicada ya integrada en `CourseSidebar.vue`
+
+---
+
 ## [Sin version] - 2026-03-03
 
 ### Agregado

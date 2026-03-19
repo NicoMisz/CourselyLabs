@@ -14,6 +14,7 @@
             <div class="col-12 col-md-auto">
             <q-tabs v-model="filter" dense align="left" active-color="primary" indicator-color="primary">
                 <q-tab name="todos" label="Todos" />
+                <q-tab name="no-iniciados" label="No iniciados" />
                 <q-tab name="en-curso" label="En curso" />
                 <q-tab name="completados" label="Completados" />
             </q-tabs>
@@ -65,7 +66,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-//import EmptyState from '../components/EmptyState.vue';
+import EmptyState from '../components/EmptyState.vue';
 import CourseCardEnrolled from '../components/CourseCardEnrolled.vue';
 import { getMyCourses } from '../api/enrollment';
 import type { EnrolledCourse } from '../types/enrollment';
@@ -75,7 +76,7 @@ const loading = ref(true);
 const errorMessage = ref('');
 const courses = ref<EnrolledCourse[]>([]);
 
-const filter = ref<'todos' | 'en-curso' | 'completados'>('todos');
+const filter = ref<'todos' | 'no-iniciados' | 'en-curso' | 'completados'>('todos');
 const sortBy = ref<'lastAccessedAt' | 'title' | 'progressPercent'>('lastAccessedAt');
 
 const sortOptions = [
@@ -86,8 +87,9 @@ const sortOptions = [
 
 const visibleCourses = computed(() => {
   const filtered = courses.value.filter((course) => {
-    if (filter.value === 'completados') return course.progressPercent >= 100;
+    if (filter.value === 'no-iniciados') return course.progressPercent === 0;
     if (filter.value === 'en-curso') return course.progressPercent > 0 && course.progressPercent < 100;
+    if (filter.value === 'completados') return course.progressPercent >= 100;
     return true;
   });
 

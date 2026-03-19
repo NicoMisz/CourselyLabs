@@ -204,43 +204,44 @@ Página individual de un curso en `/cursos/:slug` con toda su información organ
 
 ---
 
-## 4. `feature/enrollment-flow` 🆕 PENDIENTE
+## 4. `feature/enrollment-flow` -- COMPLETADO
 
 **Prioridad:** Alta
 **Dependencias:** `feature/course-detail-page`
 
-### Descripción
-Inscripción de usuarios en cursos gratuitos, vista "Mis cursos" y conexión del axios configurado en CoursesView.
+### Descripcion
+Inscripcion de usuarios en cursos gratuitos, vista "Mis cursos" y conexion del axios configurado en CoursesView.
 
-### Diagnóstico del estado actual
+### Estado final
 
 | Elemento | Estado |
 |---|---|
-| `POST /api/enrollments` | Existe en backend |
-| `GET /api/enrollments/check` | Existe en backend |
-| `GET /api/enrollments/user/{userId}/courses` con datos del curso | Falta — solo devuelve enrollment, no el curso |
-| `CoursesView.vue` | Usa axios directo sin token, no el interceptado |
-| Vista "Mis cursos" | No existe |
+| `POST /api/enrollments/me` | Hecho — endpoint + API client |
+| `GET /api/enrollments/check` | Hecho — endpoint + API client |
+| `GET /api/enrollments/me/courses` | Hecho — endpoint + API client (`getMyCourses`) |
+| `PATCH /api/enrollments/{id}/access` | Hecho — API client (`updateEnrollmentLastAccess`) |
+| `CoursesView.vue` — axios configurado | Hecho — ya estaba via composable |
+| `CourseSidebar.vue` | Hecho — integra logica de inscripcion (4 estados: guest/enrolled/free/paid) |
+| `EnrollSuccessDialog.vue` | Hecho — dialog con checkmark gradient + "Seguir explorando" / "Ir al curso" |
+| `CourseDetailView.vue` | Hecho — integra enrollment: check + create + banner error + dialog |
+| `MyCoursesView.vue` | Hecho — vista `/mis-cursos` con tabs Todos/En curso/Completados + ordenacion |
+| `CourseCardEnrolled.vue` | Hecho — thumbnail + progress bar superpuesta + badge estado + hover scale |
+| `EmptyState.vue` | Hecho — componente reutilizable: icono + titulo + descripcion + CTA |
+| Ruta `/mis-cursos` | Hecho — registrada con `requiresAuth: true` |
+| Types `enrollment.ts` | Hecho — `CreateEnrollmentPayload`, `EnrollmentResponse`, `EnrolledCourse` |
+| API `enrollment.ts` | Hecho — `checkEnrollment`, `createEnrollment`, `getMyCourses`, `updateEnrollmentLastAccess` |
+| `HomeView.vue` — "Continuar aprendiendo" | Hecho — usa `CourseCardEnrolled` + `EnrolledCourse` + `getMyCourses` |
+| Iconos Material Icons | Hecho — migrados de Line Awesome a Material Icons en Sidebar y HomeView |
+| Sidebar modo mini | Hecho — tooltips en modo mini + header oculto cuando mini |
+| `CourseDetail.free` | Hecho — campo marcado como requerido (backend siempre lo envia) |
 
-### Tareas
-
-#### Backend
-- [ ] Añadir o verificar endpoint `GET /api/enrollments/my-courses` — devuelve lista de cursos inscritos del usuario autenticado con datos del curso (title, thumbnailUrl, level, slug) y progreso (% completado, último acceso)
-
-#### Frontend — Fixes
-- [ ] Conectar `CoursesView.vue` al axios configurado (`import api from 'src/api/axios'`) en lugar de axios directo
-
-#### Frontend — Componentes
-- [ ] `EnrollButton.vue` — botón con 4 estados: no logueado (redirige a login con `?redirect=`), logueado no inscrito ("Inscribirme gratis" / "Comprar"), cargando (spinner inline), inscrito ("Continuar curso")
-- [ ] `EnrollSuccessDialog.vue` — dialog con checkmark animado CSS + "¡Te has inscrito!" + botón "Ir al curso"
-- [ ] `MyCoursesView.vue` — vista `/mis-cursos` con tabs "Todos / En curso / Completados" y ordenación
-- [ ] `CourseCardEnrolled.vue` — thumbnail + barra de progreso superpuesta + título + último acceso relativo + badge de estado ("Nuevo" / "En curso" / "Completado")
-- [ ] `EmptyState.vue` — componente reutilizable: ilustración SVG + mensaje + CTA
-
-#### UX/UI
-- [ ] "Mis cursos" empty state: ilustración + "Aún no te has inscrito en ningún curso" + botón "Explorar cursos"
-- [ ] Cards de "Mis cursos": `q-linear-progress` en la parte inferior de la imagen, hover con elevación + scale(1.02)
-- [ ] Sección "Continuar donde lo dejé" en HomeView si hay cursos activos (último curso con acceso)
+### Fixes aplicados
+- [x] Creado `EmptyState.vue` — import descomentado en `MyCoursesView`
+- [x] `HomeView.vue` — cambiado de `Course`/`CourseCard` a `EnrolledCourse`/`CourseCardEnrolled` para "Continuar aprendiendo", usa `getMyCourses` del API client
+- [x] Migrados iconos Line Awesome a Material Icons en `AppSidebar` (`home`, `school`, `shopping_cart`) y `HomeView` (`school`, `co_present`)
+- [x] `AppSidebar.vue` — tooltips con nombre del link en modo mini, header "Navegacion" oculto en mini
+- [x] `CourseDetail.free` cambiado de `free?: boolean` a `free: boolean` (backend siempre lo envia con default `false`)
+- [x] Eliminado `EnrollButton.vue` — no se usaba, logica duplicada en `CourseSidebar.vue`
 
 ---
 

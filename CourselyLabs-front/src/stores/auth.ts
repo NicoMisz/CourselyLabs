@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
-import api from '@/api/axios'
+import api, { setSessionCallbacks } from '@/api/axios'
 import type { User, LoginRequest, RegisterRequest, AuthResponse } from '@/types/auth'
 
 export const useAuthStore = defineStore('auth', () => {
@@ -11,6 +11,19 @@ export const useAuthStore = defineStore('auth', () => {
   )
 
   const isLoggedIn = computed(() => !!accessToken.value && !!user.value)
+
+  // Sync Pinia state when axios refreshes or expires the token
+  setSessionCallbacks(
+    (newAccess, newRefresh) => {
+      accessToken.value = newAccess
+      if (newRefresh) refreshToken.value = newRefresh
+    },
+    () => {
+      accessToken.value = null
+      refreshToken.value = null
+      user.value = null
+    },
+  )
   const userRole = computed(() => user.value?.role ?? null)
 
   async function login(credentials: LoginRequest): Promise<void> {

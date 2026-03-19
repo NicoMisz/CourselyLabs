@@ -15,6 +15,7 @@
       :outline="isGuest"
       :loading="loading"
       :icon="buttonIcon"
+      :disable="buttonDisabled"
       unelevated
       no-caps
       class="full-width q-mt-md"
@@ -26,7 +27,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { useQuasar } from 'quasar';
 import { useAuthStore } from '../stores/auth';
 
 const props = defineProps<{
@@ -36,7 +36,7 @@ const props = defineProps<{
   averageRating?: number;
   courseId?: string;
   courseSlug?: string;
-  free?: boolean;
+  isFree: boolean;
   price?: number;
   enrolled: boolean;
   loading?: boolean;
@@ -44,35 +44,38 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   enroll: [];
-  checkout: [];
   continue: [];
 }>();
 
 const router = useRouter();
 const route = useRoute();
-const $q = useQuasar();
 const authStore = useAuthStore();
 
 const isGuest = computed(() => !authStore.isLoggedIn);
 
+const isPaid = computed(() => !props.isFree);
+
 const buttonLabel = computed(() => {
   if (isGuest.value) return 'Inicia sesion para inscribirte';
   if (props.enrolled) return 'Continuar curso';
-  if (props.free) return 'Inscribirme gratis';
-  return `Comprar curso${props.price ? ` - ${props.price} EUR` : ''}`;
+  if (props.isFree) return 'Inscribirme gratis';
+  return 'Proximamente';
 });
 
 const buttonColor = computed(() => {
-  if (isGuest.value) return 'primary';
   if (props.enrolled) return 'primary';
-  return props.free ? 'positive' : 'accent';
+  if (props.isFree) return 'positive';
+  return 'grey-5';
 });
 
 const buttonIcon = computed(() => {
   if (isGuest.value) return 'login';
   if (props.enrolled) return 'play_circle';
-  return props.free ? 'check_circle' : 'shopping_cart';
+  if (props.isFree) return 'check_circle';
+  return 'lock';
 });
+
+const buttonDisabled = computed(() => isPaid.value && !props.enrolled && !isGuest.value);
 
 function handleClick() {
   if (isGuest.value) {
@@ -83,16 +86,10 @@ function handleClick() {
     emit('continue');
     return;
   }
-  if (props.free) {
+  if (props.isFree) {
     emit('enroll');
     return;
   }
-  $q.notify({
-    type: 'info',
-    message: 'El checkout se implementara en una rama posterior.',
-    position: 'bottom-right',
-  });
-  emit('checkout');
 }
 </script>
 

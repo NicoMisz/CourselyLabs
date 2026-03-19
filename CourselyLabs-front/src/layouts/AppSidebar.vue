@@ -12,16 +12,18 @@
     :mini-width="60"
   >
     <q-list>
-      <q-item-label header>Navegacion</q-item-label>
       <q-item
         v-for="link in linksList"
         :key="link.title"
         clickable
         :to="link.link"
-        active-class="text-primary"
+        active-class="text-primary bg-primary-light"
       >
         <q-item-section avatar>
           <q-icon :name="link.icon" />
+          <q-tooltip v-if="mini" anchor="center right" self="center left" :offset="[10, 0]">
+            {{ link.title }}
+          </q-tooltip>
         </q-item-section>
         <q-item-section>
           <q-item-label>{{ link.title }}</q-item-label>
@@ -47,19 +49,19 @@ const linksList = [
   {
     title: 'Inicio',
     caption: 'Pagina principal',
-    icon: 'las la-home',
+    icon: 'home',
     link: '/',
   },
   {
     title: 'Cursos',
     caption: 'Explorar cursos',
-    icon: 'las la-graduation-cap',
+    icon: 'school',
     link: '/cursos',
   },
   {
     title: 'Caixa',
     caption: 'Carrito de compra',
-    icon: 'las la-cash-register',
+    icon: 'shopping_cart',
     link: '/carrito',
   },
 ]

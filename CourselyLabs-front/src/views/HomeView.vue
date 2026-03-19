@@ -16,16 +16,18 @@
           label="Explorar cursos"
           to="/cursos"
           size="lg"
-          icon="las la-graduation-cap"
+          icon="school"
         />
       </div>
     </section>
 
     <div class="q-pa-md q-pa-lg-lg content-wrap">
       <!-- Continuar aprendiendo (si autenticado) -->
-      <section v-if="authStore.isLoggedIn && lastCourse" class="q-mb-xl">
+      <section v-if="authStore.isLoggedIn && lastEnrolledCourse" class="q-mb-xl">
         <h2 class="text-h5 q-mb-md" style="font-family: Monda, sans-serif">Continuar aprendiendo</h2>
-        <CourseCard :course="lastCourse" />
+        <div style="max-width: 380px">
+          <CourseCardEnrolled :course="lastEnrolledCourse" />
+        </div>
       </section>
 
       <!-- Cursos destacados -->
@@ -79,7 +81,7 @@
         <p class="text-body1 text-grey-8 q-mb-md">
           Comparte tu conocimiento con miles de estudiantes. Crea tu primer curso hoy.
         </p>
-        <q-btn unelevated rounded color="accent" label="Empieza aqui" icon="las la-chalkboard-teacher" to="/instructor" />
+        <q-btn unelevated rounded color="accent" label="Empieza aqui" icon="co_present" to="/instructor" />
       </section>
     </div>
   </q-page>
@@ -90,7 +92,10 @@ import { ref, computed, onMounted } from 'vue'
 import api from '@/api/axios'
 import { useAuthStore } from '@/stores/auth'
 import CourseCard from '@/components/CourseCard.vue'
+import CourseCardEnrolled from '@/components/CourseCardEnrolled.vue'
+import { getMyCourses } from '@/api/enrollment'
 import type { Course } from '@/types/course'
+import type { EnrolledCourse } from '@/types/enrollment'
 
 interface Category {
   id: number
@@ -101,7 +106,7 @@ interface Category {
 const authStore = useAuthStore()
 const allCourses = ref<Course[]>([])
 const categories = ref<Category[]>([])
-const lastCourse = ref<Course | null>(null)
+const lastEnrolledCourse = ref<EnrolledCourse | null>(null)
 const loadingCourses = ref(true)
 
 const featuredCourses = computed(() => allCourses.value.slice(0, 4))
@@ -124,8 +129,15 @@ onMounted(async () => {
 
   if (authStore.isLoggedIn) {
     promises.push(
-      api.get<Course[]>('/api/enrollments/my-courses', { params: { limit: 1, sortBy: 'lastAccess' } })
-        .then(({ data }) => { lastCourse.value = data[0] || null })
+      getMyCourses()
+        .then((data) => {
+          const sorted = data.sort((a, b) => {
+            const aTime = a.lastAccessedAt ? new Date(a.lastAccessedAt).getTime() : 0
+            const bTime = b.lastAccessedAt ? new Date(b.lastAccessedAt).getTime() : 0
+            return bTime - aTime
+          })
+          lastEnrolledCourse.value = sorted[0] || null
+        })
         .catch(() => { /* endpoint may not exist yet */ })
     )
   }
