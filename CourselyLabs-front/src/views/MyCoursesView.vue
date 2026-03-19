@@ -65,7 +65,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-//import EmptyState from '../components/EmptyState.vue';
+import EmptyState from '../components/EmptyState.vue';
 import CourseCardEnrolled from '../components/CourseCardEnrolled.vue';
 import { getMyCourses } from '../api/enrollment';
 import type { EnrolledCourse } from '../types/enrollment';
