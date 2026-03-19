@@ -221,10 +221,10 @@ Inscripcion de usuarios en cursos gratuitos, vista "Mis cursos" y conexion del a
 | `GET /api/enrollments/me/courses` | Hecho — endpoint + API client (`getMyCourses`) |
 | `PATCH /api/enrollments/{id}/access` | Hecho — API client (`updateEnrollmentLastAccess`) |
 | `CoursesView.vue` — axios configurado | Hecho — ya estaba via composable |
-| `CourseSidebar.vue` | Hecho — integra logica de inscripcion (4 estados: guest/enrolled/free/paid) |
+| `CourseSidebar.vue` | Hecho — logica de inscripcion: guest (login redirect), free (enroll), paid (disabled "Proximamente"), enrolled (continuar) |
 | `EnrollSuccessDialog.vue` | Hecho — dialog con checkmark gradient + "Seguir explorando" / "Ir al curso" |
 | `CourseDetailView.vue` | Hecho — integra enrollment: check + create + banner error + dialog |
-| `MyCoursesView.vue` | Hecho — vista `/mis-cursos` con tabs Todos/En curso/Completados + ordenacion |
+| `MyCoursesView.vue` | Hecho — vista `/mis-cursos` con tabs Todos/No iniciados/En curso/Completados + ordenacion |
 | `CourseCardEnrolled.vue` | Hecho — thumbnail + progress bar superpuesta + badge estado + hover scale |
 | `EmptyState.vue` | Hecho — componente reutilizable: icono + titulo + descripcion + CTA |
 | Ruta `/mis-cursos` | Hecho — registrada con `requiresAuth: true` |
@@ -233,15 +233,19 @@ Inscripcion de usuarios en cursos gratuitos, vista "Mis cursos" y conexion del a
 | `HomeView.vue` — "Continuar aprendiendo" | Hecho — usa `CourseCardEnrolled` + `EnrolledCourse` + `getMyCourses` |
 | Iconos Material Icons | Hecho — migrados de Line Awesome a Material Icons en Sidebar y HomeView |
 | Sidebar modo mini | Hecho — tooltips en modo mini + header oculto cuando mini |
-| `CourseDetail.free` | Hecho — campo marcado como requerido (backend siempre lo envia) |
+| `CourseDetail.isFree` | Hecho — renombrado de `free` a `isFree` para coincidir con el JSON del backend |
+| Axios session sync | Hecho — interceptor sincroniza Pinia al refrescar/expirar token via callbacks |
 
 ### Fixes aplicados
 - [x] Creado `EmptyState.vue` — import descomentado en `MyCoursesView`
 - [x] `HomeView.vue` — cambiado de `Course`/`CourseCard` a `EnrolledCourse`/`CourseCardEnrolled` para "Continuar aprendiendo", usa `getMyCourses` del API client
 - [x] Migrados iconos Line Awesome a Material Icons en `AppSidebar` (`home`, `school`, `shopping_cart`) y `HomeView` (`school`, `co_present`)
 - [x] `AppSidebar.vue` — tooltips con nombre del link en modo mini, header "Navegacion" oculto en mini
-- [x] `CourseDetail.free` cambiado de `free?: boolean` a `free: boolean` (backend siempre lo envia con default `false`)
 - [x] Eliminado `EnrollButton.vue` — no se usaba, logica duplicada en `CourseSidebar.vue`
+- [x] `CourseDetail` renombrado campo `free` a `isFree` — el backend envia `"isFree"` en JSON, no `"free"`
+- [x] `CourseSidebar.vue` — prop renombrada a `isFree`, cursos de pago muestran "Proximamente" deshabilitado (flujo de pago pendiente en `feature/payments-stripe`)
+- [x] `MyCoursesView.vue` — añadida pestaña "No iniciados" (cursos con `progressPercent === 0`)
+- [x] `api/axios.ts` — añadido sistema de callbacks (`setSessionCallbacks`) para sincronizar Pinia cuando el interceptor refresca o expira el token, evitando estado inconsistente entre localStorage y el store
 
 ---
 
@@ -978,7 +982,7 @@ develop
  ├── fix/security-improvements        ✅ Completado
  ├── chore/codebase-cleanup           ✅ Completado
  ├── feature/course-detail-page       ✅ Completado
- ├── feature/enrollment-flow          (merge 4, tras course-detail-page)
+ ├── feature/enrollment-flow          ✅ Completado
  ├── feature/course-sections-lessons  (merge 5, tras enrollment-flow)
  ├── feature/downloadable-resources   (merge 6, tras course-sections-lessons)
  ├── feature/student-progress         (merge 7, tras course-sections-lessons)
