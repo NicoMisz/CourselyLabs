@@ -37,4 +37,5 @@ public class CourseDetailDTO {
     private Integer totalStudents;
     private BigDecimal averageRating;
     private List<InstructorSummaryDTO> instructors;
+    private List<SectionDTO> sections;
 }
