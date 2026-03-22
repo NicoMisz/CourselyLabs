@@ -249,49 +249,54 @@ Inscripcion de usuarios en cursos gratuitos, vista "Mis cursos" y conexion del a
 
 ---
 
-## 5. `feature/course-sections-lessons` 🆕 PENDIENTE
+## 5. `feature/course-sections-lessons` ⚠️ EN PROGRESO
 
 **Prioridad:** Alta
 **Dependencias:** `feature/enrollment-flow`
 
-### Descripción
-Entidades de secciones y lecciones en backend y vista de lección en frontend con reproductor de vídeo, visor de texto y PDF.
+### Descripcion
+Entidades de secciones y lecciones en backend y vista de leccion en frontend con reproductor de video, visor de texto y PDF.
 
-### Tareas
+### Estado actual
 
-#### Backend — Entidades nuevas
-- [ ] `SectionEntity`: id, courseId, title, description, position, createdAt
-- [ ] `LessonEntity`: id, sectionId, title, description, type (`video/text/pdf/audio`), contentUrl, duration, position, isFree, createdAt
-- [ ] Migración Flyway para ambas tablas
+| Elemento | Estado |
+|---|---|
+| Flyway V2 migration (sections, lessons) | Hecho |
+| `SectionEntity` + `LessonEntity` | Hecho |
+| `SectionDTO` + `LessonDTO` + `ReorderRequestDTO` | Hecho |
+| `SectionRepository` + `LessonRepository` | Hecho |
+| `SectionMapper` + `LessonMapper` | Hecho |
+| `SectionService` + `LessonService` | Hecho — CRUD + reorder |
+| `SectionController` + `LessonController` | Hecho — 9 endpoints |
+| `CourseDetailDTO.sections` | Hecho — secciones incluidas en detalle del curso |
+| Types `lesson.ts` | Hecho — `Section`, `Lesson`, `LessonType` |
+| API `lesson.ts` | Hecho — `getCourseSections`, `getLessonById` |
+| `LessonTypeIcon.vue` | Hecho — icono por tipo (video/text/pdf/audio) |
+| `CourseSectionList.vue` | Hecho — expansion-items, duracion, badge Preview, candado |
+| `CourseNavSidebar.vue` | Hecho — drawer 300px, leccion activa highlighted |
+| `LessonVideoPlayer.vue` | Hecho — Video.js, velocidad guardada en localStorage, PiP |
+| `LessonTextViewer.vue` | Hecho — marked + highlight.js |
+| `LessonPdfViewer.vue` | Hecho — embed nativo + fallback descarga |
+| `LessonNavBar.vue` | Hecho — barra inferior sticky con anterior/siguiente |
+| `LessonView.vue` | Hecho — layout propio con sidebar + contenido + nav |
+| Ruta `/cursos/:slug/leccion/:lessonId` | Hecho — requiresAuth |
+| Tab "Contenido" en CourseDetailView | Hecho — usa `CourseSectionList` |
+| Deps: video.js, marked, highlight.js | Hecho |
 
-#### Backend — Endpoints
-- [ ] `GET /api/courses/{courseId}/sections` — secciones con lecciones anidadas
-- [ ] `POST /api/courses/{courseId}/sections` — crear sección (solo instructor del curso)
-- [ ] `PUT /api/sections/{id}` — actualizar sección
-- [ ] `DELETE /api/sections/{id}` — eliminar sección
-- [ ] `PATCH /api/sections/reorder` — reordenar (`[{ id, position }]`)
-- [ ] `POST /api/sections/{sectionId}/lessons` — crear lección
-- [ ] `PUT /api/lessons/{id}` — actualizar lección
-- [ ] `DELETE /api/lessons/{id}` — eliminar lección
-- [ ] `PATCH /api/lessons/reorder` — reordenar lecciones
+### UX/UI implementado
+- [x] Mobile: sidebar como `q-drawer` con breakpoint 1024px + boton hamburguesa
+- [x] Velocidad de video preferida guardada en localStorage
+- [x] Fade-in del contenido al cambiar de leccion (CSS transition)
+- [x] Skeleton del contenido principal mientras carga
+- [x] Contador por seccion en el arbol ("N lecciones")
 
-#### Frontend — Componentes
-- [ ] `CourseSectionList.vue` — árbol colapsable (`q-expansion-item`) con icono por tipo de lección, duración, badge "Preview" y candado para lecciones bloqueadas
-- [ ] `LessonView.vue` — vista `/cursos/:slug/leccion/:lessonId` con layout sidebar + contenido
-- [ ] `CourseNavSidebar.vue` — sidebar izquierdo (250px, colapsable); lección activa highlighted, secciones expandidas automáticamente, porcentaje total arriba
-- [ ] `LessonVideoPlayer.vue` — Video.js + HLS; controles: play/pause, volumen, velocidad (0.5x–2x), fullscreen, picture-in-picture; atajos de teclado (espacio, ←→, ↑↓, F)
-- [ ] `LessonTextViewer.vue` — markdown renderizado con syntax highlighting en code blocks
-- [ ] `LessonPdfViewer.vue` — `<embed>` nativo + fallback a descarga directa
-- [ ] `LessonNavBar.vue` — barra inferior fija con "← Anterior" y "Siguiente →" con título de la lección
-- [ ] `LessonTypeIcon.vue` — icono reutilizable por tipo (video, texto, PDF, audio)
-
-#### UX/UI
-- [ ] Mobile: sidebar como `q-drawer` con swipe o botón hamburguesa
-- [ ] Autoplay de siguiente lección con countdown de 5s cancelable
-- [ ] Velocidad de vídeo preferida guardada en localStorage
-- [ ] Fade-in del contenido al cambiar de lección (no recarga completa)
-- [ ] Skeleton del contenido principal mientras carga (rectángulo para vídeo, líneas para texto)
-- [ ] Contador por sección en el árbol: "3/8 lecciones" con mini barra de progreso
+### Pendiente para futuras iteraciones
+- [ ] Autoplay de siguiente leccion con countdown de 5s cancelable
+- [ ] Atajos de teclado para video (espacio, flechas, F)
+- [ ] Porcentaje total de curso arriba del sidebar (requiere `feature/student-progress`)
+- [ ] Mini barra de progreso por seccion (requiere `feature/student-progress`)
+- [ ] Autorizacion: solo instructor del curso puede crear/editar secciones y lecciones
+- [ ] Seed de datos de prueba (secciones + lecciones para curso existente)
 
 ---
 
@@ -983,7 +988,7 @@ develop
  ├── chore/codebase-cleanup           ✅ Completado
  ├── feature/course-detail-page       ✅ Completado
  ├── feature/enrollment-flow          ✅ Completado
- ├── feature/course-sections-lessons  (merge 5, tras enrollment-flow)
+ ├── feature/course-sections-lessons  ⚠️ En progreso
  ├── feature/downloadable-resources   (merge 6, tras course-sections-lessons)
  ├── feature/student-progress         (merge 7, tras course-sections-lessons)
  ├── feature/course-prerequisites     (merge 8, tras student-progress)

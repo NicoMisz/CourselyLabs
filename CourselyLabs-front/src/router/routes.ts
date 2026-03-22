@@ -48,8 +48,13 @@ const routes: RouteRecordRaw[] = [
         path: 'mis-cursos',
         component: () => import('../views/MyCoursesView.vue'),
         meta: { requiresAuth: true },
-      }
+      },
     ],
+  },
+  {
+    path: '/cursos/:slug/leccion/:lessonId',
+    component: () => import('@/views/LessonView.vue'),
+    meta: { requiresAuth: true },
   },
   {
     path: '/:catchAll(.*)*',
