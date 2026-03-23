@@ -19,6 +19,8 @@ export interface InstructorSummary {
   avatarUrl?: string;
 }
 
+import type { Section } from './lesson'
+
 export interface CourseDetail {
   id: string;
   slug: string;
@@ -35,4 +37,5 @@ export interface CourseDetail {
   averageRating?: number;
   updatedAt?: string;
   instructors?: InstructorSummary[];
+  sections?: Section[];
 }

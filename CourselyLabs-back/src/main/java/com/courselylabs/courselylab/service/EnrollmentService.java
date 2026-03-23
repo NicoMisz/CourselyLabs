@@ -21,6 +21,8 @@ import com.courselylabs.courselylab.exception.ResourceNotFoundException;
 import com.courselylabs.courselylab.mapper.EnrollmentMapper;
 import com.courselylabs.courselylab.repository.CourseRepository;
 import com.courselylabs.courselylab.repository.EnrollmentRepository;
+import com.courselylabs.courselylab.repository.LessonProgressRepository;
+import com.courselylabs.courselylab.repository.SectionRepository;
 import com.courselylabs.courselylab.repository.UserRepository;
 
 @Service
@@ -31,13 +33,19 @@ public class EnrollmentService {
     private final UserRepository userRepository;
     private final CourseRepository courseRepository;
     private final EnrollmentMapper enrollmentMapper;
+    private final LessonProgressRepository lessonProgressRepository;
+    private final SectionRepository sectionRepository;
 
     public EnrollmentService(EnrollmentRepository enrollmentRepository, UserRepository userRepository,
-                             CourseRepository courseRepository, EnrollmentMapper enrollmentMapper) {
+                             CourseRepository courseRepository, EnrollmentMapper enrollmentMapper,
+                             LessonProgressRepository lessonProgressRepository,
+                             SectionRepository sectionRepository) {
         this.enrollmentRepository = enrollmentRepository;
         this.userRepository = userRepository;
         this.courseRepository = courseRepository;
         this.enrollmentMapper = enrollmentMapper;
+        this.lessonProgressRepository = lessonProgressRepository;
+        this.sectionRepository = sectionRepository;
     }
 
     @Transactional(readOnly = true)
@@ -151,12 +159,29 @@ public class EnrollmentService {
 
     private EnrolledCourseDTO toEnrolledCourseDTO(EnrollmentEntity entity) {
         CourseEntity course = entity.getCourse();
-        int progressPercent = 0;
-        String progressStatus = "nuevo";
+        UUID userId = entity.getUser().getId();
+        UUID courseId = course.getId();
+
+        int totalLessons = sectionRepository.findByCourseIdOrderByPositionAsc(courseId)
+                .stream()
+                .mapToInt(s -> s.getLessons().size())
+                .sum();
+
+        int completed = lessonProgressRepository.countCompletedByUserIdAndCourseId(userId, courseId);
+        int progressPercent = totalLessons > 0 ? (completed * 100) / totalLessons : 0;
+
+        String progressStatus;
+        if (progressPercent >= 100) {
+            progressStatus = "completado";
+        } else if (progressPercent > 0) {
+            progressStatus = "en-curso";
+        } else {
+            progressStatus = "nuevo";
+        }
 
         return new EnrolledCourseDTO(
             entity.getId(),
-            course.getId(),
+            courseId,
             course.getSlug(),
             course.getTitle(),
             course.getShortDescription(),

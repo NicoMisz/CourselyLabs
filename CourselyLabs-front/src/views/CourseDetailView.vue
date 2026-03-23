@@ -79,8 +79,14 @@
             </q-tab-panel>
 
             <q-tab-panel name="contenido">
-              <q-banner class="bg-blue-1 text-info" rounded>
-                Contenido del curso disponible proximamente.
+              <CourseSectionList
+                v-if="course.sections?.length"
+                :sections="course.sections"
+                :course-slug="course.slug"
+                :enrolled="enrolled"
+              />
+              <q-banner v-else class="bg-grey-2 text-grey-8" rounded>
+                Este curso aun no tiene contenido publicado.
               </q-banner>
             </q-tab-panel>
 
@@ -146,6 +152,7 @@ import CourseHero from '../components/CourseHero.vue';
 import CourseSidebar from '../components/CourseSidebar.vue';
 import CourseBreadcrumb from '../components/CourseBreadcrumb.vue';
 import EnrollSuccessDialog from '../components/EnrollSuccessDialog.vue';
+import CourseSectionList from '../components/CourseSectionList.vue';
 import { getCourseBySlug, getCourseInstructors } from '../api/course';
 import { checkEnrollment, createEnrollment } from '../api/enrollment';
 import type { CourseDetail } from '../types/course';

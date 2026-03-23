@@ -25,11 +25,13 @@ import com.courselylabs.courselylab.entity.UserEntity;
 import com.courselylabs.courselylab.exception.BadRequestException;
 import com.courselylabs.courselylab.exception.ResourceNotFoundException;
 import com.courselylabs.courselylab.mapper.CourseMapper;
+import com.courselylabs.courselylab.mapper.SectionMapper;
 import com.courselylabs.courselylab.repository.CategoriaRepository;
 import com.courselylabs.courselylab.repository.CourseInstructorRepository;
 import com.courselylabs.courselylab.repository.CourseRepository;
 import com.courselylabs.courselylab.repository.EnrollmentRepository;
 import com.courselylabs.courselylab.repository.ReviewRepository;
+import com.courselylabs.courselylab.repository.SectionRepository;
 import com.courselylabs.courselylab.repository.spec.CourseSpecifications;
 
 @Service
@@ -39,24 +41,30 @@ public class CourseService {
     private final CourseRepository courseRepository;
     private final CategoriaRepository categoriaRepository;
     private final CourseMapper courseMapper;
+    private final SectionMapper sectionMapper;
 
     private final ReviewRepository reviewRepository;
     private final EnrollmentRepository enrollmentRepository;
     private final CourseInstructorRepository courseInstructorRepository;
+    private final SectionRepository sectionRepository;
 
     public CourseService(
             CourseRepository courseRepository,
             CategoriaRepository categoriaRepository,
             CourseMapper courseMapper,
+            SectionMapper sectionMapper,
             ReviewRepository reviewRepository,
             EnrollmentRepository enrollmentRepository,
-            CourseInstructorRepository courseInstructorRepository) {
+            CourseInstructorRepository courseInstructorRepository,
+            SectionRepository sectionRepository) {
         this.courseRepository = courseRepository;
         this.categoriaRepository = categoriaRepository;
         this.courseMapper = courseMapper;
+        this.sectionMapper = sectionMapper;
         this.reviewRepository = reviewRepository;
         this.enrollmentRepository = enrollmentRepository;
         this.courseInstructorRepository = courseInstructorRepository;
+        this.sectionRepository = sectionRepository;
     }
 
     @Transactional(readOnly = true)
@@ -222,6 +230,9 @@ public class CourseService {
 
         List<CourseInstructorEntity> links = courseInstructorRepository.findByCourseId(entity.getId());
         dto.setInstructors(mapInstructors(links));
+
+        dto.setSections(sectionMapper.toDTOList(
+                sectionRepository.findByCourseIdOrderByPositionAsc(entity.getId())));
 
         return dto;
     }
