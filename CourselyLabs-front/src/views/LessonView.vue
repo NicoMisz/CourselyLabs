@@ -16,6 +16,9 @@
       :course-slug="slug"
       :course-title="courseTitle"
       :active-lesson-id="lessonId"
+      :completed-lesson-ids="courseProgress?.completedLessonIds || []"
+      :progress-percent="courseProgress?.progressPercent || 0"
+      :progress-text="progressText"
     />
 
     <q-page-container>
@@ -39,13 +42,30 @@
 
         <!-- Content -->
         <template v-else-if="lesson">
+          <!-- Resume video banner -->
+          <q-banner
+            v-if="showResumeBanner"
+            class="bg-blue-1 q-mx-md q-mx-lg-lg q-mt-md"
+            rounded
+            inline-actions
+            style="max-width: 960px; margin-left: auto; margin-right: auto; width: 100%"
+          >
+            Continuar desde {{ formatTime(lessonProgress?.lastPositionSeconds || 0) }}?
+            <template #action>
+              <q-btn flat color="primary" label="Si" @click="resumeVideo" />
+              <q-btn flat color="grey-7" label="Empezar de nuevo" @click="showResumeBanner = false" />
+            </template>
+          </q-banner>
+
           <div class="col q-pa-md q-pa-lg-lg" style="max-width: 960px; margin: 0 auto; width: 100%">
             <Transition name="fade" mode="out-in">
               <LessonVideoPlayer
                 v-if="lesson.type === 'video' && lesson.contentUrl"
+                ref="videoPlayerRef"
                 :key="lesson.id"
                 :src="lesson.contentUrl"
-                @ended="goToNext"
+                @ended="handleVideoEnded"
+                @time-update="handleTimeUpdate"
               />
               <LessonTextViewer
                 v-else-if="lesson.type === 'text' && lesson.contentText"
@@ -63,9 +83,20 @@
               </div>
             </Transition>
 
-            <div class="q-mt-lg">
-              <h1 class="text-h5 q-my-sm">{{ lesson.title }}</h1>
-              <p v-if="lesson.description" class="text-body2 text-grey-7">{{ lesson.description }}</p>
+            <div class="q-mt-lg row items-center justify-between">
+              <div class="col">
+                <h1 class="text-h5 q-my-sm">{{ lesson.title }}</h1>
+                <p v-if="lesson.description" class="text-body2 text-grey-7">{{ lesson.description }}</p>
+              </div>
+              <q-btn
+                :color="isCurrentCompleted ? 'positive' : 'grey-5'"
+                :icon="isCurrentCompleted ? 'check_circle' : 'radio_button_unchecked'"
+                :label="isCurrentCompleted ? 'Completada' : 'Marcar como completada'"
+                :outline="!isCurrentCompleted"
+                no-caps
+                :loading="completingLesson"
+                @click="handleToggleComplete"
+              />
             </div>
           </div>
 
@@ -77,15 +108,33 @@
         </template>
       </q-page>
     </q-page-container>
+
+    <!-- Course completion dialog -->
+    <q-dialog v-model="showCompletionDialog">
+      <q-card class="q-pa-lg text-center" style="min-width: 340px">
+        <div class="completion-icon q-mx-auto q-mb-md">
+          <q-icon name="emoji_events" size="48px" color="white" />
+        </div>
+        <div class="text-h5 q-mb-sm">Has completado el curso!</div>
+        <div class="text-body2 text-grey-7 q-mb-lg">
+          Felicidades por completar {{ courseTitle }}.
+        </div>
+        <q-card-actions align="center" class="q-gutter-sm">
+          <q-btn flat color="primary" label="Explorar mas cursos" to="/cursos" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-layout>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getCourseSections, getLessonById } from '../api/lesson'
 import { getCourseBySlug } from '../api/course'
+import { getCourseProgress, getLessonProgress, toggleLessonComplete, updateLessonPosition } from '../api/progress'
 import type { Section, Lesson } from '../types/lesson'
+import type { CourseProgress, LessonProgress } from '../types/progress'
 import CourseNavSidebar from '../components/CourseNavSidebar.vue'
 import LessonNavBar from '../components/LessonNavBar.vue'
 import LessonVideoPlayer from '../components/LessonVideoPlayer.vue'
@@ -104,6 +153,29 @@ const sidebarOpen = ref(true)
 const sections = ref<Section[]>([])
 const lesson = ref<Lesson | null>(null)
 const courseTitle = ref('')
+const courseId = ref('')
+const videoPlayerRef = ref<InstanceType<typeof LessonVideoPlayer> | null>(null)
+
+// Progress state
+const courseProgress = ref<CourseProgress | null>(null)
+const lessonProgress = ref<LessonProgress | null>(null)
+const completingLesson = ref(false)
+const showCompletionDialog = ref(false)
+const showResumeBanner = ref(false)
+
+// Video position throttle
+let positionTimer: ReturnType<typeof setInterval> | null = null
+let lastSavedPosition = 0
+
+const progressText = computed(() => {
+  if (!courseProgress.value) return ''
+  const { completedLessons, totalLessons, progressPercent } = courseProgress.value
+  return `${completedLessons} de ${totalLessons} lecciones (${progressPercent}%)`
+})
+
+const isCurrentCompleted = computed(() =>
+  courseProgress.value?.completedLessonIds.includes(lessonId.value) ?? false
+)
 
 const allLessons = computed<Lesson[]>(() =>
   sections.value.flatMap(s => s.lessons)
@@ -123,9 +195,72 @@ const nextLesson = computed(() =>
     : null
 )
 
+function formatTime(seconds: number): string {
+  const m = Math.floor(seconds / 60)
+  const s = seconds % 60
+  return `${m}:${String(s).padStart(2, '0')}`
+}
+
 function goToNext() {
   if (nextLesson.value) {
     router.push(`/cursos/${slug.value}/leccion/${nextLesson.value.id}`)
+  }
+}
+
+async function handleToggleComplete() {
+  completingLesson.value = true
+  try {
+    await toggleLessonComplete(lessonId.value)
+    courseProgress.value = await getCourseProgress(courseId.value)
+
+    if (courseProgress.value.progressPercent >= 100) {
+      showCompletionDialog.value = true
+    }
+  } catch { /* silently fail */ }
+  finally {
+    completingLesson.value = false
+  }
+}
+
+async function handleVideoEnded() {
+  // Auto-complete on video end
+  if (!isCurrentCompleted.value) {
+    await handleToggleComplete()
+  }
+  goToNext()
+}
+
+function handleTimeUpdate(currentTime: number, duration: number) {
+  // Auto-complete at 90% watched
+  if (duration > 0 && currentTime / duration >= 0.9 && !isCurrentCompleted.value) {
+    handleToggleComplete()
+  }
+}
+
+function startPositionTracking() {
+  stopPositionTracking()
+  positionTimer = setInterval(async () => {
+    if (!videoPlayerRef.value) return
+    const current = videoPlayerRef.value.getCurrentTime?.() ?? 0
+    const rounded = Math.floor(current)
+    if (rounded > 0 && Math.abs(rounded - lastSavedPosition) >= 5) {
+      lastSavedPosition = rounded
+      await updateLessonPosition(lessonId.value, rounded).catch(() => {})
+    }
+  }, 10000)
+}
+
+function stopPositionTracking() {
+  if (positionTimer) {
+    clearInterval(positionTimer)
+    positionTimer = null
+  }
+}
+
+function resumeVideo() {
+  showResumeBanner.value = false
+  if (videoPlayerRef.value && lessonProgress.value) {
+    videoPlayerRef.value.seekTo?.(lessonProgress.value.lastPositionSeconds)
   }
 }
 
@@ -135,8 +270,21 @@ async function loadData() {
   try {
     const course = await getCourseBySlug(slug.value)
     courseTitle.value = course.title
+    courseId.value = course.id
     sections.value = await getCourseSections(course.id)
     lesson.value = await getLessonById(lessonId.value)
+
+    courseProgress.value = await getCourseProgress(course.id).catch(() => null)
+    lessonProgress.value = await getLessonProgress(lessonId.value).catch(() => null)
+
+    // Show resume banner for video lessons with saved position
+    if (lesson.value?.type === 'video' && (lessonProgress.value?.lastPositionSeconds ?? 0) > 10) {
+      showResumeBanner.value = true
+    }
+
+    if (lesson.value?.type === 'video') {
+      startPositionTracking()
+    }
   } catch {
     error.value = 'No se pudo cargar la leccion.'
   } finally {
@@ -145,8 +293,19 @@ async function loadData() {
 }
 
 async function loadLesson() {
+  stopPositionTracking()
+  showResumeBanner.value = false
   try {
     lesson.value = await getLessonById(lessonId.value)
+    lessonProgress.value = await getLessonProgress(lessonId.value).catch(() => null)
+
+    if (lesson.value?.type === 'video' && (lessonProgress.value?.lastPositionSeconds ?? 0) > 10) {
+      showResumeBanner.value = true
+    }
+    if (lesson.value?.type === 'video') {
+      lastSavedPosition = 0
+      startPositionTracking()
+    }
   } catch {
     error.value = 'No se pudo cargar la leccion.'
   }
@@ -154,6 +313,7 @@ async function loadLesson() {
 
 watch(lessonId, loadLesson)
 onMounted(loadData)
+onBeforeUnmount(stopPositionTracking)
 </script>
 
 <style scoped>
@@ -164,5 +324,14 @@ onMounted(loadData)
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+.completion-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f59e0b, #ea580c);
 }
 </style>

@@ -12,6 +12,18 @@
       <router-link :to="`/cursos/${courseSlug}`" class="text-subtitle1 text-weight-medium text-primary" style="text-decoration: none">
         {{ courseTitle }}
       </router-link>
+
+      <div v-if="progressText" class="q-mt-sm">
+        <div class="text-caption text-grey-7 q-mb-xs">{{ progressText }}</div>
+        <q-linear-progress
+          :value="progressPercent / 100"
+          color="primary"
+          track-color="grey-3"
+          rounded
+          size="6px"
+          class="progress-bar"
+        />
+      </div>
     </div>
 
     <q-separator />
@@ -20,7 +32,7 @@
       <template v-for="section in sections" :key="section.id">
         <q-expansion-item
           :label="section.title"
-          :caption="`${section.lessons.length} leccion${section.lessons.length !== 1 ? 'es' : ''}`"
+          :caption="sectionCaption(section)"
           header-class="text-weight-medium text-body2"
           default-opened
           dense
@@ -36,7 +48,18 @@
             dense
           >
             <q-item-section avatar>
-              <LessonTypeIcon :type="lesson.type" size="18px" :color="lesson.id === activeLessonId ? 'white' : 'grey-7'" />
+              <q-icon
+                v-if="completedLessonIds.includes(lesson.id)"
+                name="check_circle"
+                size="18px"
+                :color="lesson.id === activeLessonId ? 'white' : 'positive'"
+              />
+              <LessonTypeIcon
+                v-else
+                :type="lesson.type"
+                size="18px"
+                :color="lesson.id === activeLessonId ? 'white' : 'grey-7'"
+              />
             </q-item-section>
             <q-item-section>
               <q-item-label class="text-body2">{{ lesson.title }}</q-item-label>
@@ -52,15 +75,34 @@
 import type { Section } from '../types/lesson'
 import LessonTypeIcon from './LessonTypeIcon.vue'
 
-defineProps<{
+const props = withDefaults(defineProps<{
   modelValue: boolean
   sections: Section[]
   courseSlug: string
   courseTitle: string
   activeLessonId?: string
-}>()
+  completedLessonIds?: string[]
+  progressPercent?: number
+  progressText?: string
+}>(), {
+  completedLessonIds: () => [],
+  progressPercent: 0,
+  progressText: '',
+})
 
 defineEmits<{
   'update:modelValue': [value: boolean]
 }>()
+
+function sectionCaption(section: Section): string {
+  const completed = section.lessons.filter(l => props.completedLessonIds.includes(l.id)).length
+  const total = section.lessons.length
+  return `${completed}/${total} leccion${total !== 1 ? 'es' : ''}`
+}
 </script>
+
+<style scoped>
+.progress-bar {
+  transition: width 0.5s ease;
+}
+</style>

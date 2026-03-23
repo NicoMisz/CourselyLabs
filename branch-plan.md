@@ -293,8 +293,8 @@ Entidades de secciones y lecciones en backend y vista de leccion en frontend con
 ### Pendiente para futuras iteraciones
 - [ ] Autoplay de siguiente leccion con countdown de 5s cancelable
 - [ ] Atajos de teclado para video (espacio, flechas, F)
-- [ ] Porcentaje total de curso arriba del sidebar (requiere `feature/student-progress`)
-- [ ] Mini barra de progreso por seccion (requiere `feature/student-progress`)
+- [x] Porcentaje total de curso arriba del sidebar (implementado en `feature/student-progress`)
+- [ ] Mini barra de progreso por seccion (pendiente)
 - [ ] Autorizacion: solo instructor del curso puede crear/editar secciones y lecciones
 - [ ] Seed de datos de prueba (secciones + lecciones para curso existente)
 
@@ -340,38 +340,41 @@ Archivos descargables adjuntos a lecciones (PDFs, código fuente, assets). Desca
 
 ---
 
-## 7. `feature/student-progress` 🆕 PENDIENTE
+## 7. `feature/student-progress` ⚠️ EN PROGRESO
 
 **Prioridad:** Alta
 **Dependencias:** `feature/course-sections-lessons`
 
-### Descripción
-Tracking del progreso del estudiante: marcar lecciones como completadas, guardar posición de vídeo, progreso por curso.
+### Descripcion
+Tracking del progreso del estudiante: marcar lecciones como completadas, guardar posicion de video, progreso por curso.
 
-### Tareas
+### Estado actual
 
-#### Backend — Entidad nueva
-- [ ] `LessonProgressEntity`: id, userId, lessonId, isCompleted, completedAt, lastPositionSeconds, createdAt
-- [ ] Constraint unique `(userId, lessonId)`
-- [ ] Migración Flyway
+| Elemento | Estado |
+|---|---|
+| Flyway V3 migration (lesson_progress) | Hecho |
+| `LessonProgressEntity` (unique user+lesson) | Hecho |
+| `LessonProgressDTO` + `CourseProgressDTO` + `PositionUpdateDTO` | Hecho |
+| `LessonProgressRepository` (queries por user+course) | Hecho |
+| `LessonProgressService` (toggle, position, courseProgress) | Hecho |
+| `LessonProgressController` (4 endpoints) | Hecho |
+| `EnrollmentService.toEnrolledCourseDTO` — progreso real | Hecho — calcula % desde lesson_progress |
+| Types `progress.ts` | Hecho |
+| API `progress.ts` | Hecho — toggle, getCourse, getLesson, updatePosition |
+| Boton "Marcar como completada" en LessonView | Hecho — toggle con color positive/grey |
+| Auto-completar video al 90% visto | Hecho — timeUpdate event |
+| `CourseNavSidebar` — barra de progreso + checks | Hecho — linear-progress + "N/M lecciones (X%)" + check icons |
+| Video position save (throttled 10s) | Hecho — setInterval + updateLessonPosition |
+| Resume banner "Continuar desde MM:SS?" | Hecho — banner con Si/Empezar de nuevo |
+| `LessonVideoPlayer` — expose getCurrentTime/seekTo | Hecho — defineExpose + timeUpdate emit |
+| Dialog de celebracion al 100% | Hecho — emoji_events gradient + "Has completado el curso!" |
+| "Mis cursos" — progreso real del backend | Hecho — EnrollmentService calcula desde lesson_progress |
 
-#### Backend — Endpoints
-- [ ] `POST /api/progress/lessons/{lessonId}/complete` — marcar/desmarcar como completada (toggle)
-- [ ] `GET /api/progress/courses/{courseId}` — progreso del curso: total lecciones, completadas, porcentaje, lista de lessonIds completados
-- [ ] `PATCH /api/progress/lessons/{lessonId}/position` — guardar posición en segundos (throttled: guardar cada 10s en frontend)
-
-#### Frontend
-- [ ] Botón "Marcar como completada" en `LessonView.vue` — toggle con animación de check fill + color `$positive`
-- [ ] Auto-completar lección de vídeo al superar el 90% visto
-- [ ] `q-linear-progress` del curso en `CourseNavSidebar.vue` con texto "12 de 30 lecciones (40%)"
+### Pendiente para futuras iteraciones
 - [ ] `q-circular-progress` en cards de "Mis cursos" (40px, porcentaje dentro)
-- [ ] Dot pulsante en la primera lección no completada en `CourseNavSidebar.vue`
-- [ ] Al reabrir una lección de vídeo con posición guardada: `q-banner` "Continuar desde 12:34?" con botones "Sí" / "Empezar de nuevo"
-
-#### UX/UI
-- [ ] Dialog de celebración al completar el curso al 100%: animación confeti CSS + "¡Has completado [curso]!" + botones "Dejar valoración" / "Explorar más cursos"
-- [ ] Animación suave en la barra de progreso al incrementar (`transition: width 0.5s ease`)
-- [ ] Click en botón "Completada ✓" de nuevo → dialog de confirmación "¿Marcar como no completada?"
+- [ ] Dot pulsante en la primera leccion no completada en `CourseNavSidebar`
+- [ ] Dialog de confirmacion al desmarcar leccion completada
+- [ ] Animacion confeti CSS en dialog de celebracion
 
 ---
 

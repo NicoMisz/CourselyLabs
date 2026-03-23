@@ -16,6 +16,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   ended: []
+  timeUpdate: [currentTime: number, duration: number]
 }>()
 
 const videoEl = ref<HTMLVideoElement>()
@@ -45,7 +46,23 @@ function initPlayer() {
   })
 
   player.on('ended', () => emit('ended'))
+
+  player.on('timeupdate', () => {
+    const ct = player?.currentTime() ?? 0
+    const dur = player?.duration() ?? 0
+    emit('timeUpdate', ct, dur)
+  })
 }
+
+function getCurrentTime(): number {
+  return player?.currentTime() ?? 0
+}
+
+function seekTo(seconds: number) {
+  player?.currentTime(seconds)
+}
+
+defineExpose({ getCurrentTime, seekTo })
 
 function detectType(url: string): string {
   if (url.endsWith('.m3u8')) return 'application/x-mpegURL'
