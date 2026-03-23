@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.courselylabs.courselylab.dto.CourseDTO;
 import com.courselylabs.courselylab.dto.CourseDetailDTO;
 import com.courselylabs.courselylab.dto.InstructorSummaryDTO;
+import com.courselylabs.courselylab.exception.BadRequestException;
 import com.courselylabs.courselylab.service.CourseService;
 
 import jakarta.validation.Valid;
@@ -78,6 +79,33 @@ public class CourseController {
     @GetMapping("/status/{status}")
     public ResponseEntity<List<CourseDTO>> findByStatus(@PathVariable String status) {
         return ResponseEntity.ok(courseService.findByStatus(status));
+    }
+
+    @GetMapping("/search/advanced")
+    public ResponseEntity<Page<CourseDTO>> searchAdvanced(
+        @RequestParam(required = false) String keyword,
+        @RequestParam(required = false) Integer categoryId,
+        @RequestParam(required = false) String level,
+        @RequestParam(required = false) Boolean isFree,
+        @RequestParam(required = false) Double minRating,
+        @RequestParam(required = false, defaultValue = "recent") String sortBy,
+        @PageableDefault(size = 10) Pageable pageable
+    ) {
+    if (pageable.getPageSize() > 50) {
+        throw new BadRequestException("size no puede ser mayor a 50");
+    }
+
+    Page<CourseDTO> page = courseService.searchAdvanced(
+            keyword,
+            categoryId,
+            level,
+            isFree,
+            minRating,
+            sortBy,
+            pageable
+    );
+
+    return ResponseEntity.ok(page);
     }
 
     @PostMapping

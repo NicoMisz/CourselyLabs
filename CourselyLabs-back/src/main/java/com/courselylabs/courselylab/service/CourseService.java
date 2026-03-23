@@ -5,10 +5,13 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +32,7 @@ import com.courselylabs.courselylab.repository.CourseRepository;
 import com.courselylabs.courselylab.repository.EnrollmentRepository;
 import com.courselylabs.courselylab.repository.ReviewRepository;
 import com.courselylabs.courselylab.repository.SectionRepository;
+import com.courselylabs.courselylab.repository.spec.CourseSpecifications;
 
 @Service
 @Transactional
@@ -250,5 +254,70 @@ public class CourseService {
         }
 
         return instructors;
+    }
+
+    @Transactional(readOnly = true)
+    public Page<CourseDTO> searchAdvanced(
+            String keyword,
+            Integer categoryId,
+            String level,
+            Boolean isFree,
+            Double minRating,
+            String sortBy,
+            Pageable pageable
+    ) {
+        if (minRating != null && (minRating < 0 || minRating > 5)) {
+            throw new BadRequestException("minRating debe estar entre 0 y 5");
+        }
+
+        CourseSearchSort sort = parseSortOrThrow(sortBy);
+        String normalizedKeyword = normalizeLower(keyword);
+        String normalizedLevel = normalizeLower(level);
+
+        Sort resolvedSort = switch (sort) {
+            case PRICE_ASC  -> Sort.by(Sort.Direction.ASC,  "price");
+            case PRICE_DESC -> Sort.by(Sort.Direction.DESC, "price");
+            case POPULAR    -> Sort.by(Sort.Direction.DESC, "totalStudents"); // campo en entidad
+            case RATING     -> Sort.by(Sort.Direction.DESC, "averageRating"); // campo en entidad
+            default         -> Sort.by(Sort.Direction.DESC, "createdAt");
+        };
+
+        Pageable effectivePageable = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                resolvedSort
+        );
+
+        var spec = CourseSpecifications.publishedWithFilters(
+                normalizedKeyword,
+                categoryId,
+                normalizedLevel,
+                isFree,
+                minRating
+        );
+
+        return courseRepository.findAll(spec, effectivePageable)
+                .map(courseMapper::toDTO);
+    }
+
+    private CourseSearchSort parseSortOrThrow(String sortBy) {
+    try {
+        return CourseSearchSort.fromQueryParam(sortBy);
+    } catch (IllegalArgumentException ex) {
+        throw new BadRequestException(ex.getMessage());
+    }
+    }
+
+    private String normalize(String value) {
+    if (value == null) {
+        return null;
+    }
+    String trimmed = value.trim();
+    return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private String normalizeLower(String value) {
+        String normalized = normalize(value);
+        return normalized == null ? null : normalized.toLowerCase(Locale.ROOT);
     }
 }
