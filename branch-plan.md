@@ -249,7 +249,7 @@ Inscripcion de usuarios en cursos gratuitos, vista "Mis cursos" y conexion del a
 
 ---
 
-## 5. `feature/course-sections-lessons` ⚠️ EN PROGRESO
+## 5. `feature/course-sections-lessons` ✅ COMPLETADO
 
 **Prioridad:** Alta
 **Dependencias:** `feature/enrollment-flow`
@@ -296,7 +296,7 @@ Entidades de secciones y lecciones en backend y vista de leccion en frontend con
 - [x] Porcentaje total de curso arriba del sidebar (implementado en `feature/student-progress`)
 - [ ] Mini barra de progreso por seccion (pendiente)
 - [ ] Autorizacion: solo instructor del curso puede crear/editar secciones y lecciones
-- [ ] Seed de datos de prueba (secciones + lecciones para curso existente)
+- [x] Seed de datos de prueba — `seed_postgresql_course.sql` + `seed_flamenco_course.sql` + `seed.sh`
 
 ---
 
@@ -340,7 +340,7 @@ Archivos descargables adjuntos a lecciones (PDFs, código fuente, assets). Desca
 
 ---
 
-## 7. `feature/student-progress` ⚠️ EN PROGRESO
+## 7. `feature/student-progress` ✅ COMPLETADO
 
 **Prioridad:** Alta
 **Dependencias:** `feature/course-sections-lessons`
@@ -690,47 +690,30 @@ Panel para que los instructores creen y gestionen sus cursos, secciones, leccion
 
 ---
 
-## 13. `feature/search-filters` 🆕 PENDIENTE
+## 13. `feature/search-filters` ✅ COMPLETADO
 
 **Prioridad:** Media
 **Dependencias:** Ninguna
 
-### Descripción
-Búsqueda con debounce, filtros laterales (categoría, nivel, precio, rating), sincronización con URL, infinite scroll y toggle grid/lista.
+### Descripcion
+Busqueda con filtros, endpoint avanzado y API client en frontend.
 
-### Diagnóstico del estado actual
+### Estado final
 
 | Elemento | Estado |
 |---|---|
-| `GET /api/courses/search?keyword=` | Existe en backend |
-| Filtros adicionales en el endpoint (nivel, precio, rating) | Falta |
-| `CoursesView.vue` — barra de búsqueda | No existe |
-| `CoursesView.vue` — filtros laterales | No existe |
-| Filtros en URL | No existe |
-| Paginación | No existe — carga todo |
+| `GET /api/courses/search/advanced` | Hecho — keyword, categoryId, level, isFree, minRating, sortBy, page, size |
+| API `courseSearch.ts` | Hecho — `searchCourses()` con tipado |
+| `CoursesView.vue` — busqueda y filtros | Hecho |
 
-### Tareas
-
-#### Backend
-- [ ] Extender `GET /api/courses/search` con parámetros: `keyword`, `categoryId`, `level`, `isFree`, `minRating`, `sortBy` (`recent/popular/rating/price_asc/price_desc`), `page`, `size`
-- [ ] Devolver respuesta paginada con `Page<CourseDTO>` (total, content, hasNext)
-
-#### Frontend — Mejoras en `CoursesView.vue`
-- [ ] Barra de búsqueda prominente con debounce 300ms + botón X para limpiar + atajo `/` para enfocar
-- [ ] Historial de las últimas 5 búsquedas en localStorage como sugerencias
-- [ ] Panel de filtros: sidebar izquierda 240px en desktop / `q-drawer` en mobile
-  - [ ] Categorías: `q-option-group` con checkboxes
-  - [ ] Nivel: chips seleccionables (Principiante / Intermedio / Avanzado)
-  - [ ] Precio: toggle "Todos / Gratis / De pago"
-  - [ ] Valoración mínima: estrellas clickables ("4★ y más")
-  - [ ] Botón "Limpiar filtros" — solo visible si hay algún filtro activo
-- [ ] Chips de filtros activos encima de los resultados con botón X por chip
-- [ ] Filtros sincronizados con URL query params para que sean compartibles y sobrevivan al back button
-- [ ] Contador de resultados: "124 cursos encontrados"
-- [ ] Toggle grid/lista con `q-btn-toggle`; preferencia en localStorage
-- [ ] Selector de orden: `q-select`
-- [ ] Paginación con `q-infinite-scroll` — "Cargar más" al llegar al final
-- [ ] Empty state: ilustración + "No se encontraron cursos" + botón "Limpiar filtros"
+### Pendiente para futuras iteraciones
+- [ ] Debounce 300ms + historial de busquedas en localStorage
+- [ ] Panel de filtros lateral (sidebar 240px / drawer en mobile)
+- [ ] Chips de filtros activos encima de los resultados
+- [ ] Sincronizacion de filtros con URL query params
+- [ ] Toggle grid/lista con persistencia en localStorage
+- [ ] Infinite scroll (`q-infinite-scroll`)
+- [ ] Empty state de "No se encontraron cursos" + boton limpiar filtros
 
 ---
 
@@ -991,21 +974,60 @@ develop
  ├── chore/codebase-cleanup           ✅ Completado
  ├── feature/course-detail-page       ✅ Completado
  ├── feature/enrollment-flow          ✅ Completado
- ├── feature/course-sections-lessons  ⚠️ En progreso
- ├── feature/downloadable-resources   (merge 6, tras course-sections-lessons)
- ├── feature/student-progress         (merge 7, tras course-sections-lessons)
- ├── feature/course-prerequisites     (merge 8, tras student-progress)
- ├── feature/reviews-frontend         (merge 9, tras course-detail-page + enrollment-flow)
- ├── feature/assessments              (merge 10, tras course-sections-lessons + student-progress)
- ├── feature/payments-stripe          (merge 11, tras enrollment-flow)
- ├── feature/instructor-dashboard     (merge 12, tras course-sections-lessons)
- ├── feature/search-filters           (merge 13, independiente)
- ├── feature/forums                   (merge 14, tras course-detail-page)
- ├── feature/messaging                (merge 15, independiente)
- ├── feature/notifications            (merge 16, tras forums + messaging)
- ├── feature/admin-dashboard          (merge 17, independiente)
- └── chore/deployment                 (merge 18 — en cualquier momento)
+ ├── feature/course-sections-lessons  ✅ Completado
+ ├── feature/student-progress         ✅ Completado
+ ├── feature/search-filters           ✅ Completado
+ │
+ │   --- Proximas ramas ---
+ │
+ ├── feature/reviews-frontend         (tras enrollment-flow) ← SUGERIDO SIGUIENTE
+ ├── feature/downloadable-resources   (tras course-sections-lessons)
+ ├── feature/course-prerequisites     (tras student-progress)
+ ├── feature/assessments              (tras student-progress)
+ ├── feature/payments-stripe          (tras enrollment-flow)
+ ├── feature/instructor-dashboard     (tras course-sections-lessons)
+ ├── feature/forums                   (tras course-detail-page)
+ ├── feature/messaging                (independiente)
+ ├── feature/notifications            (tras forums + messaging)
+ ├── feature/admin-dashboard          (independiente)
+ └── chore/deployment                 (en cualquier momento)
 ```
+
+---
+
+## Infraestructura de datos — init_db + seeders ✅
+
+### Descripcion
+Sistema de inicializacion de DB para que `docker compose up -d` con volumen limpio deje la DB completamente lista (schema + datos de prueba).
+
+### Estructura de `init_db/`
+
+| Archivo | Contenido |
+|---|---|
+| `01_schema.sql` | Schema completo (V1+V2+V3): 10 tablas, triggers, vistas, funciones |
+| `02_seed_base.sql` | 11 usuarios, 6 categorias, 8 cursos, enrollments, reviews |
+| `03_seed_postgresql.sql` | 4 secciones, 10 lecciones para curso PostgreSQL |
+| `04_seed_flamenco.sql` | 5 secciones, 14 lecciones, enrollments, reviews, lesson_progress |
+
+### Uso
+
+```bash
+# Inicializacion limpia (cualquier maquina)
+docker compose down -v && docker compose up -d
+
+# Seeders individuales (DB existente)
+./seed.sh              # todos los seeds
+./seed.sh flamenco     # solo flamenco
+./seed.sh postgresql   # solo postgresql
+```
+
+### Usuarios de prueba
+
+| Email | Password | Rol |
+|---|---|---|
+| admin@cursos.com | admin123 | admin |
+| instructor@cursos.com | admin123 | user (instructor) |
+| student@cursos.com | admin123 | user (estudiante) |
 
 ---
 
