@@ -1,5 +1,6 @@
 package com.courselylabs.courselylab.service;
 
+import com.courselylabs.courselylab.dto.ChangePasswordDTO;
 import com.courselylabs.courselylab.dto.auth.AuthResponseDTO;
 import com.courselylabs.courselylab.dto.auth.LoginRequestDTO;
 import com.courselylabs.courselylab.dto.auth.RegisterRequestDTO;
@@ -96,6 +97,18 @@ public class AuthService {
                 .expiresIn(refreshExpiration / 1000)
                 .user(userMapper.toDTO(refreshToken.getUser()))
                 .build();
+    }
+
+    public void changePassword(String email, ChangePasswordDTO dto) {
+        UserEntity user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new BadRequestException("Usuario no encontrado"));
+
+        if (!passwordEncoder.matches(dto.getCurrentPassword(), user.getPasswordHash())) {
+            throw new BadRequestException("La contraseña actual es incorrecta");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(dto.getNewPassword()));
+        userRepository.save(user);
     }
 
     public void logout(String token) {

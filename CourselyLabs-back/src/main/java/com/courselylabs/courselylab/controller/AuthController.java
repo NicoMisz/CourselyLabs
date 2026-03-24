@@ -1,5 +1,6 @@
 package com.courselylabs.courselylab.controller;
 
+import com.courselylabs.courselylab.dto.ChangePasswordDTO;
 import com.courselylabs.courselylab.dto.auth.AuthResponseDTO;
 import com.courselylabs.courselylab.dto.auth.LoginRequestDTO;
 import com.courselylabs.courselylab.dto.auth.RefreshRequestDTO;
@@ -7,6 +8,7 @@ import com.courselylabs.courselylab.dto.auth.RegisterRequestDTO;
 import com.courselylabs.courselylab.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -37,6 +39,14 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(@Valid @RequestBody RefreshRequestDTO dto) {
         authService.logout(dto.getRefreshToken());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/change-password")
+    public ResponseEntity<Void> changePassword(
+            @Valid @RequestBody ChangePasswordDTO dto,
+            Authentication auth) {
+        authService.changePassword(auth.getName(), dto);
         return ResponseEntity.noContent().build();
     }
 }
