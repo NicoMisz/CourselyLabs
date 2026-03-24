@@ -1,10 +1,14 @@
 <template>
   <q-layout view="hHh Lpr fFf" class="bg-white">
-    <AppHeader @toggle-drawer="toggleLeftDrawer" />
+    <AppHeader
+      @toggle-drawer="leftDrawerOpen = !leftDrawerOpen"
+      @update:hidden="headerHidden = $event"
+    />
 
     <AppSidebar
       v-model="leftDrawerOpen"
       :mini="miniState"
+      :header-hidden="headerHidden"
       @update:mini="miniState = $event"
     />
 
@@ -22,10 +26,7 @@ import AppHeader from './AppHeader.vue'
 import AppSidebar from './AppSidebar.vue'
 import AppFooter from './AppFooter.vue'
 
-const leftDrawerOpen = ref(false)
+const leftDrawerOpen = ref(true)
 const miniState = ref(true)
-
-function toggleLeftDrawer() {
-  leftDrawerOpen.value = !leftDrawerOpen.value
-}
+const headerHidden = ref(false)
 </script>
