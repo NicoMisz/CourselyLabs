@@ -51,9 +51,10 @@ Cada sección corresponde a una rama de git independiente desde `develop`. Las r
 
 ### Bugs y mejoras pendientes de autenticacion/perfil
 
-- [ ] **BUG: localStorage "user" no se actualiza al editar perfil** — `ProfileView.vue` actualiza Pinia pero no localStorage. Si el usuario refresca la pagina, ve datos viejos hasta el proximo login. **Fix**: llamar `localStorage.setItem('user', JSON.stringify(updatedUser))` tras el PUT exitoso, o mejor, añadir un metodo `updateUser()` en el auth store que sincronice ambos.
-- [ ] **No hay endpoint de cambio de password** — No existe forma de cambiar la contraseña. Requiere nuevo endpoint `PATCH /api/auth/change-password` con validacion de password actual + nuevo password.
-- [ ] **No hay verificacion de email** — `isVerified` siempre false para usuarios nuevos. Requiere flujo de envio de email con token + endpoint `GET /api/auth/verify?token=`. Depende de configurar SendGrid o similar.
+- [x] **FIX: localStorage sync en edicion de perfil** — Añadido `updateUser()` en auth store que sincroniza Pinia + localStorage. `ProfileView` ahora usa `authStore.updateUser(data)`.
+- [x] **Endpoint de cambio de password** — `PATCH /api/auth/change-password` con `ChangePasswordDTO` (currentPassword + newPassword min 8). Ruta protegida en SecurityConfig (excluida del `permitAll` de `/api/auth/**`).
+- [x] **Rediseño de ProfileView** — Layout profesional: header gradient con avatar+iniciales, info personal editable, seccion seguridad con cambio de contraseña (toggle visibility), estadisticas de cursos, fecha de registro.
+- [x] **Verificacion de email** — Implementado con JavaMailSender + MailHog (dev). Flyway V4 (`verification_tokens`). `EmailService` genera token UUID con 24h de expiración, envía HTML con botón de verificación. Endpoints: `GET /api/auth/verify?token=`, `POST /api/auth/resend-verification?email=`. Frontend: `VerifyEmailView.vue` (ruta `/verificar-email?token=`), banner de warning en `ProfileView` con botón "Reenviar email". Registro envía email automáticamente (no bloquea si falla). Para producción: cambiar `MAIL_HOST`/`MAIL_PORT` a Gmail SMTP o servidor propio.
 - [ ] **No hay logout de todos los dispositivos** — Solo se revoca el refresh token actual. Si el usuario tiene sesion en otro navegador, sigue activa. Fix: endpoint `POST /api/auth/logout-all` que revoque todos los refresh tokens del usuario.
 - [ ] **El refresh token no rota** — Al refrescar, se devuelve el mismo token en vez de generar uno nuevo y revocar el anterior. Esto reduce la seguridad ante robo de refresh token. Fix: generar nuevo refresh token en cada refresh y revocar el anterior.
 
