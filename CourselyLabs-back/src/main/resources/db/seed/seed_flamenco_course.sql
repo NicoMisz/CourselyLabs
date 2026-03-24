@@ -37,7 +37,7 @@ VALUES (
   'Descubre el flamenco: historia, palos, guitarra, cante y baile',
   cat_id,
   'beginner',
-  false,
+  true,
   NULL,
   'published',
   true,

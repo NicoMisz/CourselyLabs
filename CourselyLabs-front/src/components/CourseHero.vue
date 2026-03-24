@@ -14,7 +14,7 @@
 
         <div class="row q-gutter-sm items-center q-mb-md">
           <LevelBadge :level="level" />
-          <PriceBadge :free="free" :price="price" />
+          <PriceBadge :is-free="isFree" :price="price" />
           <q-chip dense icon="groups" color="grey-2" text-color="dark">
             {{ studentsLabel }}
           </q-chip>
@@ -38,7 +38,7 @@ const props = defineProps<{
   title: string;
   shortDescription?: string;
   level?: string;
-  free?: boolean;
+  isFree?: boolean;
   price?: number;
   thumbnailUrl?: string;
   studentsCount?: number;

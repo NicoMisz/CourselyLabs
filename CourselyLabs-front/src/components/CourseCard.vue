@@ -19,7 +19,7 @@
 
     <q-card-section class="q-pt-none row items-center q-gutter-sm">
       <LevelBadge :level="course.level" />
-      <PriceBadge :free="course.isFree" :price="course.price" />
+      <PriceBadge :is-free="course.isFree" :price="course.price" />
       <q-space />
       <div v-if="course.averageRating" class="text-caption text-grey-8 row items-center no-wrap">
         <q-icon name="star" color="warning" size="16px" class="q-mr-xs" />

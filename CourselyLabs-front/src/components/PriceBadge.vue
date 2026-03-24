@@ -1,37 +1,34 @@
 <template>
   <div class="price-wrap">
     <q-chip v-if="isFree" dense color="positive" text-color="white">Gratis</q-chip>
-    <div v-else class="price-paid">
-      <span class="price-amount">{{ formattedPrice }}</span>
-    </div>
+    <template v-else>
+      <q-chip dense color="accent" text-color="white">{{ formattedPrice }}</q-chip>
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed } from 'vue'
 
 const props = defineProps<{
-  free?: boolean;
-  price?: number;
-}>();
+  isFree: boolean
+  price?: number | null
+}>()
 
-const isFree = computed(() => props.free || !props.price || props.price <= 0);
-
-const formattedPrice = computed(() =>
-  new Intl.NumberFormat('es-ES', {
-    style: 'currency',
-    currency: 'EUR',
-  }).format(props.price || 0),
-);
+const formattedPrice = computed(() => {
+  if (props.price != null && props.price > 0) {
+    return new Intl.NumberFormat('es-ES', {
+      style: 'currency',
+      currency: 'EUR',
+    }).format(props.price)
+  }
+  return 'De pago'
+})
 </script>
 
 <style scoped>
 .price-wrap {
   display: flex;
   align-items: center;
-}
-.price-amount {
-  font-weight: 700;
-  font-size: 1.2rem;
 }
 </style>

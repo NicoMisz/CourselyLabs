@@ -50,7 +50,7 @@
             :title="course.title"
             :short-description="course.shortDescription"
             :level="course.level"
-            :free="course.isFree"
+            :is-free="course.isFree"
             :price="course.price"
             :thumbnail-url="course.thumbnailUrl"
             :students-count="course.studentsCount"
