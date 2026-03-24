@@ -32,6 +32,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
+    private final EmailService emailService;
     private final long refreshExpiration;
 
     public AuthService(UserRepository userRepository,
@@ -40,6 +41,7 @@ public class AuthService {
                        AuthenticationManager authenticationManager,
                        PasswordEncoder passwordEncoder,
                        UserMapper userMapper,
+                       EmailService emailService,
                        @Value("${jwt.refresh-expiration}") long refreshExpiration) {
         this.userRepository = userRepository;
         this.refreshTokenRepository = refreshTokenRepository;
@@ -47,6 +49,7 @@ public class AuthService {
         this.authenticationManager = authenticationManager;
         this.passwordEncoder = passwordEncoder;
         this.userMapper = userMapper;
+        this.emailService = emailService;
         this.refreshExpiration = refreshExpiration;
     }
 
@@ -75,6 +78,12 @@ public class AuthService {
         user.setIsActive(true);
 
         userRepository.save(user);
+
+        try {
+            emailService.sendVerificationEmail(user);
+        } catch (Exception e) {
+            // No bloquear el registro si falla el envio de email
+        }
 
         UserDetailsImpl userDetails = new UserDetailsImpl(user);
         return buildAuthResponse(userDetails);

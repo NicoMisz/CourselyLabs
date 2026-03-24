@@ -1,6 +1,24 @@
 <template>
   <q-page class="q-pa-md q-pa-lg-lg">
     <div class="profile-container q-mx-auto">
+      <!-- Email no verificado -->
+      <q-banner v-if="user && !user.isVerified" class="bg-warning-1 q-mb-md" rounded inline-actions>
+        <template #avatar>
+          <q-icon name="warning" color="warning" />
+        </template>
+        Tu email no esta verificado. Revisa tu bandeja de entrada o spam.
+        <template #action>
+          <q-btn
+            flat
+            color="warning"
+            label="Reenviar email"
+            no-caps
+            :loading="resendingFromProfile"
+            @click="resendFromProfile"
+          />
+        </template>
+      </q-banner>
+
       <!-- Header -->
       <div class="profile-header q-pa-lg q-mb-md rounded-borders">
         <div class="row items-center q-gutter-md">
@@ -343,6 +361,23 @@ async function changePassword() {
     $q.notify({ type: 'negative', message: msg, position: 'bottom-right' })
   } finally {
     savingPassword.value = false
+  }
+}
+
+// --- Stats ---
+// --- Resend verification from profile banner ---
+const resendingFromProfile = ref(false)
+
+async function resendFromProfile() {
+  if (!user.value?.email) return
+  resendingFromProfile.value = true
+  try {
+    await api.post(`/api/auth/resend-verification?email=${encodeURIComponent(user.value.email)}`)
+    $q.notify({ type: 'positive', message: 'Email de verificacion reenviado', position: 'bottom-right' })
+  } catch {
+    $q.notify({ type: 'negative', message: 'No se pudo reenviar el email', position: 'bottom-right' })
+  } finally {
+    resendingFromProfile.value = false
   }
 }
 

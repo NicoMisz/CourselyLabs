@@ -49,6 +49,11 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/MyCoursesView.vue'),
         meta: { requiresAuth: true },
       },
+      {
+        path: 'verificar-email',
+        component: () => import('@/views/VerifyEmailView.vue'),
+        meta: { title: 'Verificar email — CourselyLabs' },
+      },
     ],
   },
   {
