@@ -1,44 +1,89 @@
 <template>
-  <q-header>
-    <q-toolbar>
-
-      <q-toolbar-title class="cursor-pointer" @click="$router.push('/')">
-        CourselyLabs
-      </q-toolbar-title>
+  <q-header
+    :class="['app-header', { 'app-header--hidden': hidden }]"
+    bordered
+  >
+    <q-toolbar class="app-toolbar">
+      <q-btn
+        flat
+        dense
+        round
+        icon="menu"
+        color="white"
+        class="mobile-menu-btn"
+        @click="$emit('toggleDrawer')"
+      />
 
       <q-space />
 
-      <q-btn flat no-caps label="Cursos" @click="$router.push('/cursos')" />
+      <router-link to="/" class="app-logo">
+        <span class="app-logo__coursely">Coursely</span><span class="app-logo__labs">Labs</span>
+      </router-link>
 
-      <template v-if="authStore.isLoggedIn">
-        <q-btn flat no-caps label="Mis cursos" @click="$router.push('/mis-cursos')" />
-        <span class="q-mx-sm text-body2">{{ authStore.user?.firstName }}</span>
-        <q-btn flat round dense icon="account_circle" @click="$router.push('/profile')" />
-        <q-btn flat round dense icon="logout" @click="handleLogout" />
-      </template>
+      <q-space />
 
-      <template v-else>
-        <q-btn flat no-caps label="Iniciar sesion" @click="$router.push('/login')" />
-      </template>
+      <div class="mobile-menu-spacer" style="width: 40px" />
     </q-toolbar>
   </q-header>
 </template>
 
 <script setup lang="ts">
-import { useAuthStore } from '../stores/auth';
-import { useRouter } from 'vue-router';
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 
-withDefaults(defineProps<{ showMenuButton?: boolean }>(), {
-  showMenuButton: true,
-});
+const emit = defineEmits<{
+  toggleDrawer: []
+  'update:hidden': [value: boolean]
+}>()
 
-defineEmits<{ toggleDrawer: [] }>();
+const hidden = ref(false)
+const THRESHOLD = 80
 
-const authStore = useAuthStore();
-const router = useRouter();
-
-async function handleLogout() {
-  await authStore.logout();
-  router.push('/login');
+function onScroll() {
+  const nowHidden = window.scrollY > THRESHOLD
+  if (nowHidden !== hidden.value) {
+    hidden.value = nowHidden
+    emit('update:hidden', nowHidden)
+  }
 }
+
+onMounted(() => window.addEventListener('scroll', onScroll, { passive: true }))
+onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
 </script>
+
+<style scoped>
+.app-header {
+  background: #0f766e;
+  transition: transform 0.35s ease;
+}
+
+.app-header--hidden {
+  transform: translateY(-100%);
+}
+
+.app-toolbar {
+  min-height: 64px;
+}
+
+.app-logo {
+  text-decoration: none;
+  font-family: 'Monda', sans-serif;
+  font-weight: 700;
+  font-size: 1.6rem;
+  letter-spacing: -0.5px;
+}
+
+.app-logo__coursely {
+  color: #ffffff;
+}
+
+.app-logo__labs {
+  color: #ea580c;
+}
+
+@media (min-width: 1009px) {/* Por culpa del minisidebar es este numero tan raro */
+  .mobile-menu-btn,
+  .mobile-menu-spacer {
+    display: none !important;
+  }
+}
+</style>

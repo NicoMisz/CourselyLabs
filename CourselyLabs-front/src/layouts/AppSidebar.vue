@@ -4,40 +4,97 @@
     @update:model-value="$emit('update:modelValue', $event)"
     show-if-above
     bordered
-    class="bg-grey-2"
+    class="bg-grey-1"
     :mini="mini"
     @mouseenter="$emit('update:mini', false)"
     @mouseleave="$emit('update:mini', true)"
     :width="250"
     :mini-width="60"
   >
-    <q-list>
-      <q-item
-        v-for="link in linksList"
-        :key="link.title"
-        clickable
-        :to="link.link"
-        active-class="text-primary bg-primary-light"
-      >
+    <q-list class="q-pt-sm">
+      <!-- Mini logo when header is hidden -->
+      <q-item v-if="headerHidden" clickable to="/" class="q-mb-xs">
         <q-item-section avatar>
-          <q-icon :name="link.icon" />
-          <q-tooltip v-if="mini" anchor="center right" self="center left" :offset="[10, 0]">
-            {{ link.title }}
-          </q-tooltip>
+          <span class="sidebar-logo-mini">C<span class="sidebar-logo-mini__accent">L</span></span>
         </q-item-section>
         <q-item-section>
-          <q-item-label>{{ link.title }}</q-item-label>
-          <q-item-label caption>{{ link.caption }}</q-item-label>
+          <span class="sidebar-logo">
+            <span class="sidebar-logo__coursely">Coursely</span><span class="sidebar-logo__labs">Labs</span>
+          </span>
         </q-item-section>
       </q-item>
+
+      <q-separator v-if="headerHidden" class="q-mb-sm" />
+
+      <!-- Navegacion principal -->
+      <SidebarItem
+        v-for="link in navLinks"
+        :key="link.link"
+        v-bind="link"
+        :mini="mini"
+      />
+
+      <q-separator class="q-my-sm" />
+
+      <!-- Autenticado -->
+      <template v-if="authStore.isLoggedIn">
+        <SidebarItem
+          v-for="link in authLinks"
+          :key="link.link"
+          v-bind="link"
+          :mini="mini"
+        />
+
+        <q-separator class="q-my-sm" />
+
+        <!-- Usuario -->
+        <q-item clickable to="/profile" active-class="text-primary">
+          <q-item-section avatar>
+            <q-avatar size="32px" color="primary" text-color="white" font-size="14px">
+              {{ initials }}
+            </q-avatar>
+            <q-tooltip v-if="mini" anchor="center right" self="center left" :offset="[10, 0]">
+              Mi perfil
+            </q-tooltip>
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>{{ authStore.user?.firstName }} {{ authStore.user?.lastName }}</q-item-label>
+            <q-item-label caption>{{ rolLabel }}</q-item-label>
+          </q-item-section>
+        </q-item>
+
+        <q-item clickable @click="handleLogout">
+          <q-item-section avatar>
+            <q-icon name="logout" />
+            <q-tooltip v-if="mini" anchor="center right" self="center left" :offset="[10, 0]">
+              Cerrar sesion
+            </q-tooltip>
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>Cerrar sesion</q-item-label>
+          </q-item-section>
+        </q-item>
+      </template>
+
+      <!-- No autenticado -->
+      <template v-else>
+        <SidebarItem title="Iniciar sesion" icon="login" link="/login" :mini="mini" />
+        <SidebarItem title="Registrarse" icon="person_add" link="/register" :mini="mini" />
+      </template>
     </q-list>
   </q-drawer>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
+import SidebarItem from './SidebarItem.vue'
+
 defineProps<{
   modelValue: boolean
   mini: boolean
+  headerHidden?: boolean
 }>()
 
 defineEmits<{
@@ -45,24 +102,59 @@ defineEmits<{
   'update:mini': [value: boolean]
 }>()
 
-const linksList = [
-  {
-    title: 'Inicio',
-    caption: 'Pagina principal',
-    icon: 'home',
-    link: '/',
-  },
-  {
-    title: 'Cursos',
-    caption: 'Explorar cursos',
-    icon: 'school',
-    link: '/cursos',
-  },
-  {
-    title: 'Caixa',
-    caption: 'Carrito de compra',
-    icon: 'shopping_cart',
-    link: '/carrito',
-  },
+const authStore = useAuthStore()
+const router = useRouter()
+
+const initials = computed(() => {
+  const f = authStore.user?.firstName?.[0] || ''
+  const l = authStore.user?.lastName?.[0] || ''
+  return (f + l).toUpperCase()
+})
+
+const rolLabel = computed(() => {
+  switch (authStore.user?.role) {
+    case 'admin': return 'Administrador'
+    case 'premium': return 'Premium'
+    default: return 'Estudiante'
+  }
+})
+
+const navLinks = [
+  { title: 'Inicio', icon: 'home', link: '/' },
+  { title: 'Cursos', icon: 'school', link: '/cursos' },
 ]
+
+const authLinks = [
+  { title: 'Mis cursos', icon: 'menu_book', link: '/mis-cursos' },
+  { title: 'Mi perfil', icon: 'person', link: '/profile' },
+]
+
+async function handleLogout() {
+  await authStore.logout()
+  router.push('/login')
+}
 </script>
+
+<style scoped>
+.sidebar-logo-mini {
+  font-family: 'Monda', sans-serif;
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: #0f766e;
+}
+.sidebar-logo-mini__accent {
+  color: #ea580c;
+}
+.sidebar-logo {
+  font-family: 'Monda', sans-serif;
+  font-weight: 700;
+  font-size: 1.1rem;
+  text-decoration: none;
+}
+.sidebar-logo__coursely {
+  color: #0f766e;
+}
+.sidebar-logo__labs {
+  color: #ea580c;
+}
+</style>
