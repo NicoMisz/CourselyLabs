@@ -51,6 +51,8 @@ public class CourseDTO {
 
     private BigDecimal averageRating;
 
+    private UUID createdById;
+
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;

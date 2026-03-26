@@ -10,3 +10,8 @@ export async function getCourseInstructors(courseId: string): Promise<Instructor
   const { data } = await api.get(`/api/courses/${courseId}/instructors`);
   return data;
 }
+
+export async function getCategories() {
+  const { data } = await api.get('/api/categories');
+  return data;
+}

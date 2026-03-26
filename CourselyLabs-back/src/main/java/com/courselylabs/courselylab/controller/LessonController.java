@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import org.springframework.security.access.prepost.PreAuthorize;
+
 import com.courselylabs.courselylab.dto.LessonDTO;
 import com.courselylabs.courselylab.dto.ReorderRequestDTO;
 import com.courselylabs.courselylab.service.LessonService;
@@ -36,6 +38,7 @@ public class LessonController {
     }
 
     @PostMapping("/sections/{sectionId}/lessons")
+    @PreAuthorize("@courseSecurityService.canEditSection(#sectionId, authentication)")
     public ResponseEntity<LessonDTO> create(
             @PathVariable UUID sectionId,
             @Valid @RequestBody LessonDTO dto) {
@@ -44,6 +47,7 @@ public class LessonController {
     }
 
     @PutMapping("/lessons/{id}")
+    @PreAuthorize("@courseSecurityService.canEditLesson(#id, authentication)")
     public ResponseEntity<LessonDTO> update(
             @PathVariable UUID id,
             @Valid @RequestBody LessonDTO dto) {
@@ -51,6 +55,7 @@ public class LessonController {
     }
 
     @DeleteMapping("/lessons/{id}")
+    @PreAuthorize("@courseSecurityService.canEditLesson(#id, authentication)")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         lessonService.delete(id);
         return ResponseEntity.noContent().build();

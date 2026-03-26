@@ -32,7 +32,7 @@ SELECT id INTO cat_id FROM categories WHERE slug = 'musica';
 -- ==========================================
 -- 2. CURSO
 -- ==========================================
-INSERT INTO courses (id, title, slug, description, short_description, category_id, level, is_free, price, status, is_published, published_at, total_students, average_rating)
+INSERT INTO courses (id, title, slug, description, short_description, category_id, level, is_free, price, status, is_published, published_at, total_students, average_rating, created_by)
 VALUES (
   gen_random_uuid(),
   'Arte Flamenco: De los origenes al escenario',
@@ -41,13 +41,14 @@ VALUES (
   'Descubre el flamenco: historia, palos, guitarra, cante y baile',
   cat_id,
   'beginner',
-  false,
+  true,
   NULL,
   'published',
   true,
   now() - interval '15 days',
   2,
-  0.00
+  0.00,
+  instructor
 )
 RETURNING id INTO course_id;
 

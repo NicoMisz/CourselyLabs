@@ -75,6 +75,7 @@ CREATE TABLE courses (
     published_at TIMESTAMP,
     total_students INTEGER DEFAULT 0,
     average_rating DECIMAL(3,2) DEFAULT 0.00,
+    created_by UUID REFERENCES users(id),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -84,6 +85,7 @@ CREATE INDEX idx_courses_category ON courses(category_id);
 CREATE INDEX idx_courses_status ON courses(status);
 CREATE INDEX idx_courses_is_published ON courses(is_published);
 CREATE INDEX idx_courses_created_at ON courses(created_at DESC);
+CREATE INDEX idx_courses_created_by ON courses(created_by);
 
 -- ============================================
 -- COURSE_INSTRUCTORS
@@ -187,6 +189,22 @@ CREATE TABLE lesson_progress (
 
 CREATE INDEX idx_lesson_progress_user_id ON lesson_progress(user_id);
 CREATE INDEX idx_lesson_progress_lesson_id ON lesson_progress(lesson_id);
+
+-- ============================================
+-- VERIFICATION TOKENS
+-- ============================================
+
+CREATE TABLE verification_tokens (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token       VARCHAR(255) NOT NULL UNIQUE,
+    expires_at  TIMESTAMP NOT NULL,
+    used        BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at  TIMESTAMP NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_verification_tokens_token ON verification_tokens(token);
+CREATE INDEX idx_verification_tokens_user_id ON verification_tokens(user_id);
 
 -- ============================================
 -- TRIGGERS
