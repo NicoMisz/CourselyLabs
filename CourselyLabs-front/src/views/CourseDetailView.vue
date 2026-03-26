@@ -106,7 +106,14 @@
 
             <q-tab-panel name="valoraciones">
               <q-banner class="bg-grey-2 text-grey-8" rounded>
-                Valoraciones disponibles en una siguiente iteracion.
+                <CourseTabReviews
+                  v-if="course"
+                  :course-id="course.id"
+                  :enrolled="enrolled"
+                  :is-logged-in="authStore.isLoggedIn"
+                  :completed-lessons="courseCompletedLessons"
+                  :current-user-id="authStore.user?.id"
+                />
               </q-banner>
             </q-tab-panel>
           </q-tab-panels>
@@ -157,6 +164,9 @@ import { getCourseBySlug, getCourseInstructors } from '../api/course';
 import { checkEnrollment, createEnrollment } from '../api/enrollment';
 import type { CourseDetail } from '../types/course';
 
+import CourseTabReviews from '@/components/CourseTabReviews.vue';
+import { getCourseProgress } from '@/api/progress';
+
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
@@ -170,6 +180,8 @@ const enrolled = ref(false);
 const enrollLoading = ref(false);
 const showEnrollSuccess = ref(false);
 const enrollError = ref('');
+
+const courseCompletedLessons = ref(0)
 
 function setOgMeta(name: string, content: string) {
   const selector = `meta[property="${name}"]`
@@ -241,12 +253,43 @@ async function handleEnroll() {
   }
 }
 
+async function fetchCourseProgress(courseId?: string) {
+  if (!authStore.isLoggedIn || !enrolled.value || !courseId) {
+    courseCompletedLessons.value = 0
+    return
+  }
+
+  try {
+    const p = await getCourseProgress(courseId)
+    courseCompletedLessons.value = p.completedLessons ?? 0
+  } catch {
+    courseCompletedLessons.value = 0
+  }
+}
+
 function handleContinueCourse() {
   router.push(route.fullPath);
 }
 
 watch(() => course.value?.id, fetchEnrollmentState, { immediate: true });
+
 watch(() => route.params.slug, fetchCourse);
 onMounted(fetchCourse);
+
+// Nuevo: cargar progreso cuando cambia el curso
+watch(
+  () => course.value?.id,
+  (id) => {
+    if (id) fetchCourseProgress(id)
+  },
+  { immediate: true }
+)
+
+// Nuevo: recargar progreso si cambia la inscripción
+watch(enrolled, (isEnrolled) => {
+  if (isEnrolled && course.value?.id) {
+    fetchCourseProgress(course.value.id)
+  }
+})
 
 </script>
