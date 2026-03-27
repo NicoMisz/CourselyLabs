@@ -17,60 +17,81 @@
 
       <!-- Sections -->
       <div v-else>
-        <div v-for="(section, sIdx) in sections" :key="section.id" class="q-mb-md">
-          <q-card flat bordered>
-            <q-card-section class="row items-center q-py-sm bg-grey-2">
-              <q-icon name="drag_indicator" class="cursor-move text-grey-5 q-mr-sm" />
+        <draggable
+          v-model="sections"
+          item-key="id"
+          handle=".section-handle"
+          animation="200"
+          @end="handleSectionReorder"
+        >
+          <template #item="{ element: section }">
+            <div class="q-mb-md">
+              <q-card flat bordered>
+                <q-card-section class="row items-center q-py-sm bg-grey-2">
+                  <q-icon name="drag_indicator" class="section-handle cursor-move text-grey-5 q-mr-sm" />
 
-              <!-- Section title edit -->
-              <q-input
-                v-if="section._editing"
-                v-model="section.title"
-                dense
-                outlined
-                class="col"
-                bg-color="white"
-                @keyup.enter="saveSection(section)"
-                @blur="saveSection(section)"
-              >
-                <template #after>
-                  <q-btn flat dense icon="check" color="positive" @click="saveSection(section)" />
-                </template>
-              </q-input>
-              <span v-else class="text-subtitle2 text-weight-medium col cursor-pointer" @click="section._editing = true">
-                {{ section.title }}
-              </span>
+                  <!-- Section title edit -->
+                  <q-input
+                    v-if="section._editing"
+                    v-model="section.title"
+                    dense
+                    outlined
+                    class="col"
+                    bg-color="white"
+                    @keyup.enter="saveSection(section)"
+                    @blur="saveSection(section)"
+                  >
+                    <template #after>
+                      <q-btn flat dense icon="check" color="positive" @click="saveSection(section)" />
+                    </template>
+                  </q-input>
+                  <span v-else class="text-subtitle2 text-weight-medium col cursor-pointer" @click="section._editing = true">
+                    {{ section.title }}
+                  </span>
 
-              <q-btn flat dense round icon="delete" color="negative" @click="confirmDeleteSection(section)" />
-            </q-card-section>
+                  <q-btn flat dense round icon="delete" color="negative" @click="confirmDeleteSection(section)" />
+                </q-card-section>
 
-            <!-- Lessons -->
-            <q-list separator>
-              <q-item v-for="(lesson, lIdx) in section.lessons" :key="lesson.id" class="q-pl-xl">
-                <q-item-section avatar>
-                  <q-icon :name="lessonTypeIcon(lesson.type)" size="20px" color="grey-7" />
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label>{{ lesson.title }}</q-item-label>
-                  <q-item-label caption>
-                    {{ lessonTypeLabel(lesson.type) }}
-                    <span v-if="lesson.isFree" class="text-positive"> — Gratis</span>
-                  </q-item-label>
-                </q-item-section>
-                <q-item-section side>
-                  <div class="row q-gutter-xs">
-                    <q-btn flat dense round icon="edit" size="sm" @click="openLessonDialog(section.id, lesson)" />
-                    <q-btn flat dense round icon="delete" size="sm" color="negative" @click="confirmDeleteLesson(section, lesson)" />
-                  </div>
-                </q-item-section>
-              </q-item>
-            </q-list>
+                <!-- Lessons -->
+                <draggable
+                  v-model="section.lessons"
+                  item-key="id"
+                  handle=".lesson-handle"
+                  animation="200"
+                  @end="handleLessonReorder(section)()"
+                >
+                  <template #item="{ element: lesson }">
+                    <q-item class="q-pl-xl">
+                      <q-item-section avatar>
+                        <q-icon name="drag_indicator" class="lesson-handle cursor-move text-grey-4" size="16px" />
+                      </q-item-section>
+                      <q-item-section avatar>
+                        <q-icon :name="lessonTypeIcon(lesson.type)" size="20px" color="grey-7" />
+                      </q-item-section>
+                      <q-item-section>
+                        <q-item-label>{{ lesson.title }}</q-item-label>
+                        <q-item-label caption>
+                          {{ lessonTypeLabel(lesson.type) }}
+                          <span v-if="lesson.isFree" class="text-positive"> — Gratis</span>
+                        </q-item-label>
+                      </q-item-section>
+                      <q-item-section side>
+                        <div class="row q-gutter-xs">
+                          <q-btn flat dense round icon="edit" size="sm" @click="openLessonDialog(section.id, lesson)" />
+                          <q-btn flat dense round icon="delete" size="sm" color="negative" @click="confirmDeleteLesson(section, lesson)" />
+                        </div>
+                      </q-item-section>
+                    </q-item>
+                  </template>
+                </draggable>
 
-            <q-card-section class="q-py-sm">
-              <q-btn flat dense no-caps icon="add" label="Añadir leccion" color="primary" @click="openLessonDialog(section.id)" />
-            </q-card-section>
-          </q-card>
-        </div>
+                <q-card-section class="q-py-sm">
+                  <q-btn flat dense no-caps icon="add" label="Añadir leccion" color="primary" @click="openLessonDialog(section.id)" />
+                </q-card-section>
+              </q-card>
+            </div>
+          </template>
+        </draggable>
 
         <!-- Add section -->
         <q-card flat bordered class="q-pa-sm">
@@ -173,9 +194,10 @@ import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { getCourseSections } from '../../api/lesson'
 import { getCourseForEdit } from '../../api/instructor'
-import { createSection, updateSection, deleteSection } from '../../api/sectionEditor'
-import { createLesson, updateLesson, deleteLesson } from '../../api/lessonEditor'
+import { createSection, updateSection, deleteSection, reorderSections } from '../../api/sectionEditor'
+import { createLesson, updateLesson, deleteLesson, reorderLessons } from '../../api/lessonEditor'
 import RichTextEditor from '../../components/RichTextEditor.vue'
+import draggable from 'vuedraggable'
 
 const route = useRoute()
 const $q = useQuasar()
@@ -345,6 +367,26 @@ async function saveLesson() {
     $q.notify({ type: 'negative', message: 'Error al guardar la leccion', position: 'bottom-right' })
   } finally {
     savingLesson.value = false
+  }
+}
+
+async function handleSectionReorder() {
+  const items = sections.value.map((s: any, i: number) => ({ id: s.id, position: i }))
+  try {
+    await reorderSections(items)
+  } catch {
+    $q.notify({ type: 'negative', message: 'Error al reordenar secciones', position: 'bottom-right' })
+  }
+}
+
+function handleLessonReorder(section: any) {
+  return async () => {
+    const items = section.lessons.map((l: any, i: number) => ({ id: l.id, position: i }))
+    try {
+      await reorderLessons(items)
+    } catch {
+      $q.notify({ type: 'negative', message: 'Error al reordenar lecciones', position: 'bottom-right' })
+    }
   }
 }
 

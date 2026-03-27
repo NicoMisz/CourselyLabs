@@ -62,6 +62,12 @@
             <div class="text-caption text-grey-7 q-mt-xs">
               {{ course.totalStudents || 0 }} estudiantes
             </div>
+
+            <!-- Rejection banner -->
+            <q-banner v-if="course.status === 'rejected' && course.rejectionReason" rounded class="bg-red-1 text-negative q-mt-sm" dense>
+              <template #avatar><q-icon name="warning" color="negative" /></template>
+              {{ course.rejectionReason }}
+            </q-banner>
           </q-card-section>
 
           <q-separator />
@@ -77,10 +83,19 @@
                     v-if="course.status === 'draft'"
                     clickable
                     v-close-popup
-                    @click="handleSubmitReview(course.id)"
+                    @click="openSubmitDialog(course)"
                   >
                     <q-item-section avatar><q-icon name="send" size="20px" /></q-item-section>
                     <q-item-section>Enviar a revision</q-item-section>
+                  </q-item>
+                  <q-item
+                    v-if="course.status === 'rejected'"
+                    clickable
+                    v-close-popup
+                    @click="openSubmitDialog(course)"
+                  >
+                    <q-item-section avatar><q-icon name="replay" size="20px" color="warning" /></q-item-section>
+                    <q-item-section>Editar y reenviar</q-item-section>
                   </q-item>
                   <q-item clickable v-close-popup @click="handlePreview(course.slug)">
                     <q-item-section avatar><q-icon name="visibility" size="20px" /></q-item-section>
@@ -114,13 +129,44 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
+
+    <!-- Submit review dialog -->
+    <q-dialog v-model="submitDialog">
+      <q-card style="min-width: 400px">
+        <q-card-section>
+          <div class="text-h6">Enviar a revision</div>
+        </q-card-section>
+        <q-card-section>
+          <div class="text-body2 q-mb-md">Tu curso sera revisado por un administrador antes de publicarse. Verifica que cumple los requisitos:</div>
+          <q-list dense>
+            <q-item v-for="check in submitChecks" :key="check.label">
+              <q-item-section avatar>
+                <q-icon :name="check.ok ? 'check_circle' : 'cancel'" :color="check.ok ? 'positive' : 'negative'" />
+              </q-item-section>
+              <q-item-section>{{ check.label }}</q-item-section>
+            </q-item>
+          </q-list>
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn flat label="Cancelar" v-close-popup />
+          <q-btn
+            color="primary"
+            label="Enviar a revision"
+            :disable="!allChecksPass"
+            :loading="submitting"
+            @click="handleSubmitReview"
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
-import { getMyCreatedCourses, getMyCourseLimits, deleteCourse, submitForReview } from '../../api/instructor'
+import { getMyCreatedCourses, getMyCourseLimits, deleteCourse, submitForReview, getCourseForEdit } from '../../api/instructor'
+import { getCourseSections } from '../../api/lesson'
 import type { CourseLimits } from '../../api/instructor'
 
 const $q = useQuasar()
@@ -129,6 +175,13 @@ const courses = ref<any[]>([])
 const limits = ref<CourseLimits | null>(null)
 const deleteDialog = ref(false)
 const courseToDelete = ref<any>(null)
+
+// Submit review
+const submitDialog = ref(false)
+const submitCourseId = ref('')
+const submitting = ref(false)
+const submitChecks = ref<{ label: string; ok: boolean }[]>([])
+const allChecksPass = computed(() => submitChecks.value.every(c => c.ok))
 const deleting = ref(false)
 
 function statusColor(status: string) {
@@ -174,14 +227,42 @@ async function handleDelete() {
   }
 }
 
-async function handleSubmitReview(id: string) {
+async function openSubmitDialog(course: any) {
+  submitCourseId.value = course.id
+  submitChecks.value = [
+    { label: 'El curso tiene titulo', ok: !!course.title },
+    { label: 'Cargando contenido...', ok: false },
+  ]
+  submitDialog.value = true
+
   try {
-    await submitForReview(id)
-    const course = courses.value.find(c => c.id === id)
+    const sections = await getCourseSections(course.id)
+    const totalLessons = sections.reduce((sum: number, s: any) => sum + (s.lessons?.length || 0), 0)
+    submitChecks.value = [
+      { label: 'El curso tiene titulo', ok: !!course.title },
+      { label: `Al menos 1 seccion (${sections.length} encontradas)`, ok: sections.length > 0 },
+      { label: `Al menos 1 leccion (${totalLessons} encontradas)`, ok: totalLessons > 0 },
+    ]
+  } catch {
+    submitChecks.value = [
+      { label: 'El curso tiene titulo', ok: !!course.title },
+      { label: 'Error al verificar contenido', ok: false },
+    ]
+  }
+}
+
+async function handleSubmitReview() {
+  submitting.value = true
+  try {
+    await submitForReview(submitCourseId.value)
+    const course = courses.value.find(c => c.id === submitCourseId.value)
     if (course) course.status = 'pending_review'
+    submitDialog.value = false
     $q.notify({ type: 'positive', message: 'Curso enviado a revision', position: 'bottom-right' })
   } catch {
     $q.notify({ type: 'negative', message: 'Error al enviar a revision', position: 'bottom-right' })
+  } finally {
+    submitting.value = false
   }
 }
 

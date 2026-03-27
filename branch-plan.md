@@ -668,7 +668,7 @@ VITE_STRIPE_PUBLIC_KEY=pk_test_xxxxx
 
 ---
 
-## 12. `feature/course-creation` ⚠️ EN PROGRESO
+## 12. `feature/course-creation` ✅ COMPLETADO
 
 **Prioridad:** Alta
 **Dependencias:** `feature/course-sections-lessons`, `feature/student-progress`
@@ -744,10 +744,16 @@ Flujo completo para que cualquier usuario pueda crear y gestionar sus propios cu
 | Enlace "Crear curso" en AppSidebar | Hecho |
 | Slug auto-generado | Hecho — desde titulo, normalizado sin acentos |
 
+| Drag & drop secciones/lecciones | Hecho — `vuedraggable` con handles, llama a `reorderSections`/`reorderLessons` |
+| Checklist antes de enviar a revision | Hecho — dialog verifica titulo + al menos 1 seccion + al menos 1 leccion |
+| `rejectionReason` en CourseEntity/DTO | Hecho — Flyway V6, campo TEXT |
+| Banner de rechazo en dashboard | Hecho — banner rojo con motivo + boton "Editar y reenviar" |
+| "Volver al sitio" en InstructorLayout | Hecho — enlace en sidebar |
+
 ### Pendiente para futuras ramas
 
 - [ ] **Gestion de instructores** (rama aparte): `InstructorManager.vue`, controller de co-instructores, add/remove/change main
-- [ ] **Verificacion admin**: approve/reject con `rejectionReason` (en `feature/admin-dashboard`)
+- [ ] **Verificacion admin**: approve/reject endpoint (en `feature/admin-dashboard`)
 - [ ] **Drag & drop** para reordenar secciones/lecciones (requiere `vuedraggable`)
 - [ ] **Banner de rechazo** con motivo + boton "Editar y reenviar"
 - [ ] **Checklist de requisitos** antes de enviar a revision

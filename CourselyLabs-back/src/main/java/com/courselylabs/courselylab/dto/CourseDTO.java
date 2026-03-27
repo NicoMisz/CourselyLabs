@@ -43,6 +43,8 @@ public class CourseDTO {
 
     private String status;
 
+    private String rejectionReason;
+
     private Boolean isPublished;
 
     private LocalDateTime publishedAt;
