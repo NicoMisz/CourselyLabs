@@ -74,6 +74,12 @@ SELECT c.id, u.id, TRUE FROM courses c, users u WHERE c.slug = 'marketing-digita
 INSERT INTO course_instructors (course_id, instructor_id, is_main)
 SELECT c.id, u.id, TRUE FROM courses c, users u WHERE c.slug = 'introduccio-ia'                AND u.email = 'instructor@cursos.com';
 
+-- Set created_by from main instructor
+UPDATE courses c SET created_by = (
+    SELECT ci.instructor_id FROM course_instructors ci
+    WHERE ci.course_id = c.id AND ci.is_main = TRUE LIMIT 1
+) WHERE c.created_by IS NULL;
+
 -- Enrollments
 INSERT INTO enrollments (user_id, course_id, access_type, enrolled_at, last_accessed_at)
 SELECT u.id, c.id, 'free', CURRENT_TIMESTAMP - INTERVAL '25 days', CURRENT_TIMESTAMP - INTERVAL '2 days'

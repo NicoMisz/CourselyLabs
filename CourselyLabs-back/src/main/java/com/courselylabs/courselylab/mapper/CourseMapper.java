@@ -23,6 +23,9 @@ public class CourseMapper {
             dto.setCategoryId(entity.getCategory().getId());
             dto.setCategoryName(entity.getCategory().getName());
         }
+        if (entity.getCreatedBy() != null) {
+            dto.setCreatedById(entity.getCreatedBy().getId());
+        }
         return dto;
     }
 

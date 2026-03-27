@@ -62,6 +62,37 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true },
   },
   {
+    path: '/instructor',
+    component: () => import('@/layouts/InstructorLayout.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: '',
+        redirect: '/instructor/cursos',
+      },
+      {
+        path: 'cursos',
+        component: () => import('@/views/instructor/InstructorCourseList.vue'),
+        meta: { title: 'Mis cursos — Instructor' },
+      },
+      {
+        path: 'cursos/nuevo',
+        component: () => import('@/views/instructor/CourseWizard.vue'),
+        meta: { title: 'Crear curso — Instructor' },
+      },
+      {
+        path: 'cursos/:id/editar',
+        component: () => import('@/views/instructor/CourseWizard.vue'),
+        meta: { title: 'Editar curso — Instructor' },
+      },
+      {
+        path: 'cursos/:id/contenido',
+        component: () => import('@/views/instructor/CourseContentEditor.vue'),
+        meta: { title: 'Contenido del curso — Instructor' },
+      },
+    ],
+  },
+  {
     path: '/:catchAll(.*)*',
     component: () => import('@/layouts/MainLayout.vue'),
     children: [

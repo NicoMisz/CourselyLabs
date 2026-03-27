@@ -126,6 +126,7 @@ const navLinks = [
 
 const authLinks = [
   { title: 'Mis cursos', icon: 'menu_book', link: '/mis-cursos' },
+  { title: 'Crear curso', icon: 'add_circle', link: '/instructor/cursos' },
   { title: 'Mi perfil', icon: 'person', link: '/profile' },
 ]
 

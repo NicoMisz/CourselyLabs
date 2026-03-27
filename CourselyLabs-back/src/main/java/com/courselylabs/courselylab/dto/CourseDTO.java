@@ -43,6 +43,8 @@ public class CourseDTO {
 
     private String status;
 
+    private String rejectionReason;
+
     private Boolean isPublished;
 
     private LocalDateTime publishedAt;
@@ -50,6 +52,8 @@ public class CourseDTO {
     private Integer totalStudents;
 
     private BigDecimal averageRating;
+
+    private UUID createdById;
 
     private LocalDateTime createdAt;
 

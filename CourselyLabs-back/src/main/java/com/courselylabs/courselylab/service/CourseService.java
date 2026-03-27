@@ -32,6 +32,7 @@ import com.courselylabs.courselylab.repository.CourseRepository;
 import com.courselylabs.courselylab.repository.EnrollmentRepository;
 import com.courselylabs.courselylab.repository.ReviewRepository;
 import com.courselylabs.courselylab.repository.SectionRepository;
+import com.courselylabs.courselylab.repository.UserRepository;
 import com.courselylabs.courselylab.repository.spec.CourseSpecifications;
 
 @Service
@@ -47,6 +48,10 @@ public class CourseService {
     private final EnrollmentRepository enrollmentRepository;
     private final CourseInstructorRepository courseInstructorRepository;
     private final SectionRepository sectionRepository;
+    private final UserRepository userRepository;
+
+    private static final int MAX_COURSES_USER = 2;
+    private static final int MAX_COURSES_PREMIUM = 10;
 
     public CourseService(
             CourseRepository courseRepository,
@@ -56,7 +61,8 @@ public class CourseService {
             ReviewRepository reviewRepository,
             EnrollmentRepository enrollmentRepository,
             CourseInstructorRepository courseInstructorRepository,
-            SectionRepository sectionRepository) {
+            SectionRepository sectionRepository,
+            UserRepository userRepository) {
         this.courseRepository = courseRepository;
         this.categoriaRepository = categoriaRepository;
         this.courseMapper = courseMapper;
@@ -65,6 +71,7 @@ public class CourseService {
         this.enrollmentRepository = enrollmentRepository;
         this.courseInstructorRepository = courseInstructorRepository;
         this.sectionRepository = sectionRepository;
+        this.userRepository = userRepository;
     }
 
     @Transactional(readOnly = true)
@@ -118,7 +125,21 @@ public class CourseService {
         return courseMapper.toDTOList(courseRepository.findByStatus(status));
     }
 
-    public CourseDTO create(CourseDTO dto) {
+    public CourseDTO create(CourseDTO dto, String email) {
+        UserEntity creator = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
+
+        // Check course limit per role
+        long currentCount = courseRepository.countByCreatedById(creator.getId());
+        String role = creator.getRole() == null ? "user" : creator.getRole();
+        if (!"admin".equals(role)) {
+            int maxCourses = "premium".equals(role) ? MAX_COURSES_PREMIUM : MAX_COURSES_USER;
+            if (currentCount >= maxCourses) {
+                throw new BadRequestException(
+                    "Has alcanzado el limite de cursos para tu plan (" + maxCourses + " cursos). Actualiza a premium para crear mas.");
+            }
+        }
+
         if (courseRepository.existsBySlug(dto.getSlug())) {
             throw new BadRequestException("Course with slug '" + dto.getSlug() + "' already exists");
         }
@@ -131,10 +152,43 @@ public class CourseService {
             entity.setCategory(category);
         }
 
+        entity.setCreatedBy(creator);
         entity.setStatus("draft");
         entity.setIsPublished(false);
         entity = courseRepository.save(entity);
+
+        // Auto-add creator as main instructor
+        CourseInstructorEntity instructorLink = new CourseInstructorEntity();
+        instructorLink.setCourse(entity);
+        instructorLink.setInstructor(creator);
+        instructorLink.setIsMain(true);
+        courseInstructorRepository.save(instructorLink);
+
         return courseMapper.toDTO(entity);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CourseDTO> findMyCourses(String email) {
+        UserEntity user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
+        return courseMapper.toDTOList(
+                courseRepository.findByCreatedByIdOrderByCreatedAtDesc(user.getId()));
+    }
+
+    @Transactional(readOnly = true)
+    public long countMyCourses(String email) {
+        UserEntity user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
+        return courseRepository.countByCreatedById(user.getId());
+    }
+
+    @Transactional(readOnly = true)
+    public int getMaxCoursesForUser(String email) {
+        UserEntity user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
+        String role = user.getRole() == null ? "user" : user.getRole();
+        if ("admin".equals(role)) return Integer.MAX_VALUE;
+        return "premium".equals(role) ? MAX_COURSES_PREMIUM : MAX_COURSES_USER;
     }
 
     public CourseDTO update(UUID id, CourseDTO dto) {

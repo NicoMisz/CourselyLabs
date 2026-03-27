@@ -63,6 +63,9 @@ public class CourseEntity {
     @Column(name = "status", length = 20)
     private String status = "draft";
 
+    @Column(name = "rejection_reason", columnDefinition = "TEXT")
+    private String rejectionReason;
+
     @Column(name = "is_published")
     private Boolean isPublished = false;
 
@@ -74,6 +77,10 @@ public class CourseEntity {
 
     @Column(name = "average_rating", precision = 3, scale = 2)
     private BigDecimal averageRating = BigDecimal.ZERO;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by", nullable = false)
+    private UserEntity createdBy;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

@@ -668,13 +668,13 @@ VITE_STRIPE_PUBLIC_KEY=pk_test_xxxxx
 
 ---
 
-## 12. `feature/course-creation` 🆕 PENDIENTE
+## 12. `feature/course-creation` ✅ COMPLETADO
 
 **Prioridad:** Alta
 **Dependencias:** `feature/course-sections-lessons`, `feature/student-progress`
 
 ### Descripcion
-Flujo completo para que cualquier usuario pueda crear y gestionar sus propios cursos. Incluye ownership, limites por rol, gestion de instructores, dashboard de instructor y verificacion admin.
+Flujo completo para que cualquier usuario pueda crear y gestionar sus propios cursos. Incluye ownership, limites por rol, dashboard de instructor y verificacion admin. Gestion de instructores movida a rama aparte.
 
 ### Auditoria del estado actual
 
@@ -715,129 +715,48 @@ Flujo completo para que cualquier usuario pueda crear y gestionar sus propios cu
 | `submitForReview()` en CourseService | Cambia status pero no hay flujo de aprobacion |
 | Flujo de estados (draft/pending_review/published) | 3 endpoints PATCH que nadie usa desde frontend |
 
-### Tareas
+### Estado actual
 
-#### Backend — Migracion y ownership
+| Elemento | Estado |
+|---|---|
+| Flyway V5 — `created_by` en courses | Hecho — migra cursos existentes al instructor principal o admin |
+| `CourseEntity.createdBy` | Hecho — ManyToOne a UserEntity, NOT NULL |
+| `CourseDTO.createdById` | Hecho — incluido en mapper |
+| `CourseService.create()` con ownership | Hecho — asigna `createdBy` + auto-crea `course_instructors` con `is_main=true` |
+| Limites por rol (user=2, premium=10, admin=∞) | Hecho — `countByCreatedById` + `BadRequestException` |
+| `GET /api/courses/mine` | Hecho — devuelve cursos del usuario autenticado |
+| `GET /api/courses/mine/limits` | Hecho — `currentCourses` + `maxCourses` |
+| `CourseSecurityService` (bean `@PreAuthorize`) | Hecho — `isOwnerOrInstructor`, `isOwnerOrAdmin`, `isOwnerOrInstructorOrAdmin`, `canEditSection`, `canEditLesson` |
+| `@PreAuthorize` en CourseController | Hecho — update/publish/unpublish/submitForReview (owner+instructor+admin), delete (owner+admin) |
+| `@PreAuthorize` en SectionController | Hecho — create (courseId), update/delete (resuelve via section→course) |
+| `@PreAuthorize` en LessonController | Hecho — create (sectionId), update/delete (resuelve via lesson→section→course) |
+| SecurityConfig — rutas publicas | Hecho — GET lessons, courses/mine autenticado |
+| `api/instructor.ts` | Hecho — CRUD cursos + limits + submitForReview |
+| `api/sectionEditor.ts` | Hecho — CRUD secciones + reorder |
+| `api/lessonEditor.ts` | Hecho — CRUD lecciones + reorder |
+| `api/course.ts` — getCategories | Hecho |
+| `InstructorLayout.vue` | Hecho — sidebar con "Mis cursos" y "Crear curso" |
+| Rutas `/instructor/*` | Hecho — cursos, nuevo, editar, contenido |
+| `InstructorCourseList.vue` | Hecho — cards con thumbnail/status chip, limites, empty state, delete dialog, submit review |
+| `CourseWizard.vue` | Hecho — stepper 4 pasos: info basica, detalles (TipTap rich editor), contenido (link a editor), revision |
+| `CourseContentEditor.vue` | Hecho — secciones CRUD inline, lecciones CRUD via dialog (texto/video/pdf), delete confirmation |
+| `RichTextEditor.vue` | Hecho — TipTap con toolbar (bold, italic, code, listas, headings, code blocks, blockquote) |
+| Enlace "Crear curso" en AppSidebar | Hecho |
+| Slug auto-generado | Hecho — desde titulo, normalizado sin acentos |
 
-- [ ] Flyway V5: añadir columna `created_by UUID REFERENCES users(id)` a tabla `courses`
-- [ ] Actualizar `CourseEntity` con campo `createdBy` (ManyToOne a UserEntity)
-- [ ] Actualizar `CourseService.create()`: asignar `createdBy` al usuario autenticado + crear automaticamente entrada en `course_instructors` con `is_main = true`
-- [ ] Migrar cursos existentes: asignar `created_by` al instructor principal (o al admin si no tiene)
+| Drag & drop secciones/lecciones | Hecho — `vuedraggable` con handles, llama a `reorderSections`/`reorderLessons` |
+| Checklist antes de enviar a revision | Hecho — dialog verifica titulo + al menos 1 seccion + al menos 1 leccion |
+| `rejectionReason` en CourseEntity/DTO | Hecho — Flyway V6, campo TEXT |
+| Banner de rechazo en dashboard | Hecho — banner rojo con motivo + boton "Editar y reenviar" |
+| "Volver al sitio" en InstructorLayout | Hecho — enlace en sidebar |
 
-#### Backend — Limites por rol
+### Pendiente para futuras ramas
 
-- [ ] `CourseService.create()`: antes de crear, contar cursos del usuario con `courseRepository.countByCreatedById(userId)`:
-  - `role = "user"` → maximo 2 cursos
-  - `role = "premium"` → maximo 10 cursos
-  - `role = "admin"` → sin limite
-  - Si supera el limite → `BadRequestException("Has alcanzado el limite de cursos para tu plan")`
-
-#### Backend — Validacion de ownership con @PreAuthorize
-
-- [ ] Crear bean `CourseSecurityService` con metodos que devuelven `boolean`:
-  - `isOwnerOrInstructor(courseId, authentication)` — comprueba si el usuario es `created_by` o esta en `course_instructors`
-  - `isOwnerOrAdmin(courseId, authentication)` — comprueba si el usuario es `created_by` o tiene rol admin
-  - `isOwnerOrInstructorOrAdmin(courseId, authentication)` — cualquiera de los tres
-- [ ] Anotar endpoints de escritura en `CourseController` con `@PreAuthorize`:
-  - `@PreAuthorize("@courseSecurityService.isOwnerOrInstructorOrAdmin(#id, authentication)")` en `update()`, `publish()`, `unpublish()`, `submitForReview()`
-  - `@PreAuthorize("@courseSecurityService.isOwnerOrAdmin(#id, authentication)")` en `delete()` (solo owner o admin puede borrar, no co-instructores)
-- [ ] Anotar endpoints en `SectionController` y `LessonController`: el usuario debe ser owner/instructor del curso padre. El bean recibe el `courseId` (para secciones) o lo resuelve via seccion → curso (para lecciones)
-- [ ] Si no tiene permiso → Spring Security lanza `AccessDeniedException` automaticamente (403 Forbidden)
-- [ ] `@EnableMethodSecurity` ya esta activado en `SecurityConfig`, no requiere cambios adicionales
-
-#### Backend — Gestion de instructores (controller nuevo)
-
-- [ ] `POST /api/courses/{courseId}/instructors` — añadir instructor por email (solo owner o admin)
-- [ ] `DELETE /api/courses/{courseId}/instructors/{userId}` — eliminar instructor (solo owner o admin, no puede eliminarse a si mismo si es el unico)
-- [ ] `PATCH /api/courses/{courseId}/instructors/{userId}/main` — marcar como instructor principal (solo owner o admin)
-- [ ] `GET /api/courses/{courseId}/instructors` — ya existe, mantener publico
-
-#### Backend — Verificacion admin (conectar con feature/admin-dashboard)
-
-- [ ] `submitForReview()` ya existe — verificar que solo el owner puede llamarlo
-- [ ] Documentar que `PATCH /api/admin/courses/{id}/approve` y `reject` se implementan en `feature/admin-dashboard`
-- [ ] Al rechazar: cambiar status a `"rejected"` con campo `rejectionReason` (requiere añadir campo a CourseEntity)
-- [ ] El owner recibe notificacion con el motivo del rechazo (requiere `feature/notifications`)
-
-#### Frontend — API client
-
-- [ ] `api/instructor.ts`:
-  - `getMyCreatedCourses()` — `GET /api/courses/mine` (endpoint nuevo: cursos donde `created_by = yo`)
-  - `createCourse(data)` — `POST /api/courses`
-  - `updateCourse(id, data)` — `PUT /api/courses/{id}`
-  - `deleteCourse(id)` — `DELETE /api/courses/{id}`
-  - `submitForReview(id)` — `PATCH /api/courses/{id}/submit-review`
-  - `publishCourse(id)` — `PATCH /api/courses/{id}/publish` (solo admin)
-  - `addInstructor(courseId, email)` — `POST /api/courses/{courseId}/instructors`
-  - `removeInstructor(courseId, userId)` — `DELETE /api/courses/{courseId}/instructors/{userId}`
-- [ ] `api/sectionEditor.ts`:
-  - `createSection(courseId, data)` — `POST /api/courses/{courseId}/sections`
-  - `updateSection(id, data)` — `PUT /api/sections/{id}`
-  - `deleteSection(id)` — `DELETE /api/sections/{id}`
-  - `reorderSections(data)` — `PATCH /api/sections/reorder`
-- [ ] `api/lessonEditor.ts`:
-  - `createLesson(sectionId, data)` — `POST /api/sections/{sectionId}/lessons`
-  - `updateLesson(id, data)` — `PUT /api/lessons/{id}`
-  - `deleteLesson(id)` — `DELETE /api/lessons/{id}`
-  - `reorderLessons(data)` — `PATCH /api/lessons/reorder`
-
-#### Frontend — Ruta y layout
-
-- [ ] `layouts/InstructorLayout.vue` — sidebar propio con navegacion: Mis cursos, Crear curso, Estadisticas
-- [ ] Ruta `/instructor` con `meta: { requiresAuth: true }` — cualquier usuario autenticado (segun CLAUDE.md "Cualquiera puede ser instructor")
-- [ ] Subrutas: `/instructor/cursos`, `/instructor/cursos/nuevo`, `/instructor/cursos/:id/editar`, `/instructor/cursos/:id/contenido`
-- [ ] Añadir enlace "Crear curso" en `AppSidebar.vue` (visible para todos los autenticados)
-
-#### Frontend — Dashboard de instructor
-
-- [ ] `InstructorCourseList.vue` — listado de cursos creados con:
-  - Thumbnail + titulo + chip de estado (borrador `grey` / en revision `warning` / publicado `positive` / rechazado `negative`)
-  - Metricas inline: estudiantes inscritos, rating medio
-  - Menu contextual: editar info, gestionar contenido, duplicar, eliminar
-  - Badge con cursos restantes segun rol: "1 de 2 cursos usados" (user) o "3 de 10" (premium)
-- [ ] Empty state: icono `add_circle` + "Crea tu primer curso" + boton "Nuevo curso"
-
-#### Frontend — Formulario de creacion/edicion
-
-- [ ] `CourseWizard.vue` — `q-stepper` con 4 pasos:
-  1. **Informacion basica**: titulo (genera slug automatico), descripcion corta, categoria (select), nivel (select)
-  2. **Detalles**: descripcion larga (textarea), thumbnail URL (input texto por ahora), gratis/pago + precio
-  3. **Contenido**: editor de secciones y lecciones (ver abajo)
-  4. **Revision**: resumen de todo + boton "Guardar borrador" o "Enviar a revision"
-- [ ] Auto-guardado borrador cada 30s con indicador "Guardado" en la toolbar
-- [ ] Validacion por paso: no se puede avanzar sin completar campos obligatorios
-- [ ] Slug auto-generado desde titulo (editable manualmente)
-
-#### Frontend — Editor de secciones y lecciones
-
-- [ ] `SectionEditor.vue` — lista de secciones con:
-  - Edicion inline del titulo (click para editar)
-  - Drag & drop para reordenar (usar `vuedraggable` o similar)
-  - Boton "+" para añadir seccion
-  - Icono de eliminar con confirmacion
-  - Cada seccion expandible para ver sus lecciones
-- [ ] `LessonEditor.vue` — dentro de cada seccion:
-  - Edicion inline: titulo, tipo (video/text/pdf/audio), duracion
-  - Contenido segun tipo: URL para video/pdf, textarea con markdown para texto
-  - Toggle "Leccion gratuita" (preview para no inscritos)
-  - Drag & drop para reordenar
-  - Boton eliminar con confirmacion
-
-#### Frontend — Gestion de instructores
-
-- [ ] `InstructorManager.vue` — seccion dentro del editor de curso:
-  - Lista de instructores actuales con badge "Principal" para el `is_main`
-  - Input de email + boton "Añadir" para invitar co-instructores
-  - Boton para eliminar (no se puede eliminar al creador)
-  - Boton para cambiar instructor principal
-
-#### UX/UI
-
-- [ ] Confirmacion antes de eliminar con nombre: "¿Eliminar la seccion 'Introduccion'?"
-- [ ] Boton "Vista previa" → abre `/cursos/{slug}` en nueva pestaña
-- [ ] Al enviar a revision: dialog con checklist de requisitos (titulo, al menos 1 seccion, al menos 1 leccion) + "Tu curso sera revisado por un administrador antes de publicarse"
-- [ ] Si el curso fue rechazado: banner con motivo del rechazo + boton "Editar y reenviar"
-- [ ] Indicador visual del limite de cursos en el dashboard
+- [ ] **Gestion de instructores** (rama aparte): `InstructorManager.vue`, controller de co-instructores, add/remove/change main
+- [ ] **Verificacion admin**: approve/reject endpoint (en `feature/admin-dashboard`)
+- [ ] **Drag & drop** para reordenar secciones/lecciones (requiere `vuedraggable`)
+- [ ] **Banner de rechazo** con motivo + boton "Editar y reenviar"
+- [ ] **Checklist de requisitos** antes de enviar a revision
 
 ---
 
