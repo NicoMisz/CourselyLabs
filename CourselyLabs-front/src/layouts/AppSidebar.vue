@@ -124,11 +124,16 @@ const navLinks = [
   { title: 'Cursos', icon: 'school', link: '/cursos' },
 ]
 
-const authLinks = [
-  { title: 'Mis cursos', icon: 'menu_book', link: '/mis-cursos' },
-  { title: 'Crear curso', icon: 'add_circle', link: '/instructor/cursos' },
-  { title: 'Mi perfil', icon: 'person', link: '/profile' },
-]
+const authLinks = computed(() => {
+  const links = [
+    { title: 'Mis cursos', icon: 'menu_book', link: '/mis-cursos' },
+    { title: 'Crear curso', icon: 'add_circle', link: '/instructor/cursos' },
+  ]
+  if (authStore.user?.role === 'admin') {
+    links.push({ title: 'Administracion', icon: 'admin_panel_settings', link: '/admin' })
+  }
+  return links
+})
 
 async function handleLogout() {
   await authStore.logout()
