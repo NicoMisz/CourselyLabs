@@ -2,15 +2,7 @@
 import { computed, ref } from 'vue'
 import ReviewItem from './ReviewItem.vue'
 
-interface Review {
-  id: string
-  userName: string
-  userAvatar?: string | null
-  rating: number
-  comment: string
-  createdAt: string
-  isOwn?: boolean
-}
+import type { Review } from '../types/review'
 
 interface Props {
   reviews: Review[]
@@ -32,14 +24,18 @@ const emit = defineEmits<{
 const sortMode = ref<'recent' | 'best' | 'worst'>('recent')
 
 const sortedReviews = computed(() => {
-  const list = [...props.reviews]
+  const list = [...props.reviews].map(r => ({
+    ...r,
+    userName: r.userFullName ?? 'Usuario',
+    createdAt: r.createdAt ?? ''
+  }))
 
   // Priorizar review propia
   list.sort((a, b) => (b.isOwn ? 1 : 0) - (a.isOwn ? 1 : 0))
 
   // Orden seleccionado
   if (sortMode.value === 'recent') {
-    return list.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    return list.sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''))
   }
   if (sortMode.value === 'best') {
     return list.sort((a, b) => b.rating - a.rating)
@@ -50,6 +46,12 @@ const sortedReviews = computed(() => {
 
   return list
 })
+
+const sortOptions =[
+          { label: 'Más recientes', value: 'recent' },
+          { label: 'Mejor valoración', value: 'best' },
+          { label: 'Peor valoración', value: 'worst' }
+        ] as const
 </script>
 
 <template>
@@ -61,12 +63,10 @@ const sortedReviews = computed(() => {
         v-model="sortMode"
         dense
         outlined
+        emit-value
+        map-options
         style="width: 180px"
-        :options="[
-          { label: 'Más recientes', value: 'recent' },
-          { label: 'Mejor valoración', value: 'best' },
-          { label: 'Peor valoración', value: 'worst' }
-        ]"
+        :options="sortOptions"
       />
     </div>
 
