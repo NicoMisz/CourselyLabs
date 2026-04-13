@@ -516,13 +516,13 @@ Sistema de evaluación con cuestionarios autocorregidos y entregas de proyectos.
 
 ---
 
-## 11. `feature/payments-stripe` 🆕 PENDIENTE
+## 11. `feature/payments-stripe` ✅ COMPLETADO
 
 **Prioridad:** Alta
 **Dependencias:** `feature/enrollment-flow`
 
-### Descripción
-Integración completa con Stripe: pago único por curso, suscripciones mensuales/anuales y cupones de descuento. Al completar el pago se crea el enrollment automáticamente.
+### Descripcion
+Suscripcion Premium via Stripe. Los cursos de pago son "Premium" — solo accesibles con suscripcion activa. Al suscribirse, el rol del usuario cambia a `premium` (mas cursos, badge, acceso a cursos premium).
 
 ### Configuración inicial — Stripe test mode
 
@@ -616,55 +616,41 @@ VITE_STRIPE_PUBLIC_KEY=pk_test_xxxxx
 
 ---
 
-### Tareas
+### Estado actual
 
-#### Backend — Dependencias
-- [ ] Añadir `stripe-java` SDK al `pom.xml`
+| Elemento | Estado |
+|---|---|
+| `stripe-java` SDK en pom.xml | Hecho |
+| Flyway V7 — tablas `subscriptions` + `payments` | Hecho |
+| `SubscriptionEntity` + `PaymentEntity` | Hecho |
+| `SubscriptionRepository` + `PaymentRepository` | Hecho |
+| `StripeConfig` (init API key) | Hecho |
+| `StripeService` — checkout, webhook, cancel, history, isPremium | Hecho |
+| `PaymentController` — 6 endpoints | Hecho |
+| Webhook handler — checkout.session.completed, invoice.paid, subscription.updated/deleted | Hecho |
+| Auto-upgrade rol a `premium` al suscribirse | Hecho |
+| Auto-downgrade rol a `user` al expirar suscripcion | Hecho |
+| Idempotencia en webhook por `stripeSessionId` | Hecho |
+| Webhook publico en SecurityConfig | Hecho |
+| `EnrollmentService` — cursos premium requieren suscripcion activa | Hecho |
+| Variables Stripe en `application.properties` | Hecho |
+| `api/payments.ts` — checkout, subscription, cancel, history, isPremium | Hecho |
+| `PremiumPage.vue` — 6 beneficios + pricing mensual/anual + FAQs | Hecho |
+| `PaymentSuccessView.vue` — checkmark + refresh session | Hecho |
+| `PaymentCancelledView.vue` — info + volver | Hecho |
+| `CourseSidebar` — boton "Hazte Premium" para cursos premium | Hecho |
+| `ProfileView` — seccion suscripcion (activa/cancelada/sin) + cancelar | Hecho |
+| `ProfileView` — historial de pagos | Hecho |
+| `AppSidebar` — badge premium en avatar + enlace "Hazte Premium" para no-premium | Hecho |
+| Rutas: `/premium`, `/pago/exito`, `/pago/cancelado` | Hecho |
+| Modelo simplificado: sin compra individual de cursos, solo suscripcion | Hecho |
+| Precios: 7 EUR/mes, 60 EUR/ano | Hecho |
 
-#### Backend — Entidades nuevas
-- [ ] `PaymentEntity`: id, userId, courseId (nullable), type (`one_time/subscription`), stripePaymentIntentId, stripeSessionId, amount, currency, status (`pending/completed/failed/refunded`), createdAt
-- [ ] `SubscriptionEntity`: id, userId, stripeSubscriptionId, stripeCustomerId, plan (`monthly/annual`), status (`active/cancelled/past_due`), currentPeriodStart, currentPeriodEnd, cancelledAt, createdAt
-- [ ] `CouponEntity`: id, code (unique), discountType (`percentage/fixed`), discountValue, maxUses, currentUses, expiresAt, isActive, applicableTo (`all/specific_courses`), createdAt
-- [ ] `CouponCourseEntity`: id, couponId, courseId
-- [ ] Migraciones Flyway
+### Pendiente para futuras iteraciones
 
-#### Backend — Endpoints
-- [ ] `POST /api/payments/checkout` — crear sesión Stripe Checkout para compra de curso; acepta `couponCode` opcional
-- [ ] `POST /api/payments/subscribe` — crear suscripción mensual/anual
-- [ ] `POST /api/payments/webhook` — receptor de webhooks Stripe; verificación de firma `STRIPE_WEBHOOK_SECRET`; idempotencia por `stripeSessionId`
-- [ ] `GET /api/payments/history` — historial de pagos del usuario autenticado
-- [ ] `POST /api/payments/cancel-subscription` — cancelar suscripción (cancela al final del período)
-- [ ] `GET /api/payments/subscription` — estado actual de suscripción del usuario
-- [ ] `POST /api/coupons/validate` — validar código: activo, no expirado, usos < maxUsos, aplicable al curso
-- [ ] CRUD de cupones (admin): `GET/POST/PUT/DELETE /api/admin/coupons`
-
-#### Backend — Lógica
-- [ ] Webhook `checkout.session.completed` → crear enrollment automáticamente + marcar pago como `completed`
-- [ ] Webhook `invoice.paid` → renovar suscripción, extender `currentPeriodEnd`
-- [ ] Webhook `customer.subscription.updated/deleted` → actualizar estado de suscripción
-- [ ] Suscriptor activo → acceso a todos los cursos de pago (verificar en `EnrollmentService`)
-
-#### Backend — Variables de entorno
-- [ ] `STRIPE_SECRET_KEY`, `STRIPE_PUBLIC_KEY`, `STRIPE_WEBHOOK_SECRET`
-- [ ] `STRIPE_MONTHLY_PRICE_ID`, `STRIPE_ANNUAL_PRICE_ID`
-
-#### Frontend — Componentes
-- [ ] `CheckoutButton.vue` — reemplaza `EnrollButton` para cursos de pago; incluye badge "Pago seguro 🔒" + logos Visa/MC
-- [ ] `CouponInput.vue` — link "¿Tienes un cupón?" que expande input; al aplicar: spinner → check verde "−20%" o X roja "No válido"
-- [ ] `SubscriptionPlans.vue` — pricing table con toggle mensual/anual, plan recomendado destacado, comparativa de features
-- [ ] `PricingToggle.vue` — toggle mensual/anual con badge "Ahorra 20%"
-- [ ] `PaymentSuccessView.vue` — checkmark animado + resumen + botón "Ir al curso"
-- [ ] `PaymentCancelledView.vue` — icono info + "Pago cancelado" + botón volver
-- [ ] `PaymentHistory.vue` — tabla fecha/concepto/importe/estado + botón descargar factura
-- [ ] `SubscriptionManager.vue` — plan actual, próxima fecha cobro, método pago, cancelar suscripción
-
-#### Frontend — Configuración
-- [ ] Añadir `VITE_STRIPE_PUBLIC_KEY` a `.env`
-- [ ] Rutas: `/suscripcion`, `/pago/exito?session_id=`, `/pago/cancelado`, `/perfil/pagos`, `/perfil/suscripcion`
-
-#### UX/UI
-- [ ] Precio en el sidebar del curso: fuente Monda 28px; con cupón → precio original tachado + descuento badge
-- [ ] Suscriptor activo → badge "Incluido en tu suscripción" con icono de corona en lugar del precio
+- [ ] Cupones de descuento
+- [ ] Facturas descargables (Stripe Invoicing)
+- [ ] Cambio de plan mensual ↔ anual
 
 ---
 
