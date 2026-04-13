@@ -1037,19 +1037,19 @@ develop
  ├── feature/course-sections-lessons  ✅ Completado
  ├── feature/student-progress         ✅ Completado
  ├── feature/search-filters           ✅ Completado
+ ├── feature/course-creation          ✅ Completado
+ ├── feature/admin-dashboard          ✅ Completado
+ ├── feature/reviews-frontend         ✅ Completado (en paralelo)
  │
  │   --- Proximas ramas ---
  │
- ├── feature/reviews-frontend         (tras enrollment-flow) ← SUGERIDO SIGUIENTE
  ├── feature/downloadable-resources   (tras course-sections-lessons)
  ├── feature/course-prerequisites     (tras student-progress)
  ├── feature/assessments              (tras student-progress)
  ├── feature/payments-stripe          (tras enrollment-flow)
- ├── feature/course-creation          (tras course-sections-lessons + student-progress) ← ALTA PRIORIDAD
  ├── feature/forums                   (tras course-detail-page)
  ├── feature/messaging                (independiente)
  ├── feature/notifications            (tras forums + messaging)
- ├── feature/admin-dashboard          (independiente)
  └── chore/deployment                 (en cualquier momento)
 ```
 
@@ -1064,7 +1064,7 @@ Sistema de inicializacion de DB para que `docker compose up -d` con volumen limp
 
 | Archivo | Contenido |
 |---|---|
-| `01_schema.sql` | Schema completo (V1+V2+V3): 10 tablas, triggers, vistas, funciones |
+| `01_schema.sql` | Schema completo (V1+V2+V3+V4+V5+V6): 11 tablas (incl. verification_tokens, created_by, rejection_reason), triggers, vistas, funciones |
 | `02_seed_base.sql` | 11 usuarios, 6 categorias, 8 cursos, enrollments, reviews |
 | `03_seed_postgresql.sql` | 4 secciones, 10 lecciones para curso PostgreSQL |
 | `04_seed_flamenco.sql` | 5 secciones, 14 lecciones, enrollments, reviews, lesson_progress |
