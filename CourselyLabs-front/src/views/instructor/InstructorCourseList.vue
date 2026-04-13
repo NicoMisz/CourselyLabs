@@ -137,7 +137,7 @@
           <div class="text-h6">Enviar a revision</div>
         </q-card-section>
         <q-card-section>
-          <div class="text-body2 q-mb-md">Tu curso sera revisado por un administrador antes de publicarse. Verifica que cumple los requisitos:</div>
+          <div class="text-body2 q-mb-md">Tu curso sera revisado por un administrador. Si es aprobado, se publicara automaticamente. Verifica que cumple los requisitos:</div>
           <q-list dense>
             <q-item v-for="check in submitChecks" :key="check.label">
               <q-item-section avatar>

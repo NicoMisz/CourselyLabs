@@ -13,6 +13,9 @@ router.beforeEach((to) => {
     if (!authStore.isLoggedIn) {
       return { path: '/login', query: { redirect: to.fullPath } }
     }
+    if (to.meta.requiresRole && authStore.user?.role !== to.meta.requiresRole) {
+      return { path: '/' }
+    }
   }
 })
 

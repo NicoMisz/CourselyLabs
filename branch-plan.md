@@ -928,55 +928,45 @@ Sistema de notificaciones en tiempo real via WebSocket (STOMP). Campana en el he
 
 ---
 
-## 17. `feature/admin-dashboard` 🆕 PENDIENTE
+## 17. `feature/admin-dashboard` ✅ COMPLETADO
 
 **Prioridad:** Media
 **Dependencias:** Ninguna técnica (puede hacerse en paralelo con otras features)
 
 ### Descripción
-Panel de administración accesible solo para rol `ADMIN`. Gestión de usuarios, moderación de cursos, reportes, categorías, historial de actividad y cupones.
+Panel de administración accesible solo para rol `ADMIN`. Gestión de usuarios y moderación de cursos.
 
-### Tareas
+### Estado actual
 
-#### Backend — Entidades nuevas
-- [ ] `ActivityLogEntity`: id, actorId, action, targetType, targetId, details (JSON), createdAt
-- [ ] `CourseReviewRequestEntity`: id, courseId, reviewerId (admin), status (`pending/approved/rejected`), rejectionReason, reviewedAt, createdAt
-- [ ] `UserReportEntity`: id, reporterId, reportedUserId, reason, status (`open/resolved/dismissed`), resolvedBy, createdAt
-- [ ] Migraciones Flyway
+| Elemento | Estado |
+|---|---|
+| `AdminService` | Hecho — stats, getUsers (paginado), changeRole, ban, unban, getPendingCourses, approveCourse, rejectCourse |
+| `AdminController` con `@PreAuthorize("hasRole('ADMIN')")` | Hecho — todos los endpoints bajo proteccion de rol |
+| `GET /api/admin/stats` | Hecho — totalUsers, publishedCourses, pendingCourses, totalEnrollments |
+| `GET /api/admin/users` | Hecho — paginado con Spring Pageable |
+| `PATCH /api/admin/users/{id}/role` | Hecho — valida roles (user/premium/admin) |
+| `PATCH /api/admin/users/{id}/ban` + `/unban` | Hecho — no permite banear admins |
+| `GET /api/admin/courses/pending` | Hecho — cursos con status `pending_review` |
+| `PATCH /api/admin/courses/{id}/approve` | Hecho — auto-publica (status=published, isPublished=true, publishedAt=now) |
+| `PATCH /api/admin/courses/{id}/reject` | Hecho — acumula rejectionReason ("1: motivo; 2: motivo") |
+| `api/admin.ts` | Hecho — todas las llamadas API |
+| `AdminLayout.vue` | Hecho — sidebar con badge de pendientes |
+| Rutas `/admin/*` con guard `requiresRole: 'admin'` | Hecho |
+| `AdminDashboard.vue` | Hecho — 4 tarjetas de metricas + quick links |
+| `AdminCourseQueue.vue` | Hecho — cards con preview, aprobar y rechazar con motivo obligatorio |
+| `AdminUserTable.vue` | Hecho — q-table server-side, cambiar rol, ban/unban |
+| Enlace "Administracion" en AppSidebar (solo admin) | Hecho |
+| Fix duplicado "Mi perfil" en sidebar | Hecho — eliminado de authLinks, queda solo el avatar item |
+| Fix pom.xml dependencias fuera de `<dependencies>` | Hecho |
+| Modal enviar a revision con aviso publicacion automatica | Hecho |
 
-#### Backend — Endpoints (todos bajo `@PreAuthorize("hasRole('ADMIN')")`)
-- [ ] `GET /api/admin/stats` — usuarios totales, cursos publicados, inscripciones del mes, ingresos del mes + variación vs mes anterior
-- [ ] `GET /api/admin/users` — listado con filtros (rol, estado activo/baneado, fechas), paginado, ordenable
-- [ ] `PATCH /api/admin/users/{id}/role` — cambiar rol
-- [ ] `PATCH /api/admin/users/{id}/ban` — banear/desbanear con campo `reason` obligatorio
-- [ ] `GET /api/admin/courses/pending` — cola de cursos pendientes de revisión (ordenados por antigüedad)
-- [ ] `PATCH /api/admin/courses/{id}/approve` — aprobar curso → publica automáticamente
-- [ ] `PATCH /api/admin/courses/{id}/reject` — rechazar con `rejectionReason` obligatorio
-- [ ] `GET /api/admin/reports` — reportes de usuarios paginados y filtrables
-- [ ] `DELETE /api/admin/reviews/{id}` — eliminar review inapropiada
-- [ ] `GET /api/admin/activity-log` — historial de acciones admin (paginado, filtros por tipo/fecha/actor)
-- [ ] Registrar automáticamente en `ActivityLogEntity` cada acción admin ejecutada
+### Pendiente para futuras iteraciones
 
-#### Frontend — Ruta y layout
-- [ ] Ruta `/admin` con `meta: { requiresAuth: true, requiresRole: 'admin' }` y guard en router
-- [ ] `AdminLayout.vue` — sidebar propio con navegación y badges de contadores (cursos pendientes, reportes abiertos)
-
-#### Frontend — Vistas y componentes
-- [ ] `AdminDashboard.vue` — 4 tarjetas de métricas: Usuarios, Cursos, Inscripciones (mes), Ingresos (mes)
-- [ ] `AdminMetricCard.vue` — número con counter-up animado + variación "↑12%" / "↓3%" + sparkline últimos 7 días
-- [ ] `AdminUserTable.vue` — `q-table` server-side; columnas: avatar+nombre, email, rol (chip), estado, fecha registro, acciones; tabs "Todos / Activos / Baneados / Pendientes verificar"; selección múltiple para acciones en lote
-- [ ] `AdminCourseQueue.vue` — lista de cursos pendientes; badge "Urgente" si lleva >48h en cola
-- [ ] `AdminCoursePreview.vue` — vista previa completa del curso (reutiliza `CourseDetailView` en modo read-only) + botones "Aprobar" / "Rechazar" con textarea de motivo
-- [ ] `AdminReportList.vue` — listado de reportes filtrables; acciones: resolver, descartar, banear usuario
-- [ ] `AdminCategoryManager.vue` — CRUD de categorías (backend ya existe)
-- [ ] `AdminActivityLog.vue` — `q-timeline` vertical; filtros por tipo/fecha/admin; expandir para ver detalles JSON
-- [ ] `ConfirmActionDialog.vue` — dialog reutilizable; botón de acción en `$negative` con el verbo específico; input de motivo obligatorio para baneos
-
-#### UX/UI
-- [ ] Acciones destructivas (banear, eliminar): `ConfirmActionDialog` con nombre del usuario en el mensaje
-- [ ] Moderación de cursos: al aprobar/rechazar, el curso desaparece de la cola con animación slide-out + toast
-- [ ] Tablas → formato card-list en mobile
-- [ ] Enlace a `/admin` en `AppHeader.vue` solo si `userRole === 'admin'`
+- [ ] `ActivityLogEntity` + historial de acciones admin
+- [ ] `AdminCategoryManager.vue` — CRUD de categorias (backend ya existe)
+- [ ] Reportes de usuarios
+- [ ] Eliminar reviews inapropiadas
+- [ ] Filtros avanzados en tabla de usuarios (por rol, estado, fecha)
 
 ---
 
