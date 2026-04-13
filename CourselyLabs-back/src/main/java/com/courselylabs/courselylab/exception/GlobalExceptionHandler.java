@@ -27,48 +27,53 @@ public class GlobalExceptionHandler {
         body.put("message", ex.getMessage());
         return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
     }
+
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<ApiErrorDTO> handleBadRequestException(BadRequestException ex) {
         ApiErrorDTO body = new ApiErrorDTO(
-            LocalDateTime.now(),
-            HttpStatus.BAD_REQUEST.value(),
-            "Bad Request",
-            "ENROLLMENT_BAD_REQUEST",
-            ex.getMessage()
-        );
+                LocalDateTime.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                "Bad Request",
+                "ENROLLMENT_BAD_REQUEST",
+                ex.getMessage());
         return ResponseEntity.badRequest().body(body);
     }
 
     @ExceptionHandler(EnrollmentAlreadyExistsException.class)
     public ResponseEntity<ApiErrorDTO> handleEnrollmentAlreadyExists(EnrollmentAlreadyExistsException ex) {
         ApiErrorDTO body = new ApiErrorDTO(
-            LocalDateTime.now(),
-            HttpStatus.CONFLICT.value(),
-            "Conflict",
-            "ENROLLMENT_ALREADY_EXISTS",
-            ex.getMessage()
-        );
+                LocalDateTime.now(),
+                HttpStatus.CONFLICT.value(),
+                "Conflict",
+                "ENROLLMENT_ALREADY_EXISTS",
+                ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
 
-/*     @ExceptionHandler(BadRequestException.class)
-    public ResponseEntity<Map<String, Object>> handleBadRequest(BadRequestException ex) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("message", ex.getMessage());
-        body.put("status", 400);
-        body.put("error", "BAD_REQUEST");
-        return ResponseEntity.badRequest().body(body);
-    } */
+    /*
+     * @ExceptionHandler(BadRequestException.class)
+     * public ResponseEntity<Map<String, Object>>
+     * handleBadRequest(BadRequestException ex) {
+     * Map<String, Object> body = new HashMap<>();
+     * body.put("message", ex.getMessage());
+     * body.put("status", 400);
+     * body.put("error", "BAD_REQUEST");
+     * return ResponseEntity.badRequest().body(body);
+     * }
+     */
 
-    /* @ExceptionHandler(BadRequestException.class)
-    public ResponseEntity<Map<String, Object>> handleBadRequestException(BadRequestException ex) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("timestamp", LocalDateTime.now());
-        body.put("status", HttpStatus.BAD_REQUEST.value());
-        body.put("error", "Bad Request");
-        body.put("message", ex.getMessage());
-        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
-    } */
+    /*
+     * @ExceptionHandler(BadRequestException.class)
+     * public ResponseEntity<Map<String, Object>>
+     * handleBadRequestException(BadRequestException ex) {
+     * Map<String, Object> body = new HashMap<>();
+     * body.put("timestamp", LocalDateTime.now());
+     * body.put("status", HttpStatus.BAD_REQUEST.value());
+     * body.put("error", "Bad Request");
+     * body.put("message", ex.getMessage());
+     * return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+     * }
+     */
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationExceptions(MethodArgumentNotValidException ex) {
@@ -126,5 +131,16 @@ public class GlobalExceptionHandler {
         body.put("error", "Internal Server Error");
         body.put("message", ex.getMessage());
         return new ResponseEntity<>(body, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(PrerequisiteConflictException.class)
+    public ResponseEntity<Map<String, Object>> handlePrerequisiteConflict(PrerequisiteConflictException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.CONFLICT.value());
+        body.put("error", "Conflict");
+        body.put("message", ex.getMessage());
+        body.put("blockedPrerequisites", ex.getBlockedPrerequisites());
+        return new ResponseEntity<>(body, HttpStatus.CONFLICT);
     }
 }
