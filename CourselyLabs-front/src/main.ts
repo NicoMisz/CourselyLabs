@@ -18,10 +18,16 @@ import router from './router'
 
 const app = createApp(App)
 
-app.use(createPinia())
+const pinia = createPinia()
+app.use(pinia)
 app.use(router)
 app.use(Quasar, {
   plugins: { Notify },
 })
 
-app.mount('#app')
+// Verify session on app startup (refresh token if needed, clear if invalid)
+import { useAuthStore } from './stores/auth'
+const authStore = useAuthStore()
+authStore.checkSession().finally(() => {
+  app.mount('#app')
+})
