@@ -1,9 +1,9 @@
 package com.courselylabs.courselylab.service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -118,7 +118,7 @@ public class ReviewService {
 
     public ReviewDTO createForCourse(UUID courseId, CreateReviewRequestDTO dto, String email) {
     UserEntity user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
+        .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
 
         if (reviewRepository.existsByCourseIdAndUserId(courseId, user.getId())) {
             throw new BadRequestException("User has already reviewed this course");
@@ -142,7 +142,9 @@ public class ReviewService {
         entity.setRating(dto.getRating());
         entity.setComment(dto.getComment());
 
-        return reviewMapper.toDTO(reviewRepository.save(entity));
+        ReviewDTO result = reviewMapper.toDTO(reviewRepository.save(entity));
+        updateCourseAverageRating(courseId); // ← recalcula después de guardar
+        return result;
     }
 
     @Transactional(readOnly = true)
@@ -167,7 +169,9 @@ public class ReviewService {
         entity.setRating(dto.getRating());
         entity.setComment(dto.getComment());
 
-        return reviewMapper.toDTO(reviewRepository.save(entity));
+        ReviewDTO result = reviewMapper.toDTO(reviewRepository.save(entity));
+        updateCourseAverageRating(entity.getCourse().getId()); // ← recalcula después de actualizar
+        return result;
     }
 
 
@@ -177,10 +181,21 @@ public class ReviewService {
 
         // Validación de propiedad
         if (!entity.getUser().getEmail().equalsIgnoreCase(email)) {
-            throw new UnauthorizedException("You can only delete your own review");
+            throw new UnauthorizedException("You can only modify your own review");
         }
 
+        UUID courseId = entity.getCourse().getId(); // ← guardar antes de borrar
         reviewRepository.delete(entity);
+        updateCourseAverageRating(courseId); // ← añadir
     }
+    
+    // Método auxiliar privado
+    private void updateCourseAverageRating(UUID courseId) {
+        CourseEntity course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ResourceNotFoundException("Course", "id", courseId));
 
+        Double avg = reviewRepository.getAverageRatingByCourseId(courseId);
+        course.setAverageRating(avg != null ? BigDecimal.valueOf(avg) : BigDecimal.ZERO);
+        courseRepository.save(course);
+    }
 }

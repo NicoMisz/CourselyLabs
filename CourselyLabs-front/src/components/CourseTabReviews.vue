@@ -1,6 +1,16 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
+import type { Review } from '../types/review'
+
+import {
+  getCourseReviewsPaged,
+  getCourseAverage,
+  getMyReview,
+  createReview,
+  updateReview,
+  deleteReview
+} from '../api/review'
 
 import RatingDistribution from './RatingDistribution.vue'
 import ReviewList from './ReviewList.vue'
@@ -20,15 +30,6 @@ const $q = useQuasar()
 // -----------------------------
 // Tipos
 // -----------------------------
-interface Review {
-  id: string
-  rating: 1 | 2 | 3 | 4 | 5
-  comment: string
-  createdAt: string
-  userName: string
-  userAvatar?: string | null
-  isOwn?: boolean
-}
 
 // -----------------------------
 // Estado
@@ -66,20 +67,19 @@ onMounted(async () => {
     await loadMyReview()
   }
 
-  calculateDistribution()
+  //calculateDistribution()
 })
 
 // -----------------------------
-// API simulada (reemplazar por real)
+// API real
 // -----------------------------
 async function loadSummary() {
   loadingSummary.value = true
   try {
-    const res = await fakeApiSummary()
-    average.value = res.average
-    total.value = res.total
-    distribution.value = res.distribution
-  } finally {
+    average.value = await getCourseAverage (props.courseId)
+  } catch{
+    $q.notify({ type: 'negative', message: 'Error al cargar la valoración media'})
+  }finally {
     loadingSummary.value = false
   }
 }
@@ -87,14 +87,18 @@ async function loadSummary() {
 async function loadReviews(pageNumber: number) {
   loadingList.value = true
   try {
-    const res = await fakeApiReviews()
+    const data = await getCourseReviewsPaged(props.courseId, pageNumber)
     if (pageNumber === 0) {
-      reviews.value = res.items
+      reviews.value = data.content
     } else {
-      reviews.value = [...reviews.value, ...res.items]
+      reviews.value = [...reviews.value, ...data.content]
     }
-    hasMore.value = res.hasMore
+    hasMore.value = !data.last
+    total.value = data.totalElements
     page.value = pageNumber
+    calculateDistribution()
+  } catch{
+    $q.notify({ type: 'negative', message: 'Error al cargar las reseñas' })
   } finally {
     loadingList.value = false
   }
@@ -102,7 +106,7 @@ async function loadReviews(pageNumber: number) {
 
 async function loadMyReview() {
   try {
-    myReview.value = await fakeApiMyReview()
+    myReview.value = await getMyReview(props.courseId)
   } catch {
     myReview.value = null
   }
@@ -121,14 +125,10 @@ function calculateDistribution() {
   }
 
   reviews.value.forEach((r: Review) => {
-    dist[r.rating]++
+    dist[r.rating as 1 | 2 | 3 | 4 | 5]++
   })
 
   distribution.value = dist
-  total.value = reviews.value.length
-  average.value =
-    reviews.value.reduce((acc, r) => acc + r.rating, 0) /
-    (reviews.value.length || 1)
 }
 
 // -----------------------------
@@ -144,19 +144,17 @@ const canReview = computed(() =>
 // -----------------------------
 // CRUD
 // -----------------------------
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-async function submitReview(_payload: { rating: number; comment: string }) {
-  // no usamos payload en las fake APIs
+
+async function submitReview(payload: { rating: number; comment: string }) {
   loadingAction.value = true
   try {
     if (editingReviewId.value) {
-      await fakeApiUpdate()
-      $q.notify({ type: 'positive', message: 'Valoración actualizada' })
+      await updateReview(editingReviewId.value, payload)
+      $q.notify({ type: 'positive', message: 'Valoracion actualizada' })
     } else {
-      await fakeApiCreate()
-      $q.notify({ type: 'positive', message: 'Valoración enviada' })
+      await createReview(props.courseId, payload)
+      $q.notify({ type: 'positive', message: 'Valoracion enviada' })
     }
-
     editingReviewId.value = null
     await reloadAll()
   } finally {
@@ -164,22 +162,23 @@ async function submitReview(_payload: { rating: number; comment: string }) {
   }
 }
 
-async function deleteReview(id: string) {
-  void id // evita el warning
+async function handleDeleteReview(id: string) {
   loadingAction.value = true
   try {
-    await fakeApiDelete()
+    await deleteReview(id)
     $q.notify({ type: 'positive', message: 'Valoración eliminada' })
     await reloadAll()
+  } catch {
+    $q.notify({ type: 'negative', message: 'Error al eliminar la valoración' })
   } finally {
     loadingAction.value = false
   }
 }
 
 async function reloadAll() {
+  await loadSummary()
   await loadReviews(0)
   await loadMyReview()
-  calculateDistribution()
 }
 
 // -----------------------------
@@ -198,47 +197,6 @@ function cancelEdit() {
   loadMyReview()
 }
 
-// -----------------------------
-// Fake API (solo ejemplo)
-// -----------------------------
-async function fakeApiSummary(): Promise<{
-  average: number
-  total: number
-  distribution: Record<1 | 2 | 3 | 4 | 5, number>
-}> {
-  return {
-    average: 4.3,
-    total: 128,
-    distribution: { 5: 80, 4: 30, 3: 10, 2: 5, 1: 3 }
-  }
-}
-
-async function fakeApiReviews(): Promise<{
-  items: Review[]
-  hasMore: boolean
-}> {
-  return {
-    items: [
-      {
-        id: '1',
-        userName: 'Ana López',
-        rating: 5,
-        comment: 'Excelente curso!',
-        createdAt: '2024-01-10',
-        isOwn: false
-      }
-    ],
-    hasMore: false
-  }
-}
-
-async function fakeApiMyReview(): Promise<Review | null> {
-  return null
-}
-
-async function fakeApiCreate(): Promise<void> {}
-async function fakeApiUpdate(): Promise<void> {}
-async function fakeApiDelete(): Promise<void> {}
 </script>
 
 <template>
@@ -271,7 +229,7 @@ async function fakeApiDelete(): Promise<void> {}
         :loading-more="loadingList"
         @load-more="loadReviews(page + 1)"
         @edit="startEdit"
-        @delete="deleteReview"
+        @delete="handleDeleteReview"
       />
     </div>
   </div>

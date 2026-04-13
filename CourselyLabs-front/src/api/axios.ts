@@ -1,10 +1,15 @@
 import axios from 'axios'
+import type { InternalAxiosRequestConfig } from 'axios'
+
+interface RetryConfig extends InternalAxiosRequestConfig {
+  _retry?: boolean
+}
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
 })
 
-// --- Session sync callbacks (set by auth store to avoid circular imports) ---
+// --- Session sync callbacks ---
 let onTokenRefreshed: ((accessToken: string, refreshToken?: string) => void) | null = null
 let onSessionExpired: (() => void) | null = null
 
@@ -25,7 +30,7 @@ api.interceptors.request.use((config) => {
   return config
 })
 
-// --- Response interceptor (token refresh) ---
+// --- Response interceptor ---
 let isRefreshing = false
 let failedQueue: { resolve: (token: string) => void; reject: (err: unknown) => void }[] = []
 
@@ -45,12 +50,12 @@ function clearSessionAndRedirect() {
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const original = error.config
-
+    const original = error.config as RetryConfig  // ✅ aquí dentro
     if (
       error.response?.status !== 401 ||
       original._retry ||
-      original.url?.includes('/api/auth/')
+      original.url?.includes('/api/auth/refresh') ||
+      original.url?.includes('/api/auth/login')
     ) {
       return Promise.reject(error)
     }
@@ -78,11 +83,9 @@ api.interceptors.response.use(
         `${import.meta.env.VITE_API_BASE_URL}/api/auth/refresh`,
         { refreshToken: storedRefresh },
       )
-
       localStorage.setItem('accessToken', data.accessToken)
       if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken)
       onTokenRefreshed?.(data.accessToken, data.refreshToken)
-
       processQueue(null, data.accessToken)
       original.headers.Authorization = `Bearer ${data.accessToken}`
       return api(original)
