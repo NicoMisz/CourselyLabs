@@ -118,7 +118,7 @@ public class ReviewService {
 
     public ReviewDTO createForCourse(UUID courseId, CreateReviewRequestDTO dto, String email) {
     UserEntity user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
+        .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
 
         if (reviewRepository.existsByCourseIdAndUserId(courseId, user.getId())) {
             throw new BadRequestException("User has already reviewed this course");
@@ -181,7 +181,7 @@ public class ReviewService {
 
         // Validación de propiedad
         if (!entity.getUser().getEmail().equalsIgnoreCase(email)) {
-            throw new UnauthorizedException("You can only delete your own review");
+            throw new UnauthorizedException("You can only modify your own review");
         }
 
         UUID courseId = entity.getCourse().getId(); // ← guardar antes de borrar
@@ -193,7 +193,7 @@ public class ReviewService {
     private void updateCourseAverageRating(UUID courseId) {
         CourseEntity course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Course", "id", courseId));
-        
+
         Double avg = reviewRepository.getAverageRatingByCourseId(courseId);
         course.setAverageRating(avg != null ? BigDecimal.valueOf(avg) : BigDecimal.ZERO);
         courseRepository.save(course);

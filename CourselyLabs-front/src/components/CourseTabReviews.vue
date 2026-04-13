@@ -125,21 +125,10 @@ function calculateDistribution() {
   }
 
   reviews.value.forEach((r: Review) => {
-    const dist: Record<1 | 2 | 3 | 4 | 5, number> = {
-      1: 0, 2: 0, 3: 0, 4: 0, 5: 0
-    }
-    reviews.value.forEach((r) => {
-      dist[r.rating as 1 | 2 | 3 | 4 | 5]++
-    })
-
-    distribution.value = dist
+    dist[r.rating as 1 | 2 | 3 | 4 | 5]++
   })
 
   distribution.value = dist
-/*   total.value = reviews.value.length
-  average.value =
-    reviews.value.reduce((acc, r) => acc + r.rating, 0) /
-    (reviews.value.length || 1) */
 }
 
 // -----------------------------
@@ -155,24 +144,20 @@ const canReview = computed(() =>
 // -----------------------------
 // CRUD
 // -----------------------------
- 
-async function submitReview(_payload: { rating: number; comment: string }) {
-  // no usamos payload en las fake APIs
+
+async function submitReview(payload: { rating: number; comment: string }) {
   loadingAction.value = true
   try {
     if (editingReviewId.value) {
-      await updateReview(editingReviewId.value, _payload)
-      $q.notify({ type: 'positive', message: 'Valoración actualizada' })
+      await updateReview(editingReviewId.value, payload)
+      $q.notify({ type: 'positive', message: 'Valoracion actualizada' })
     } else {
-      await createReview(props.courseId, _payload)
-      $q.notify({ type: 'positive', message: 'Valoración enviada' })
+      await createReview(props.courseId, payload)
+      $q.notify({ type: 'positive', message: 'Valoracion enviada' })
     }
-
     editingReviewId.value = null
     await reloadAll()
-  } catch{
-    $q.notify({ type: 'negative', message: 'Error al guardar la valoración' })
-  }finally {
+  } finally {
     loadingAction.value = false
   }
 }
