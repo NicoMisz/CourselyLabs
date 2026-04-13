@@ -8,6 +8,8 @@ export interface Review {
   comment: string
   createdAt?: string
   updatedAt?: string
+  userAvatar?: string | null
+  isOwn?: boolean  // ← añade esto
 }
 
 export interface ReviewPage {

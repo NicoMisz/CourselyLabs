@@ -1,31 +1,31 @@
 import api from './axios'
-import type {
+/* import type {
   Review,
   ReviewPage,
   CreateReviewPayload,
   UpdateReviewPayload,
-} from '../types/review'
+} from '../types/review' */
 
 export async function getCourseReviewsPaged(
   courseId: string,
   page = 0,
   size = 10,
   sort = 'createdAt,desc',
-): Promise<ReviewPage> {
-  const { data } = await api.get<ReviewPage>(`/api/reviews/course/${courseId}/paged`, {
+) {
+  const { data } = await api.get(`/api/reviews/course/${courseId}/paged`, {
     params: { page, size, sort },
   })
   return data
 }
 
-export async function getCourseAverage(courseId: string): Promise<number> {
-  const { data } = await api.get<number>(`/api/reviews/course/${courseId}/average`)
+export async function getCourseAverage(courseId: string) {
+  const { data } = await api.get(`/api/reviews/course/${courseId}/average`)
   return data ?? 0
 }
 
-export async function getMyReview(courseId: string): Promise<Review | null> {
+export async function getMyReview(courseId: string) {
   try {
-    const { data } = await api.get<Review>(`/api/reviews/course/${courseId}/me`)
+    const { data } = await api.get(`/api/reviews/course/${courseId}/me`)
     return data
   } catch (error: unknown) {
     const status = (error as { response?: { status?: number } })?.response?.status
@@ -34,16 +34,17 @@ export async function getMyReview(courseId: string): Promise<Review | null> {
   }
 }
 
-export async function createReview(courseId: string, payload: CreateReviewPayload): Promise<Review> {
-  const { data } = await api.post<Review>(`/api/reviews/course/${courseId}`, payload)
+export async function createReview(courseId: string, payload: { rating: number; comment: string }) {
+  const { data } = await api.post(`/api/reviews/course/${courseId}`, payload)
   return data
 }
 
-export async function updateReview(reviewId: string, payload: UpdateReviewPayload): Promise<Review> {
-  const { data } = await api.put<Review>(`/api/reviews/${reviewId}`, payload)
+// IMPORTANTE: usar endpoints OWN
+export async function updateReview(reviewId: string, payload: { rating: number; comment: string }) {
+  const { data } = await api.put(`/api/reviews/${reviewId}/own`, payload)
   return data
 }
 
-export async function deleteReview(reviewId: string): Promise<void> {
-  await api.delete(`/api/reviews/${reviewId}`)
+export async function deleteReview(reviewId: string) {
+  await api.delete(`/api/reviews/${reviewId}/own`)
 }
