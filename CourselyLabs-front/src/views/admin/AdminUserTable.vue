@@ -2,6 +2,51 @@
   <q-page class="q-pa-lg">
     <h1 class="text-h5 q-mb-lg">Gestion de usuarios</h1>
 
+    <!-- Filters -->
+    <div class="row q-gutter-md q-mb-md items-end">
+      <q-input
+        v-model="filters.search"
+        outlined
+        dense
+        placeholder="Buscar por nombre o email..."
+        class="col-12 col-sm"
+        clearable
+        debounce="400"
+        @update:model-value="resetAndFetch"
+      >
+        <template #prepend><q-icon name="search" /></template>
+      </q-input>
+
+      <q-select
+        v-model="filters.role"
+        :options="roleFilterOptions"
+        outlined
+        dense
+        emit-value
+        map-options
+        label="Rol"
+        class="col-12 col-sm-auto"
+        style="min-width: 150px"
+        clearable
+        @update:model-value="resetAndFetch"
+      />
+
+      <q-select
+        v-model="filters.isActive"
+        :options="statusFilterOptions"
+        outlined
+        dense
+        emit-value
+        map-options
+        label="Estado"
+        class="col-12 col-sm-auto"
+        style="min-width: 150px"
+        clearable
+        @update:model-value="resetAndFetch"
+      />
+    </div>
+
+    <!-- Table -->
     <q-table
       :rows="users"
       :columns="columns"
@@ -15,7 +60,7 @@
       <!-- Name + avatar -->
       <template #body-cell-name="props">
         <q-td :props="props">
-          <div class="row items-center q-gutter-sm">
+          <div class="row items-center q-gutter-sm no-wrap">
             <q-avatar size="32px" color="primary" text-color="white" font-size="14px">
               {{ (props.row.firstName?.[0] || '') + (props.row.lastName?.[0] || '') }}
             </q-avatar>
@@ -64,17 +109,13 @@
           <q-btn flat dense round icon="more_vert">
             <q-menu>
               <q-list dense>
-                <!-- Change role -->
                 <q-item clickable v-close-popup @click="openRoleDialog(props.row)">
                   <q-item-section avatar><q-icon name="swap_horiz" size="20px" /></q-item-section>
                   <q-item-section>Cambiar rol</q-item-section>
                 </q-item>
-
-                <!-- Ban/Unban -->
                 <q-item
                   v-if="props.row.isActive && props.row.role !== 'admin'"
-                  clickable
-                  v-close-popup
+                  clickable v-close-popup
                   @click="handleBan(props.row)"
                 >
                   <q-item-section avatar><q-icon name="block" size="20px" color="negative" /></q-item-section>
@@ -82,8 +123,7 @@
                 </q-item>
                 <q-item
                   v-if="!props.row.isActive"
-                  clickable
-                  v-close-popup
+                  clickable v-close-popup
                   @click="handleUnban(props.row)"
                 >
                   <q-item-section avatar><q-icon name="check_circle" size="20px" color="positive" /></q-item-section>
@@ -93,6 +133,14 @@
             </q-menu>
           </q-btn>
         </q-td>
+      </template>
+
+      <!-- No results -->
+      <template #no-data>
+        <div class="text-center q-pa-lg text-grey-6">
+          <q-icon name="search_off" size="48px" class="q-mb-sm" />
+          <div>No se encontraron usuarios con estos filtros</div>
+        </div>
       </template>
     </q-table>
 
@@ -123,13 +171,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { getAdminUsers, changeUserRole, banUser, unbanUser } from '../../api/admin'
 
 const $q = useQuasar()
 const loading = ref(true)
 const users = ref<any[]>([])
+
+const filters = reactive({
+  search: '',
+  role: null as string | null,
+  isActive: null as boolean | null,
+})
 
 const pagination = ref({
   page: 1,
@@ -143,6 +197,17 @@ const columns = [
   { name: 'status', label: 'Estado', field: 'isActive', align: 'center' as const },
   { name: 'createdAt', label: 'Registro', field: 'createdAt', align: 'center' as const, format: (v: string) => v ? new Date(v).toLocaleDateString('es') : '' },
   { name: 'actions', label: '', field: 'id', align: 'right' as const },
+]
+
+const roleFilterOptions = [
+  { label: 'Usuario', value: 'user' },
+  { label: 'Premium', value: 'premium' },
+  { label: 'Admin', value: 'admin' },
+]
+
+const statusFilterOptions = [
+  { label: 'Activo', value: true },
+  { label: 'Baneado', value: false },
 ]
 
 const roleOptions = [
@@ -171,6 +236,36 @@ function roleLabel(role: string) {
     case 'premium': return 'Premium'
     default: return 'Usuario'
   }
+}
+
+function resetAndFetch() {
+  pagination.value.page = 1
+  fetchUsers()
+}
+
+async function fetchUsers() {
+  loading.value = true
+  try {
+    const data = await getAdminUsers({
+      search: filters.search || undefined,
+      role: filters.role || undefined,
+      isActive: filters.isActive,
+      page: pagination.value.page - 1,
+      size: pagination.value.rowsPerPage,
+    })
+    users.value = data.content
+    pagination.value.rowsNumber = data.totalElements
+  } catch {
+    $q.notify({ type: 'negative', message: 'Error al cargar usuarios', position: 'bottom-right' })
+  } finally {
+    loading.value = false
+  }
+}
+
+async function onRequest(props: any) {
+  pagination.value.page = props.pagination.page
+  pagination.value.rowsPerPage = props.pagination.rowsPerPage
+  await fetchUsers()
 }
 
 function openRoleDialog(user: any) {
@@ -217,25 +312,5 @@ async function handleUnban(user: any) {
   }
 }
 
-async function onRequest(props: any) {
-  const { page, rowsPerPage } = props.pagination
-  loading.value = true
-  try {
-    const data = await getAdminUsers(page - 1, rowsPerPage)
-    users.value = data.content
-    pagination.value = {
-      page,
-      rowsPerPage,
-      rowsNumber: data.totalElements,
-    }
-  } catch {
-    $q.notify({ type: 'negative', message: 'Error al cargar usuarios', position: 'bottom-right' })
-  } finally {
-    loading.value = false
-  }
-}
-
-onMounted(() => {
-  onRequest({ pagination: pagination.value })
-})
+onMounted(fetchUsers)
 </script>

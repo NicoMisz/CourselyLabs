@@ -1,13 +1,17 @@
 package com.courselylabs.courselylab.service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import jakarta.persistence.criteria.Predicate;
 
 import com.courselylabs.courselylab.dto.CourseDTO;
 import com.courselylabs.courselylab.entity.CourseEntity;
@@ -55,8 +59,29 @@ public class AdminService {
     // --- Users ---
 
     @Transactional(readOnly = true)
-    public Page<UserEntity> getUsers(Pageable pageable) {
-        return userRepository.findAll(pageable);
+    public Page<UserEntity> getUsers(String search, String role, Boolean isActive, Pageable pageable) {
+        Specification<UserEntity> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (search != null && !search.isBlank()) {
+                String pattern = "%" + search.toLowerCase() + "%";
+                predicates.add(cb.or(
+                    cb.like(cb.lower(root.get("firstName")), pattern),
+                    cb.like(cb.lower(root.get("lastName")), pattern),
+                    cb.like(cb.lower(root.get("email")), pattern)
+                ));
+            }
+            if (role != null && !role.isBlank()) {
+                predicates.add(cb.equal(root.get("role"), role));
+            }
+            if (isActive != null) {
+                predicates.add(cb.equal(root.get("isActive"), isActive));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        return userRepository.findAll(spec, pageable);
     }
 
     public UserEntity changeRole(UUID userId, String newRole) {

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.courselylabs.courselylab.dto.CourseDTO;
@@ -39,8 +40,11 @@ public class AdminController {
 
     @GetMapping("/users")
     public ResponseEntity<Page<UserDTO>> getUsers(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String role,
+            @RequestParam(required = false) Boolean isActive,
             @PageableDefault(size = 20, sort = "createdAt") Pageable pageable) {
-        Page<UserDTO> page = adminService.getUsers(pageable)
+        Page<UserDTO> page = adminService.getUsers(search, role, isActive, pageable)
                 .map(this::toUserDTO);
         return ResponseEntity.ok(page);
     }

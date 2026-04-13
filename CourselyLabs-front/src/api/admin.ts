@@ -25,8 +25,24 @@ export async function getAdminStats(): Promise<AdminStats> {
   return data
 }
 
-export async function getAdminUsers(page = 0, size = 20) {
-  const { data } = await api.get('/api/admin/users', { params: { page, size } })
+export interface UserFilters {
+  search?: string
+  role?: string
+  isActive?: boolean | null
+  page?: number
+  size?: number
+}
+
+export async function getAdminUsers(filters: UserFilters = {}) {
+  const params: Record<string, unknown> = {
+    page: filters.page ?? 0,
+    size: filters.size ?? 20,
+  }
+  if (filters.search) params.search = filters.search
+  if (filters.role) params.role = filters.role
+  if (filters.isActive !== undefined && filters.isActive !== null) params.isActive = filters.isActive
+
+  const { data } = await api.get('/api/admin/users', { params })
   return data
 }
 
