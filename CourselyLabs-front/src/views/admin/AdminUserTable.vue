@@ -54,7 +54,7 @@
       :loading="loading"
       flat
       bordered
-      :pagination="pagination"
+      v-model:pagination="pagination"
       @request="onRequest"
     >
       <!-- Name + avatar -->
