@@ -49,6 +49,7 @@ public class CourseService {
     private final CourseInstructorRepository courseInstructorRepository;
     private final SectionRepository sectionRepository;
     private final UserRepository userRepository;
+    private final CoursePrerequisiteService coursePrerequisiteService;
 
     private static final int MAX_COURSES_USER = 2;
     private static final int MAX_COURSES_PREMIUM = 10;
@@ -62,7 +63,8 @@ public class CourseService {
             EnrollmentRepository enrollmentRepository,
             CourseInstructorRepository courseInstructorRepository,
             SectionRepository sectionRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            CoursePrerequisiteService coursePrerequisiteService) {
         this.courseRepository = courseRepository;
         this.categoriaRepository = categoriaRepository;
         this.courseMapper = courseMapper;
@@ -72,6 +74,7 @@ public class CourseService {
         this.courseInstructorRepository = courseInstructorRepository;
         this.sectionRepository = sectionRepository;
         this.userRepository = userRepository;
+        this.coursePrerequisiteService = coursePrerequisiteService;
     }
 
     @Transactional(readOnly = true)
@@ -89,14 +92,14 @@ public class CourseService {
     public CourseDetailDTO findById(UUID id) {
         CourseEntity entity = courseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Course", "id", id));
-        return buildCourseDetail(entity);
+        return buildCourseDetail(entity, null);
     }
 
     @Transactional(readOnly = true)
     public CourseDetailDTO findBySlug(String slug) {
         CourseEntity entity = courseRepository.findBySlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException("Course", "slug", slug));
-        return buildCourseDetail(entity);
+        return buildCourseDetail(entity, null);
     }
 
     @Transactional(readOnly = true)
@@ -249,21 +252,18 @@ public class CourseService {
         courseRepository.deleteById(id);
     }
 
-    private CourseDetailDTO buildCourseDetail(CourseEntity entity) {
+    private CourseDetailDTO buildCourseDetail(CourseEntity entity, UserEntity currentUser) {  // añadido currentUser
         CourseDetailDTO dto = new CourseDetailDTO();
-
         dto.setId(entity.getId());
         dto.setTitle(entity.getTitle());
         dto.setSlug(entity.getSlug());
         dto.setDescription(entity.getDescription());
         dto.setShortDescription(entity.getShortDescription());
         dto.setThumbnailUrl(entity.getThumbnailUrl());
-
         if (entity.getCategory() != null) {
             dto.setCategoryId(entity.getCategory().getId());
             dto.setCategoryName(entity.getCategory().getName());
         }
-
         dto.setLevel(entity.getLevel());
         dto.setIsFree(entity.getIsFree());
         dto.setPrice(entity.getPrice());
@@ -284,9 +284,16 @@ public class CourseService {
 
         List<CourseInstructorEntity> links = courseInstructorRepository.findByCourseId(entity.getId());
         dto.setInstructors(mapInstructors(links));
-
         dto.setSections(sectionMapper.toDTOList(
                 sectionRepository.findByCourseIdOrderByPositionAsc(entity.getId())));
+
+        // Prerequisitos solo para premium/admin
+        boolean isPremium = currentUser != null && (
+            "premium".equalsIgnoreCase(currentUser.getRole())
+            || "admin".equalsIgnoreCase(currentUser.getRole()));
+        dto.setPrerequisites(isPremium
+            ? coursePrerequisiteService.findByCourseId(entity.getId(), currentUser.getEmail())
+            : List.of());
 
         return dto;
     }

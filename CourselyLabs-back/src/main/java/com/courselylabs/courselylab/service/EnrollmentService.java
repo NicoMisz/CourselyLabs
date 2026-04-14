@@ -128,6 +128,8 @@ public class EnrollmentService {
             throw new BadRequestException("Ya estas inscrito en este curso");
         }
 
+        coursePrerequisiteService.assertCanEnroll(email, course.getId());
+
         EnrollmentEntity enrollment = new EnrollmentEntity();
         enrollment.setUser(user);
         enrollment.setCourse(course);
