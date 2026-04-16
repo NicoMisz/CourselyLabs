@@ -29,6 +29,8 @@ import { computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 
+import type { BlockedPrerequisite } from '@/types/prerequisite'
+
 const props = defineProps<{
   level?: string;
   durationText?: string;
@@ -40,6 +42,7 @@ const props = defineProps<{
   price?: number;
   enrolled: boolean;
   loading?: boolean;
+  prerequisiteBlockers?: BlockedPrerequisite[]
 }>();
 
 const emit = defineEmits<{
@@ -54,6 +57,8 @@ const authStore = useAuthStore();
 const isGuest = computed(() => !authStore.isLoggedIn);
 
 const isPaid = computed(() => !props.isFree);
+
+const hasBlockedPrerequisites = computed(() => (props.prerequisiteBlockers?.length ?? 0) > 0);
 
 const buttonLabel = computed(() => {
   if (isGuest.value) return 'Inicia sesion para inscribirte';
@@ -75,7 +80,10 @@ const buttonIcon = computed(() => {
   return 'lock';
 });
 
-const buttonDisabled = computed(() => isPaid.value && !props.enrolled && !isGuest.value);
+const buttonDisabled = computed(() => {
+  if (hasBlockedPrerequisites.value) return true;
+  return isPaid.value && !props.enrolled && !isGuest.value;
+});
 
 function handleClick() {
   if (isGuest.value) {

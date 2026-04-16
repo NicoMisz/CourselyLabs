@@ -76,6 +76,11 @@
           <q-tab-panels v-model="tab" animated>
             <q-tab-panel name="descripcion">
               <p>{{ course.description || 'Sin descripcion completa por ahora.' }}</p>
+              <h6>Prerequisitos:</h6>
+              <CoursePrerequisites
+                :prerequisites="prerequisites"
+                :blockers="prerequisiteBlockers"
+              />
             </q-tab-panel>
 
             <q-tab-panel name="contenido">
@@ -133,6 +138,7 @@
               :price="course.price"
               :enrolled="enrolled"
               :loading="enrollLoading"
+              :prerequisite-blockers="prerequisiteBlockers"
               @enroll="handleEnroll"
               @continue="handleContinueCourse"
           />
@@ -167,6 +173,9 @@ import type { CourseDetail } from '../types/course';
 import CourseTabReviews from '@/components/CourseTabReviews.vue';
 import { getCourseProgress } from '@/api/progress';
 
+import { getCoursePrerequisites, getCoursePrerequisiteBlockers } from '@/api/prerequisite';
+import type { CoursePrerequisite, BlockedPrerequisite } from '@/types/prerequisite';
+
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
@@ -181,7 +190,10 @@ const enrollLoading = ref(false);
 const showEnrollSuccess = ref(false);
 const enrollError = ref('');
 
-const courseCompletedLessons = ref(0)
+const courseCompletedLessons = ref(0);
+
+const prerequisites = ref<CoursePrerequisite[]>([]);
+const prerequisiteBlockers = ref<BlockedPrerequisite[]>([]);
 
 function setOgMeta(name: string, content: string) {
   const selector = `meta[property="${name}"]`
@@ -260,10 +272,34 @@ async function fetchCourseProgress(courseId?: string) {
   }
 
   try {
-    const p = await getCourseProgress(courseId)
-    courseCompletedLessons.value = p.completedLessons ?? 0
+    const p = await getCourseProgress(courseId);
+    courseCompletedLessons.value = p.completedLessons ?? 0;
   } catch {
-    courseCompletedLessons.value = 0
+    courseCompletedLessons.value = 0;
+  }
+}
+
+async function fetchPrerequisites(courseId?: string) {
+  if (!courseId) {
+    prerequisites.value = [];
+    prerequisiteBlockers.value = [];
+    return;
+  }
+
+  try {
+    prerequisites.value = await getCoursePrerequisites(courseId);
+  } catch {
+    prerequisites.value = [];
+  }
+
+  try {
+    if (authStore.isLoggedIn) {
+      prerequisiteBlockers.value = await getCoursePrerequisiteBlockers(courseId);
+    } else {
+      prerequisiteBlockers.value = [];
+    }
+  } catch {
+    prerequisiteBlockers.value = [];
   }
 }
 
@@ -280,16 +316,31 @@ onMounted(fetchCourse);
 watch(
   () => course.value?.id,
   (id) => {
-    if (id) fetchCourseProgress(id)
+    if (id) fetchCourseProgress(id);
   },
   { immediate: true }
-)
+);
 
 // Nuevo: recargar progreso si cambia la inscripción
 watch(enrolled, (isEnrolled) => {
   if (isEnrolled && course.value?.id) {
     fetchCourseProgress(course.value.id)
   }
-})
+});
+
+watch(
+  () => course.value?.id,
+  (id) => {
+    if (id) fetchPrerequisites(id)
+  },
+  { immediate: true }
+);
+
+watch(
+  () => authStore.isLoggedIn,
+  () => {
+    if (course.value?.id) fetchPrerequisites(course.value.id)
+  }
+);
 
 </script>
