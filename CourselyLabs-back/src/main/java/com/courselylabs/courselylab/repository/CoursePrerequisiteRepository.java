@@ -16,22 +16,19 @@ public interface CoursePrerequisiteRepository extends JpaRepository<CoursePrereq
 
     Optional<CoursePrerequisiteEntity> findByCourseIdAndPrerequisiteCourseId(UUID courseId, UUID prerequisiteCourseId);
 
-    Optional<CoursePrerequisiteEntity> findWithPrerequisiteCourseByCourseId(UUID courseId);
-
     boolean existsByCourseIdAndPrerequisiteCourseId(UUID courseId, UUID prerequisiteCourseId);
-
+    
     // void deleteByCourseIdAndPrerequisiteCourseId(UUID courseId, UUID
     // prerequisiteCourseId);
 
     long countByCourseId(UUID courseId);
 
     @Query("""
-                SELECT cp
-                FROM CoursePrerequisiteEntity cp
-                JOIN FETCH cp.prerequisiteCourse
-                WHERE cp.course.id = :courseId
-            """)
-
-    List<CoursePrerequisiteEntity> findByCourseIdWithPrerequisiteCourse(@Param("courseId") UUID courseId);
+        SELECT cp
+        FROM CoursePrerequisiteEntity cp
+        JOIN FETCH cp.prerequisiteCourse
+        WHERE cp.course.id = :courseId
+    """)
+    List<CoursePrerequisiteEntity> findWithPrerequisiteCourseByCourseId(@Param("courseId") UUID courseId);
 
 }

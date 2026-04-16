@@ -59,8 +59,8 @@ public class CoursePrerequisiteService {
 
     @Transactional(readOnly = true)
     public List<CoursePrerequisiteDTO> findByCourseId(UUID courseId, String email) {
-        assertIsPremiumOrAdmin(email);
-        return prerequisiteRepository.findWithPrerequisiteCourseByCourseId(courseId)
+            assertIsPremiumOrAdmin(email);
+            return prerequisiteRepository.findWithPrerequisiteCourseByCourseId(courseId)
                 .stream()
                 .map(this::toDTO)
                 .toList();
@@ -108,11 +108,14 @@ public class CoursePrerequisiteService {
 
     @Transactional(readOnly = true)
     public List<BlockedPrerequisiteDTO> findBlockedPrerequisites(UUID courseId, String email) {
-        UserEntity user = requirePremiumOrAdminUser(email);
+            UserEntity user = requirePremiumOrAdminUser(email);
 
-        return prerequisiteRepository.findWithPrerequisiteCourseByCourseId(courseId)
+            return prerequisiteRepository.findWithPrerequisiteCourseByCourseId(courseId)
                 .stream()
-                .map(prereq -> toBlockedPrerequisiteDTO(user.getId(), prereq.getPrerequisiteCourse(), prereq.getCompletionThreshold()))
+                .map(prereq -> toBlockedPrerequisiteDTO(
+                        user.getId(),
+                        prereq.getPrerequisiteCourse(),
+                        prereq.getCompletionThreshold()))
                 .filter(blocked -> !blocked.isCompleted())
                 .toList();
     }

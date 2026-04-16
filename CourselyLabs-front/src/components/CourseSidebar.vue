@@ -9,6 +9,13 @@
       <div><strong>Valoracion:</strong> {{ averageRating?.toFixed(1) || 'N/A' }}</div>
     </div>
 
+      <q-banner v-if="hasBlockedPrerequisites" rounded class="bg-orange-1 text-orange-10 q-mb-md" inline-actions>
+        Completa los cursos requeridos antes de inscribirte.
+        <template #action>
+          <q-btn flat color="orange-9" label="Ver prerequisitos" />
+        </template>
+      </q-banner>
+
     <q-btn
       :label="buttonLabel"
       :color="buttonColor"
@@ -25,9 +32,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
-import { useAuthStore } from '../stores/auth';
+import { computed } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
 
 import type { BlockedPrerequisite } from '@/types/prerequisite'
 
@@ -42,7 +49,7 @@ const props = defineProps<{
   price?: number;
   enrolled: boolean;
   loading?: boolean;
-  prerequisiteBlockers?: BlockedPrerequisite[]
+  prerequisiteBlockers?: BlockedPrerequisite[];
 }>();
 
 const emit = defineEmits<{
@@ -58,7 +65,7 @@ const isGuest = computed(() => !authStore.isLoggedIn);
 
 const isPaid = computed(() => !props.isFree);
 
-const hasBlockedPrerequisites = computed(() => (props.prerequisiteBlockers?.length ?? 0) > 0);
+const hasBlockedPrerequisites = computed(() => (props.prerequisiteBlockers?.length ?? 0) > 0)
 
 const buttonLabel = computed(() => {
   if (isGuest.value) return 'Inicia sesion para inscribirte';
@@ -81,9 +88,9 @@ const buttonIcon = computed(() => {
 });
 
 const buttonDisabled = computed(() => {
-  if (hasBlockedPrerequisites.value) return true;
-  return isPaid.value && !props.enrolled && !isGuest.value;
-});
+  if (hasBlockedPrerequisites.value) return true
+  return isPaid.value && !props.enrolled && !isGuest.value
+})
 
 function handleClick() {
   if (isGuest.value) {

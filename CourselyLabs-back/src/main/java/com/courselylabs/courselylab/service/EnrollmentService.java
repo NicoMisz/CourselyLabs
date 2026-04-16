@@ -114,7 +114,7 @@ public class EnrollmentService {
         UserEntity user = getUserByEmail(email);
 
         CourseEntity course = courseRepository.findById(request.getCourseId())
-                .orElseThrow(() -> new ResourceNotFoundException("Course", "id", request.getCourseId()));
+            .orElseThrow(() -> new ResourceNotFoundException("Course", "id", request.getCourseId()));
 
         if (!Boolean.TRUE.equals(course.getIsPublished())) {
             throw new BadRequestException("No puedes inscribirte en un curso no publicado");

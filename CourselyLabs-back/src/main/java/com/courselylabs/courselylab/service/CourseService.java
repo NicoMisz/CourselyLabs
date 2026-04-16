@@ -288,12 +288,12 @@ public class CourseService {
                 sectionRepository.findByCourseIdOrderByPositionAsc(entity.getId())));
 
         // Prerequisitos solo para premium/admin
-        boolean isPremium = currentUser != null && (
-            "premium".equalsIgnoreCase(currentUser.getRole())
-            || "admin".equalsIgnoreCase(currentUser.getRole()));
+        boolean isPremium = "premium".equalsIgnoreCase(currentUser.getRole())
+            || "admin".equalsIgnoreCase(currentUser.getRole());
+
         dto.setPrerequisites(isPremium
-            ? coursePrerequisiteService.findByCourseId(entity.getId(), currentUser.getEmail())
-            : List.of());
+                ? coursePrerequisiteService.findByCourseId(entity.getId(), currentUser.getEmail())
+                : List.of());
 
         return dto;
     }

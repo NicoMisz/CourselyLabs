@@ -173,8 +173,8 @@ import type { CourseDetail } from '../types/course';
 import CourseTabReviews from '@/components/CourseTabReviews.vue';
 import { getCourseProgress } from '@/api/progress';
 
-import { getCoursePrerequisites, getCoursePrerequisiteBlockers } from '@/api/prerequisite';
-import type { CoursePrerequisite, BlockedPrerequisite } from '@/types/prerequisite';
+import { getCoursePrerequisites, getCoursePrerequisiteBlockers } from '@/api/prerequisite'
+import type { CoursePrerequisite, BlockedPrerequisite } from '@/types/prerequisite'
 
 const router = useRouter();
 const route = useRoute();
@@ -192,8 +192,8 @@ const enrollError = ref('');
 
 const courseCompletedLessons = ref(0);
 
-const prerequisites = ref<CoursePrerequisite[]>([]);
-const prerequisiteBlockers = ref<BlockedPrerequisite[]>([]);
+const prerequisites = ref<CoursePrerequisite[]>([])
+const prerequisiteBlockers = ref<BlockedPrerequisite[]>([])
 
 function setOgMeta(name: string, content: string) {
   const selector = `meta[property="${name}"]`
@@ -281,25 +281,31 @@ async function fetchCourseProgress(courseId?: string) {
 
 async function fetchPrerequisites(courseId?: string) {
   if (!courseId) {
-    prerequisites.value = [];
-    prerequisiteBlockers.value = [];
-    return;
+    prerequisites.value = []
+    prerequisiteBlockers.value = []
+    return
+  }
+
+  if (course.value?.isFree) {
+    prerequisites.value = []
+    prerequisiteBlockers.value = []
+    return
   }
 
   try {
-    prerequisites.value = await getCoursePrerequisites(courseId);
+    prerequisites.value = await getCoursePrerequisites(courseId)
   } catch {
-    prerequisites.value = [];
+    prerequisites.value = []
   }
 
   try {
     if (authStore.isLoggedIn) {
-      prerequisiteBlockers.value = await getCoursePrerequisiteBlockers(courseId);
+      prerequisiteBlockers.value = await getCoursePrerequisiteBlockers(courseId)
     } else {
-      prerequisiteBlockers.value = [];
+      prerequisiteBlockers.value = []
     }
   } catch {
-    prerequisiteBlockers.value = [];
+    prerequisiteBlockers.value = []
   }
 }
 
@@ -307,16 +313,16 @@ function handleContinueCourse() {
   router.push(route.fullPath);
 }
 
-watch(() => course.value?.id, fetchEnrollmentState, { immediate: true });
+watch(() => course.value?.id, fetchEnrollmentState, { immediate: true })
 
-watch(() => route.params.slug, fetchCourse);
+watch(() => route.params.slug, fetchCourse)
 onMounted(fetchCourse);
 
 // Nuevo: cargar progreso cuando cambia el curso
 watch(
   () => course.value?.id,
   (id) => {
-    if (id) fetchCourseProgress(id);
+    if (id) fetchCourseProgress(id)
   },
   { immediate: true }
 );
