@@ -1,9 +1,10 @@
 export interface CoursePrerequisite {
-    id: string;
-    courseId: string;
-    prerequisiteCourseId: string;
-    prerequisiteTitle: string;
-    prerequisiteSlug: string;
+    id: string
+	courseId: string
+	prerequisiteCourseId: string
+	prerequisiteTitle: string
+	prerequisiteSlug: string
+	completionThreshold: number
 }
 
 export interface CoursePrerequisiteStatus {

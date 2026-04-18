@@ -89,17 +89,26 @@ public class CourseService {
     }
 
     @Transactional(readOnly = true)
-    public CourseDetailDTO findById(UUID id) {
+    public CourseDetailDTO findById(UUID id, String email) {
         CourseEntity entity = courseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Course", "id", id));
-        return buildCourseDetail(entity, null);
+        UserEntity currentUser = resolveUserOrNull(email);
+        return buildCourseDetail(entity, currentUser);
     }
 
     @Transactional(readOnly = true)
-    public CourseDetailDTO findBySlug(String slug) {
+    public CourseDetailDTO findBySlug(String slug, String email) {
         CourseEntity entity = courseRepository.findBySlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException("Course", "slug", slug));
-        return buildCourseDetail(entity, null);
+        UserEntity currentUser = resolveUserOrNull(email);
+        return buildCourseDetail(entity, currentUser);
+    }
+
+    private UserEntity resolveUserOrNull(String email) {
+        if (email == null || email.isBlank()) {
+            return null;
+        }
+        return userRepository.findByEmail(email).orElse(null);
     }
 
     @Transactional(readOnly = true)
@@ -288,12 +297,18 @@ public class CourseService {
                 sectionRepository.findByCourseIdOrderByPositionAsc(entity.getId())));
 
         // Prerequisitos solo para premium/admin
-        boolean isPremium = "premium".equalsIgnoreCase(currentUser.getRole())
-            || "admin".equalsIgnoreCase(currentUser.getRole());
+        boolean isPremiumOrAdmin = currentUser != null && (
+            "premium".equalsIgnoreCase(currentUser.getRole())
+            || "admin".equalsIgnoreCase(currentUser.getRole())
+        );
 
-        dto.setPrerequisites(isPremium
-                ? coursePrerequisiteService.findByCourseId(entity.getId(), currentUser.getEmail())
-                : List.of());
+        if (Boolean.TRUE.equals(entity.getIsFree())) {
+            dto.setPrerequisites(List.of());
+        } else if (isPremiumOrAdmin) {
+            dto.setPrerequisites(coursePrerequisiteService.findByCourseId(entity.getId(), currentUser.getEmail()));
+        } else {
+            dto.setPrerequisites(List.of());
+        }
 
         return dto;
     }

@@ -1,6 +1,6 @@
 import api from './axios'
 import type {
-    //BlockedPrerequisite,
+    BlockedPrerequisite,
     CoursePrerequisite,
     CreateCoursePrerequisitePayload,
 } from '@/types/prerequisite'
@@ -25,16 +25,4 @@ export async function addCoursePrerequisite(
 
 export async function deleteCoursePrerequisite(courseId: string, prereqId: string): Promise<void> {
     await api.delete(`/api/courses/${courseId}/prerequisites/${prereqId}`)
-}
-
-export interface BlockedPrerequisite {
-    courseId: string
-    title: string
-    slug: string
-    enrolled: boolean
-    completed: boolean
-    completedLessons: number
-    totalLessons: number
-    progressPercent: number
-    requiredThreshold: number
 }

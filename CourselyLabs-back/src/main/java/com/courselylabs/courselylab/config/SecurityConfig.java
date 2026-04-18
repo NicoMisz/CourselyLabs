@@ -56,6 +56,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/courses/mine").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/courses/mine/limits").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/courses/*/prerequisites").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/courses/*/prerequisites/blockers").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/courses/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/lessons/**").permitAll()

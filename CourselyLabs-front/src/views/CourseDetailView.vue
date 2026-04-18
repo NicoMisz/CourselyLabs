@@ -138,10 +138,13 @@
               :price="course.price"
               :enrolled="enrolled"
               :loading="enrollLoading"
-              :prerequisite-blockers="prerequisiteBlockers"
+              :prerequisite-blockers="prerequisiteBlockers" 
               @enroll="handleEnroll"
               @continue="handleContinueCourse"
           />
+
+          <!-- Banner de bloqueo si no cumple prerequisitos
+              :prerequisite-blockers="prerequisiteBlockers"  -->
         </div>
 
       </div>
@@ -175,6 +178,8 @@ import { getCourseProgress } from '@/api/progress';
 
 import { getCoursePrerequisites, getCoursePrerequisiteBlockers } from '@/api/prerequisite'
 import type { CoursePrerequisite, BlockedPrerequisite } from '@/types/prerequisite'
+
+import CoursePrerequisites from '@/components/CoursePrerequisites.vue'
 
 const router = useRouter();
 const route = useRoute();
@@ -280,33 +285,44 @@ async function fetchCourseProgress(courseId?: string) {
 }
 
 async function fetchPrerequisites(courseId?: string) {
-  if (!courseId) {
-    prerequisites.value = []
-    prerequisiteBlockers.value = []
-    return
-  }
+	if (!courseId) {
+		prerequisites.value = []
+		prerequisiteBlockers.value = []
+		return
+	}
 
-  if (course.value?.isFree) {
-    prerequisites.value = []
-    prerequisiteBlockers.value = []
-    return
-  }
+	if (course.value?.isFree) {
+		prerequisites.value = []
+		prerequisiteBlockers.value = []
+		return
+	}
 
-  try {
-    prerequisites.value = await getCoursePrerequisites(courseId)
-  } catch {
-    prerequisites.value = []
-  }
+	// 1) Prioridad: lo que ya venga en el detalle del curso
+	prerequisites.value = Array.isArray(course.value?.prerequisites)
+		? course.value!.prerequisites
+		: []
 
-  try {
-    if (authStore.isLoggedIn) {
-      prerequisiteBlockers.value = await getCoursePrerequisiteBlockers(courseId)
-    } else {
-      prerequisiteBlockers.value = []
-    }
-  } catch {
-    prerequisiteBlockers.value = []
-  }
+	// 2) Fallback: si viene vacio, pedir endpoint dedicado
+	if (!prerequisites.value.length) {
+		try {
+			prerequisites.value = await getCoursePrerequisites(courseId)
+		} catch (err) {
+			console.warn('[prerequisites] error loading list:', err)
+			prerequisites.value = []
+		}
+	}
+
+	// Blockers para banner y bloqueo de boton
+	try {
+		if (authStore.isLoggedIn) {
+			prerequisiteBlockers.value = await getCoursePrerequisiteBlockers(courseId)
+		} else {
+			prerequisiteBlockers.value = []
+		}
+	} catch (err) {
+		console.warn('[prerequisites] error loading blockers:', err)
+		prerequisiteBlockers.value = []
+	}
 }
 
 function handleContinueCourse() {

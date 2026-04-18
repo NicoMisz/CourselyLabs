@@ -54,14 +54,20 @@ public class CourseController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CourseDetailDTO> findById(@PathVariable UUID id) {
-        return ResponseEntity.ok(courseService.findById(id));
+    public ResponseEntity<CourseDetailDTO> findById(@PathVariable UUID id, Authentication auth) {
+        return ResponseEntity.ok(courseService.findById(id, auth != null ? auth.getName() : null));
     }
+    /* public ResponseEntity<CourseDetailDTO> findById(@PathVariable UUID id) {
+        return ResponseEntity.ok(courseService.findById(id));
+    } */
 
     @GetMapping("/slug/{slug}")
-    public ResponseEntity<CourseDetailDTO> findBySlug(@PathVariable String slug) {
-        return ResponseEntity.ok(courseService.findBySlug(slug));
+    public ResponseEntity<CourseDetailDTO> findBySlug(@PathVariable String slug, Authentication auth) {
+        return ResponseEntity.ok(courseService.findBySlug(slug, auth != null ? auth.getName() : null));
     }
+    /* public ResponseEntity<CourseDetailDTO> findBySlug(@PathVariable String slug) {
+        return ResponseEntity.ok(courseService.findBySlug(slug));
+    } */
 
     @GetMapping("/{id}/instructors")
     public ResponseEntity<List<InstructorSummaryDTO>> findInstructorsByCourseId(@PathVariable UUID id) {

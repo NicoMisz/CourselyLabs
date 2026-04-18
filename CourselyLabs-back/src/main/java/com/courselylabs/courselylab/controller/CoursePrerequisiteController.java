@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.courselylabs.courselylab.dto.BlockedPrerequisiteDTO;
 import com.courselylabs.courselylab.dto.CoursePrerequisiteDTO;
 import com.courselylabs.courselylab.dto.CreateCoursePrerequisiteRequestDTO;
+import com.courselylabs.courselylab.exception.UnauthorizedException;
 import com.courselylabs.courselylab.security.UserDetailsImpl;
 import com.courselylabs.courselylab.service.CoursePrerequisiteService;
 
@@ -37,6 +38,9 @@ public class CoursePrerequisiteController {
     public ResponseEntity<List<CoursePrerequisiteDTO>> findByCourseId(
             @PathVariable UUID id,
             @AuthenticationPrincipal UserDetailsImpl currentUser) {
+        if (currentUser == null) {
+            throw new UnauthorizedException("Authentication required");
+        }
         return ResponseEntity.ok(prerequisiteService.findByCourseId(id, currentUser.getUsername()));
     }
 
@@ -45,6 +49,11 @@ public class CoursePrerequisiteController {
     public ResponseEntity<List<BlockedPrerequisiteDTO>> findBlockedPrerequisites(
             @PathVariable UUID id,
             @AuthenticationPrincipal UserDetailsImpl currentUser) {
+
+        if (currentUser == null) {
+            throw new UnauthorizedException("Authentication required");
+        }
+
         return ResponseEntity.ok(prerequisiteService.findBlockedPrerequisites(id, currentUser.getUsername()));
     }
 
@@ -54,6 +63,11 @@ public class CoursePrerequisiteController {
             @PathVariable UUID id,
             @Valid @RequestBody CreateCoursePrerequisiteRequestDTO request,
             @AuthenticationPrincipal UserDetailsImpl currentUser) {
+        
+        if (currentUser == null) {
+            throw new UnauthorizedException("Authentication required");
+        }
+
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(prerequisiteService.addPrerequisite(id, request, currentUser.getUsername()));
     }
@@ -65,6 +79,11 @@ public class CoursePrerequisiteController {
             @PathVariable UUID prereqId,
             @AuthenticationPrincipal UserDetailsImpl currentUser) {
         prerequisiteService.deletePrerequisite(id, prereqId, currentUser.getUsername());
+
+        if (currentUser == null) {
+            throw new UnauthorizedException("Authentication required");
+        }
+        
         return ResponseEntity.noContent().build();
     }
 }
