@@ -1,4 +1,6 @@
 import api from './axios'
+import type { CoursePrerequisiteStatus } from '@/types/prerequisite'
+
 import type {
     BlockedPrerequisite,
     CoursePrerequisite,
@@ -12,6 +14,11 @@ export async function getCoursePrerequisites(courseId: string): Promise<CoursePr
 
 export async function getCoursePrerequisiteBlockers(courseId: string): Promise<BlockedPrerequisite[]> {
     const { data } = await api.get<BlockedPrerequisite[]>(`/api/courses/${courseId}/prerequisites/blockers`)
+    return data
+}
+
+export async function getCoursePrerequisiteStatus(courseId: string): Promise<CoursePrerequisiteStatus[]> {
+    const { data } = await api.get<CoursePrerequisiteStatus[]>(`/api/courses/${courseId}/prerequisites/status`)
     return data
 }
 

@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.courselylabs.courselylab.dto.BlockedPrerequisiteDTO;
 import com.courselylabs.courselylab.dto.CoursePrerequisiteDTO;
+import com.courselylabs.courselylab.dto.CoursePrerequisiteStatusDTO;
 import com.courselylabs.courselylab.dto.CreateCoursePrerequisiteRequestDTO;
 import com.courselylabs.courselylab.entity.CourseEntity;
 import com.courselylabs.courselylab.entity.CoursePrerequisiteEntity;
@@ -253,5 +254,44 @@ public class CoursePrerequisiteService {
                 totalLessons,
                 progressPercent,
                 threshold);
+    }
+
+    // --- Status de prerequisitos para un curso (solo premium o admin) ---
+    @Transactional(readOnly = true)
+    public List<CoursePrerequisiteStatusDTO> findPrerequisiteStatus(UUID courseId, String email) {
+            UserEntity user = requirePremiumOrAdminUser(email);
+
+            return prerequisiteRepository.findWithPrerequisiteCourseByCourseId(courseId)
+                .stream()
+                .map(prereq -> toStatusDTO(
+                            user.getId(),
+                            prereq.getPrerequisiteCourse(),
+                            prereq.getCompletionThreshold()))
+                .toList();
+    }
+
+    // Reusa la misma logica de calculo de progreso que para los bloqueos, pero devuelve toda la info relevante para mostrar el status de cada prerequisito.
+    private CoursePrerequisiteStatusDTO toStatusDTO(UUID userId, CourseEntity course, int threshold) {
+        int totalLessons = sectionRepository.findByCourseIdOrderByPositionAsc(course.getId())
+                        .stream()
+                        .mapToInt(section -> section.getLessons().size())
+                        .sum();
+
+        int completedLessons = lessonProgressRepository.countCompletedByUserIdAndCourseId(userId, course.getId());
+        boolean enrolled = enrollmentRepository.existsByUserIdAndCourseId(userId, course.getId());
+        int progressPercent = totalLessons > 0 ? (completedLessons * 100) / totalLessons : 0;
+        boolean completed = progressPercent >= threshold;
+
+        return new CoursePrerequisiteStatusDTO(
+                        course.getId(),
+                        course.getTitle(),
+                        course.getSlug(),
+                        enrolled,
+                        completed,
+                        completedLessons,
+                        totalLessons,
+                        progressPercent,
+                        threshold
+        );
     }
 }

@@ -8,13 +8,15 @@ export interface CoursePrerequisite {
 }
 
 export interface CoursePrerequisiteStatus {
-    prerequisiteCourseId: string;
-    title: string;
-    slug: string;
-    enrolled: boolean;
-    completed: boolean;
-    completedLessons: number;
-    totalLessons: number;
+    prerequisiteCourseId: string
+    title: string
+    slug: string
+    enrolled: boolean
+    completed: boolean
+    completedLessons: number
+    totalLessons: number
+    progressPercent: number
+    requiredThreshold: number
 }
 
 export interface BlockedPrerequisite {

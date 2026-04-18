@@ -26,15 +26,12 @@ const blockerBySlug = computed(() => {
 				<q-card flat bordered class="q-pa-md">
 					<div class="text-subtitle1 text-weight-medium">{{ prereq.prerequisiteTitle }}</div>
 					<div class="text-body2 text-grey-7">Slug: {{ prereq.prerequisiteSlug }}</div>
-
 					<div class="text-caption text-grey-7 q-mt-xs">
 						Requerido: {{ prereq.completionThreshold }}%
 					</div>
-
 					<div class="text-caption text-grey-7">
 						Progreso actual:
-						{{ blockerBySlug.get(prereq.prerequisiteSlug)?.progressPercent ?? 'Cumplido o no disponible' }}
-						<template v-if="blockerBySlug.get(prereq.prerequisiteSlug)">%</template>
+						{{ blockerBySlug.get(prereq.prerequisiteSlug)?.progressPercent ?? 'N/D' }}
 					</div>
 				</q-card>
 			</div>

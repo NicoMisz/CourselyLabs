@@ -66,6 +66,7 @@
             indicator-color="primary"
           >
             <q-tab name="descripcion" label="Descripcion" />
+            <q-tab name="prerequisitos" label="Prerequisitos" />
             <q-tab name="contenido" label="Contenido" />
             <q-tab name="instructores" label="Instructores" />
             <q-tab name="valoraciones" label="Valoraciones" />
@@ -76,11 +77,15 @@
           <q-tab-panels v-model="tab" animated>
             <q-tab-panel name="descripcion">
               <p>{{ course.description || 'Sin descripcion completa por ahora.' }}</p>
-              <h6>Prerequisitos:</h6>
-              <CoursePrerequisites
-                :prerequisites="prerequisites"
-                :blockers="prerequisiteBlockers"
-              />
+            </q-tab-panel>
+
+            <q-tab-panel name="prerequisitos">
+              <div class="column q-gutter-md">
+                <CoursePrerequisitesTab
+                  :statuses="prerequisiteStatuses"
+                  :loading="prerequisiteStatusInitialLoading"
+                />
+              </div>
             </q-tab-panel>
 
             <q-tab-panel name="contenido">
@@ -161,7 +166,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, onBeforeUnmount, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import CourseHero from '../components/CourseHero.vue';
@@ -176,10 +181,9 @@ import type { CourseDetail } from '../types/course';
 import CourseTabReviews from '@/components/CourseTabReviews.vue';
 import { getCourseProgress } from '@/api/progress';
 
-import { getCoursePrerequisites, getCoursePrerequisiteBlockers } from '@/api/prerequisite'
-import type { CoursePrerequisite, BlockedPrerequisite } from '@/types/prerequisite'
-
-import CoursePrerequisites from '@/components/CoursePrerequisites.vue'
+import CoursePrerequisitesTab from '@/components/CoursePrerequisitesTab.vue'
+import { getCoursePrerequisites, getCoursePrerequisiteBlockers, getCoursePrerequisiteStatus } from '@/api/prerequisite'
+import type { CoursePrerequisite, BlockedPrerequisite, CoursePrerequisiteStatus } from '@/types/prerequisite'
 
 const router = useRouter();
 const route = useRoute();
@@ -199,6 +203,10 @@ const courseCompletedLessons = ref(0);
 
 const prerequisites = ref<CoursePrerequisite[]>([])
 const prerequisiteBlockers = ref<BlockedPrerequisite[]>([])
+const prerequisiteStatuses = ref<CoursePrerequisiteStatus[]>([])
+const prerequisiteStatusInitialLoading = ref(false)
+const prerequisiteStatusRefreshing = ref(false)
+let prerequisitesPollTimer: ReturnType<typeof setInterval> | null = null
 
 function setOgMeta(name: string, content: string) {
   const selector = `meta[property="${name}"]`
@@ -325,6 +333,51 @@ async function fetchPrerequisites(courseId?: string) {
 	}
 }
 
+// Nuevo: cargar estado de prerequisitos para mostrar progreso y bloqueo
+async function fetchPrerequisiteStatus(courseId?: string, silent = false) {
+  if (!courseId || course.value?.isFree) {
+    prerequisiteStatuses.value = []
+    return
+  }
+
+  if (silent) {
+    prerequisiteStatusRefreshing.value = true
+  } else {
+    prerequisiteStatusInitialLoading.value = true
+  }
+
+  try {
+    const data = await getCoursePrerequisiteStatus(courseId)
+    if (data.length || !silent) {
+      prerequisiteStatuses.value = data
+    }
+  } catch {
+    if (!prerequisiteStatuses.value.length) {
+      prerequisiteStatuses.value = []
+    }
+  } finally {
+    prerequisiteStatusInitialLoading.value = false
+    prerequisiteStatusRefreshing.value = false
+  }
+}
+
+// Nuevo: iniciar polling de estado de prerequisitos cada 15s cuando se vea la pestaña de prerequisitos
+function startPrerequisitesPolling() {
+  stopPrerequisitesPolling()
+  prerequisitesPollTimer = setInterval(() => {
+    if (tab.value === 'prerequisitos' && course.value?.id) {
+      fetchPrerequisiteStatus(course.value.id, true)
+    }
+  }, 15000)
+}
+
+function stopPrerequisitesPolling() {
+    if (prerequisitesPollTimer) {
+        clearInterval(prerequisitesPollTimer)
+        prerequisitesPollTimer = null
+    }
+}
+
 function handleContinueCourse() {
   router.push(route.fullPath);
 }
@@ -351,18 +404,37 @@ watch(enrolled, (isEnrolled) => {
 });
 
 watch(
-  () => course.value?.id,
-  (id) => {
-    if (id) fetchPrerequisites(id)
-  },
-  { immediate: true }
-);
+    () => course.value?.id,
+    (id) => {
+        if (!id) return
+        fetchPrerequisites(id)
+        fetchPrerequisiteStatus(id)
+    },
+    { immediate: true }
+)
+
+watch(tab, (newTab) => {
+    if (newTab === 'prerequisitos' && course.value?.id) {
+        fetchPrerequisiteStatus(course.value.id)
+    }
+})
 
 watch(
-  () => authStore.isLoggedIn,
-  () => {
-    if (course.value?.id) fetchPrerequisites(course.value.id)
-  }
-);
+    () => authStore.isLoggedIn,
+    () => {
+        if (course.value?.id) {
+            fetchPrerequisites(course.value.id)
+            fetchPrerequisiteStatus(course.value.id)
+        }
+    }
+)
+
+onMounted(() => {
+    startPrerequisitesPolling()
+})
+
+onBeforeUnmount(() => {
+    stopPrerequisitesPolling()
+})
 
 </script>

@@ -16,6 +16,11 @@
         </template>
       </q-banner>
 
+    <PrerequisiteBlockBanner
+      v-if="prerequisiteBlockers?.length"
+      :blockers="prerequisiteBlockers"
+    />
+
     <q-btn
       :label="buttonLabel"
       :color="buttonColor"
