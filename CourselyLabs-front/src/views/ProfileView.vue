@@ -203,7 +203,6 @@
               </template>
             </q-card-section>
           </q-card>
-        </div>
 
           <!-- Suscripcion -->
           <q-card flat bordered>

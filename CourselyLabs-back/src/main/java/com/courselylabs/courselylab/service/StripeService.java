@@ -97,12 +97,17 @@ public class StripeService {
             throw new BadRequestException("Invalid webhook payload");
         }
 
-        switch (event.getType()) {
-            case "checkout.session.completed" -> handleCheckoutCompleted(event);
-            case "invoice.paid" -> handleInvoicePaid(event);
-            case "customer.subscription.updated" -> handleSubscriptionUpdated(event);
-            case "customer.subscription.deleted" -> handleSubscriptionDeleted(event);
-            default -> { /* ignore other events */ }
+        try {
+            switch (event.getType()) {
+                case "checkout.session.completed" -> handleCheckoutCompleted(event);
+                case "invoice.paid" -> handleInvoicePaid(event);
+                case "customer.subscription.updated" -> handleSubscriptionUpdated(event);
+                case "customer.subscription.deleted" -> handleSubscriptionDeleted(event);
+                default -> { /* ignore other events */ }
+            }
+        } catch (Exception e) {
+            System.err.println("[Stripe Webhook] ERROR processing " + event.getType() + ": " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -152,17 +157,66 @@ public class StripeService {
     // --- Webhook handlers ---
 
     private void handleCheckoutCompleted(Event event) {
-        Session session = (Session) event.getDataObjectDeserializer().getObject().orElse(null);
-        if (session == null) return;
+        Session session;
+        // Try direct deserialization first, fallback to fetching from Stripe API
+        var deserializer = event.getDataObjectDeserializer();
+        if (deserializer.getObject().isPresent()) {
+            session = (Session) deserializer.getObject().get();
+        } else {
+            // SDK/API version mismatch — fetch session from Stripe API using raw JSON id
+            try {
+                String rawJson = deserializer.getRawJson();
+                var mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                String sessionId = mapper.readTree(rawJson).get("id").asText();
+                session = Session.retrieve(sessionId);
+                System.out.println("[Stripe Webhook] Fetched session from API: " + sessionId);
+            } catch (Exception e) {
+                System.err.println("[Stripe Webhook] checkout.session.completed: could not deserialize or fetch session: " + e.getMessage());
+                return;
+            }
+        }
 
         // Idempotency
         if (paymentRepository.existsByStripeSessionId(session.getId())) return;
 
-        String userId = session.getMetadata().get("userId");
-        String plan = session.getMetadata().get("plan");
+        // Try to get user from metadata first, then from customer_email
+        UserEntity user = null;
+        String plan = "monthly"; // default
 
-        UserEntity user = userRepository.findById(java.util.UUID.fromString(userId)).orElse(null);
-        if (user == null) return;
+        if (session.getMetadata() != null && session.getMetadata().get("userId") != null) {
+            try {
+                user = userRepository.findById(java.util.UUID.fromString(session.getMetadata().get("userId"))).orElse(null);
+                plan = session.getMetadata().getOrDefault("plan", "monthly");
+            } catch (Exception e) {
+                System.err.println("[Stripe Webhook] Error parsing metadata userId: " + e.getMessage());
+            }
+        }
+
+        // Fallback: find user by customer email
+        if (user == null && session.getCustomerEmail() != null) {
+            user = userRepository.findByEmail(session.getCustomerEmail()).orElse(null);
+        }
+
+        // Fallback: retrieve session from Stripe API to get customer email
+        if (user == null && session.getCustomer() != null) {
+            try {
+                var customer = com.stripe.model.Customer.retrieve(session.getCustomer());
+                if (customer.getEmail() != null) {
+                    user = userRepository.findByEmail(customer.getEmail()).orElse(null);
+                }
+            } catch (StripeException e) {
+                System.err.println("[Stripe Webhook] Error retrieving customer: " + e.getMessage());
+            }
+        }
+
+        if (user == null) {
+            System.err.println("[Stripe Webhook] checkout.session.completed: could not find user. session=" + session.getId()
+                + " customerEmail=" + session.getCustomerEmail() + " customer=" + session.getCustomer()
+                + " metadata=" + session.getMetadata());
+            return;
+        }
+
+        System.out.println("[Stripe Webhook] checkout.session.completed: user=" + user.getEmail() + " plan=" + plan);
 
         // Create subscription record
         SubscriptionEntity sub = new SubscriptionEntity();
