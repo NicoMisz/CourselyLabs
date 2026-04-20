@@ -36,6 +36,14 @@ public class PaymentController {
         return ResponseEntity.ok(Map.of("url", url));
     }
 
+    @PostMapping("/confirm")
+    public ResponseEntity<SubscriptionDTO> confirmPayment(
+            @RequestBody Map<String, String> body,
+            Authentication auth) throws StripeException {
+        String sessionId = body.get("sessionId");
+        return ResponseEntity.ok(stripeService.confirmCheckoutSession(auth.getName(), sessionId));
+    }
+
     @PostMapping("/webhook")
     public ResponseEntity<Void> handleWebhook(
             @RequestBody String payload,

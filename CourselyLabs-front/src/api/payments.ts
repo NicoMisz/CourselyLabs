@@ -43,3 +43,8 @@ export async function checkIsPremium(): Promise<boolean> {
   const { data } = await api.get<{ premium: boolean }>('/api/payments/is-premium')
   return data.premium
 }
+
+export async function confirmPayment(sessionId: string): Promise<SubscriptionInfo> {
+  const { data } = await api.post<SubscriptionInfo>('/api/payments/confirm', { sessionId })
+  return data
+}

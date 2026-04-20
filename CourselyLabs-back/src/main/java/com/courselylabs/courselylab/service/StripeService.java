@@ -154,6 +154,67 @@ public class StripeService {
         return subscriptionRepository.existsByUserIdAndStatus(user.getId(), "active");
     }
 
+    /**
+     * Confirms a checkout session from the frontend after successful payment redirect.
+     * This is the primary way to activate subscriptions — does not depend on webhooks.
+     */
+    public SubscriptionDTO confirmCheckoutSession(String email, String sessionId) throws StripeException {
+        UserEntity user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
+
+        Session session = Session.retrieve(sessionId);
+
+        if (!"paid".equals(session.getPaymentStatus()) && !"complete".equals(session.getStatus())) {
+            throw new BadRequestException("El pago no esta completado");
+        }
+
+        String plan = session.getMetadata() != null && session.getMetadata().get("plan") != null
+                ? session.getMetadata().get("plan")
+                : "monthly";
+
+        activateSubscription(user, session, plan);
+
+        return subscriptionRepository.findByUserIdAndStatus(user.getId(), "active")
+                .map(s -> new SubscriptionDTO(
+                        s.getId().toString(), s.getPlan(), s.getStatus(),
+                        s.getCurrentPeriodStart(), s.getCurrentPeriodEnd(),
+                        s.getCancelledAt(), s.getCreatedAt()))
+                .orElseThrow(() -> new BadRequestException("No se pudo activar la suscripcion"));
+    }
+
+    private void activateSubscription(UserEntity user, Session session, String plan) {
+        // Idempotency — don't duplicate
+        if (paymentRepository.existsByStripeSessionId(session.getId())) return;
+
+        SubscriptionEntity sub = new SubscriptionEntity();
+        sub.setUser(user);
+        sub.setStripeSubscriptionId(session.getSubscription());
+        sub.setStripeCustomerId(session.getCustomer());
+        sub.setPlan(plan);
+        sub.setStatus("active");
+        sub.setCurrentPeriodStart(LocalDateTime.now());
+        sub.setCurrentPeriodEnd("annual".equals(plan)
+                ? LocalDateTime.now().plusYears(1)
+                : LocalDateTime.now().plusMonths(1));
+        subscriptionRepository.save(sub);
+
+        BigDecimal amount = "annual".equals(plan) ? new BigDecimal("60.00") : new BigDecimal("7.00");
+        PaymentEntity payment = new PaymentEntity();
+        payment.setUser(user);
+        payment.setStripeSessionId(session.getId());
+        payment.setType("subscription");
+        payment.setDescription("Suscripcion Premium " + ("annual".equals(plan) ? "Anual" : "Mensual"));
+        payment.setAmount(amount);
+        payment.setCurrency("eur");
+        payment.setStatus("completed");
+        paymentRepository.save(payment);
+
+        if (!"admin".equals(user.getRole())) {
+            user.setRole("premium");
+            userRepository.save(user);
+        }
+    }
+
     // --- Webhook handlers ---
 
     private void handleCheckoutCompleted(Event event) {
