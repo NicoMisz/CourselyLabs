@@ -36,10 +36,10 @@
           </div>
           <q-btn
             v-if="!editingProfile"
-            flat
-            color="primary"
+            outline
+            color="white"
             icon="edit"
-            label="Editar"
+            label="Editar perfil"
             no-caps
             @click="startEditingProfile"
           />
@@ -300,7 +300,47 @@
                     <div class="text-caption text-grey-6">En progreso</div>
                   </div>
                 </div>
+                <div class="row items-center q-gutter-sm">
+                  <q-icon name="edit_note" size="24px" color="deep-purple" />
+                  <div>
+                    <div class="text-body1 text-weight-medium">{{ createdCourses.length }}</div>
+                    <div class="text-caption text-grey-6">Cursos creados</div>
+                  </div>
+                </div>
               </div>
+            </q-card-section>
+          </q-card>
+
+          <!-- Cursos creados -->
+          <q-card v-if="createdCourses.length > 0" flat bordered class="q-mb-md">
+            <q-card-section>
+              <div class="row items-center justify-between q-mb-sm">
+                <div class="text-subtitle1 text-weight-medium">Cursos creados</div>
+                <q-btn flat dense size="sm" color="primary" label="Ver todos" no-caps to="/instructor/cursos" />
+              </div>
+              <q-list dense>
+                <q-item
+                  v-for="course in createdCourses.slice(0, 5)"
+                  :key="course.id"
+                  clickable
+                  :to="`/instructor/cursos/${course.id}/editar`"
+                >
+                  <q-item-section>
+                    <q-item-label class="text-body2">{{ course.title }}</q-item-label>
+                    <q-item-label caption>{{ statusLabel(course.status) }}</q-item-label>
+                  </q-item-section>
+                  <q-item-section side>
+                    <q-chip
+                      :color="statusColor(course.status)"
+                      text-color="white"
+                      size="xs"
+                      dense
+                    >
+                      {{ statusChipLabel(course.status) }}
+                    </q-chip>
+                  </q-item-section>
+                </q-item>
+              </q-list>
             </q-card-section>
           </q-card>
 
@@ -325,6 +365,7 @@ import { useAuthStore } from '@/stores/auth'
 import api from '@/api/axios'
 import { getMyCourses } from '@/api/enrollment'
 import { getSubscription, cancelSubscription, getPaymentHistory } from '@/api/payments'
+import { getMyCreatedCourses } from '@/api/instructor'
 import type { SubscriptionInfo, PaymentRecord } from '@/api/payments'
 import type { EnrolledCourse } from '@/types/enrollment'
 
@@ -459,6 +500,36 @@ const subscription = ref<SubscriptionInfo | null>(null)
 const payments = ref<PaymentRecord[]>([])
 const cancellingSubscription = ref(false)
 
+// Created courses
+const createdCourses = ref<any[]>([])
+
+function statusColor(status: string) {
+  switch (status) {
+    case 'published': return 'positive'
+    case 'pending_review': return 'warning'
+    case 'rejected': return 'negative'
+    default: return 'grey'
+  }
+}
+
+function statusLabel(status: string) {
+  switch (status) {
+    case 'published': return 'Curso publicado'
+    case 'pending_review': return 'En revision'
+    case 'rejected': return 'Rechazado'
+    default: return 'Borrador'
+  }
+}
+
+function statusChipLabel(status: string) {
+  switch (status) {
+    case 'published': return 'Publicado'
+    case 'pending_review': return 'Revision'
+    case 'rejected': return 'Rechazado'
+    default: return 'Borrador'
+  }
+}
+
 async function handleCancelSubscription() {
   cancellingSubscription.value = true
   try {
@@ -489,6 +560,10 @@ onMounted(async () => {
 
   promises.push(
     getPaymentHistory().then(list => { payments.value = list }).catch(() => {})
+  )
+
+  promises.push(
+    getMyCreatedCourses().then(list => { createdCourses.value = list }).catch(() => {})
   )
 
   await Promise.all(promises)

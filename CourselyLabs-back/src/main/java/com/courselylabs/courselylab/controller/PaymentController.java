@@ -73,4 +73,9 @@ public class PaymentController {
     public ResponseEntity<Map<String, Boolean>> isPremium(Authentication auth) {
         return ResponseEntity.ok(Map.of("premium", stripeService.isUserPremium(auth.getName())));
     }
+
+    @GetMapping("/pricing")
+    public ResponseEntity<Map<String, Object>> getPricing() throws StripeException {
+        return ResponseEntity.ok(stripeService.getPricingInfo());
+    }
 }

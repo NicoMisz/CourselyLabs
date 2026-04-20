@@ -48,3 +48,18 @@ export async function confirmPayment(sessionId: string): Promise<SubscriptionInf
   const { data } = await api.post<SubscriptionInfo>('/api/payments/confirm', { sessionId })
   return data
 }
+
+export interface PlanPrice {
+  amount: number | null
+  currency: string
+}
+
+export interface PricingInfo {
+  monthly: PlanPrice
+  annual: PlanPrice
+}
+
+export async function getPricing(): Promise<PricingInfo> {
+  const { data } = await api.get<PricingInfo>('/api/payments/pricing')
+  return data
+}

@@ -147,6 +147,33 @@ public class StripeService {
                 .toList();
     }
 
+    public java.util.Map<String, Object> getPricingInfo() throws StripeException {
+        java.util.Map<String, Object> result = new java.util.HashMap<>();
+        result.put("monthly", fetchPriceInfo(monthlyPriceId));
+        result.put("annual", fetchPriceInfo(annualPriceId));
+        return result;
+    }
+
+    private java.util.Map<String, Object> fetchPriceInfo(String priceId) {
+        java.util.Map<String, Object> info = new java.util.HashMap<>();
+        if (priceId == null || priceId.isBlank()) {
+            info.put("amount", null);
+            info.put("currency", "eur");
+            return info;
+        }
+        try {
+            var price = com.stripe.model.Price.retrieve(priceId);
+            info.put("amount", price.getUnitAmount() != null
+                    ? new BigDecimal(price.getUnitAmount()).movePointLeft(2)
+                    : null);
+            info.put("currency", price.getCurrency());
+        } catch (StripeException e) {
+            info.put("amount", null);
+            info.put("currency", "eur");
+        }
+        return info;
+    }
+
     public boolean isUserPremium(String email) {
         UserEntity user = userRepository.findByEmail(email).orElse(null);
         if (user == null) return false;
@@ -198,14 +225,22 @@ public class StripeService {
                 : LocalDateTime.now().plusMonths(1));
         subscriptionRepository.save(sub);
 
-        BigDecimal amount = "annual".equals(plan) ? new BigDecimal("60.00") : new BigDecimal("7.00");
+        // Get actual amount and currency from Stripe session (cents -> euros)
+        BigDecimal amount;
+        if (session.getAmountTotal() != null) {
+            amount = new BigDecimal(session.getAmountTotal()).movePointLeft(2);
+        } else {
+            amount = "annual".equals(plan) ? new BigDecimal("60.00") : new BigDecimal("7.00");
+        }
+        String currency = session.getCurrency() != null ? session.getCurrency() : "eur";
+
         PaymentEntity payment = new PaymentEntity();
         payment.setUser(user);
         payment.setStripeSessionId(session.getId());
         payment.setType("subscription");
         payment.setDescription("Suscripcion Premium " + ("annual".equals(plan) ? "Anual" : "Mensual"));
         payment.setAmount(amount);
-        payment.setCurrency("eur");
+        payment.setCurrency(currency);
         payment.setStatus("completed");
         paymentRepository.save(payment);
 
@@ -293,14 +328,22 @@ public class StripeService {
         subscriptionRepository.save(sub);
 
         // Create payment record
-        BigDecimal amount = "annual".equals(plan) ? new BigDecimal("60.00") : new BigDecimal("7.00");
+        // Get actual amount and currency from Stripe session (cents -> euros)
+        BigDecimal amount;
+        if (session.getAmountTotal() != null) {
+            amount = new BigDecimal(session.getAmountTotal()).movePointLeft(2);
+        } else {
+            amount = "annual".equals(plan) ? new BigDecimal("60.00") : new BigDecimal("7.00");
+        }
+        String currency = session.getCurrency() != null ? session.getCurrency() : "eur";
+
         PaymentEntity payment = new PaymentEntity();
         payment.setUser(user);
         payment.setStripeSessionId(session.getId());
         payment.setType("subscription");
         payment.setDescription("Suscripcion Premium " + ("annual".equals(plan) ? "Anual" : "Mensual"));
         payment.setAmount(amount);
-        payment.setCurrency("eur");
+        payment.setCurrency(currency);
         payment.setStatus("completed");
         paymentRepository.save(payment);
 

@@ -142,8 +142,8 @@ const navLinks = [
 
 const authLinks = computed(() => {
   const links = [
-    { title: 'Mis cursos', icon: 'menu_book', link: '/mis-cursos' },
-    { title: 'Crear curso', icon: 'add_circle', link: '/instructor/cursos' },
+    { title: 'Cursos inscritos', icon: 'menu_book', link: '/mis-cursos' },
+    { title: 'Cursos creados', icon: 'edit_note', link: '/instructor/cursos' },
   ]
   if (authStore.user?.role === 'admin') {
     links.push({ title: 'Administracion', icon: 'admin_panel_settings', link: '/admin' })
