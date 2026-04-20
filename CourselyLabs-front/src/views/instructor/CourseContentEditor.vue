@@ -132,12 +132,30 @@
           <q-input v-model="lessonForm.description" label="Descripcion (opcional)" outlined type="textarea" rows="2" />
 
           <!-- Content by type -->
+          <!-- Video / PDF uploader (solo al editar leccion existente) -->
+          <div v-if="(lessonForm.type === 'video' || lessonForm.type === 'pdf') && editingLesson">
+            <div class="text-caption text-grey-7 q-mb-xs">
+              Contenido del archivo ({{ lessonForm.type === 'video' ? 'video MP4' : 'PDF' }})
+            </div>
+            <FileUploader
+              ref="contentUploaderRef"
+              :accept="lessonForm.type === 'video' ? 'video/mp4' : 'application/pdf'"
+              :max-size-mb="lessonForm.type === 'video' ? 500 : 50"
+              label="Subir archivo"
+              :hint="lessonForm.contentUrl ? 'Archivo ya subido (sube uno nuevo para reemplazar)' : 'Click o arrastra aqui'"
+              @upload="handleContentUpload"
+            />
+            <div v-if="lessonForm.contentUrl" class="text-caption text-positive q-mt-xs">
+              <q-icon name="check_circle" size="14px" /> Archivo subido
+            </div>
+          </div>
+
           <q-input
-            v-if="lessonForm.type === 'video'"
+            v-if="(lessonForm.type === 'video' || lessonForm.type === 'pdf') && !editingLesson"
             v-model="lessonForm.contentUrl"
-            label="URL del video"
+            label="URL del archivo"
             outlined
-            hint="URL directa al archivo de video (mp4, m3u8)"
+            hint="Guarda la leccion primero para subir archivos directamente"
           />
 
           <RichTextEditor
@@ -146,16 +164,39 @@
             placeholder="Escribe el contenido de la leccion..."
           />
 
-          <q-input
-            v-if="lessonForm.type === 'pdf'"
-            v-model="lessonForm.contentUrl"
-            label="URL del PDF"
-            outlined
-          />
-
           <div class="row q-gutter-md items-center">
             <q-input v-model.number="lessonForm.duration" label="Duracion (segundos)" outlined type="number" min="0" style="width: 200px" />
             <q-toggle v-model="lessonForm.isFree" label="Leccion gratuita (preview)" />
+          </div>
+
+          <!-- Recursos descargables (solo al editar leccion existente) -->
+          <div v-if="editingLesson">
+            <q-separator class="q-my-md" />
+            <div class="text-subtitle2 q-mb-sm">
+              <q-icon name="attach_file" size="18px" /> Recursos descargables
+            </div>
+            <q-list v-if="lessonResources.length > 0" separator dense bordered class="q-mb-sm">
+              <q-item v-for="r in lessonResources" :key="r.id">
+                <q-item-section avatar>
+                  <q-icon :name="resourceIcon(r.mimeType)" :color="resourceColor(r.mimeType)" />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label class="text-body2">{{ r.fileName }}</q-item-label>
+                  <q-item-label caption>{{ formatFileSize(r.fileSize) }}</q-item-label>
+                </q-item-section>
+                <q-item-section side>
+                  <q-btn flat dense round icon="delete" color="negative" size="sm" @click="handleDeleteResource(r.id)" />
+                </q-item-section>
+              </q-item>
+            </q-list>
+            <FileUploader
+              ref="resourceUploaderRef"
+              :max-size-mb="50"
+              label="Añadir recurso descargable"
+              hint="PDF, imagen, ZIP, docx, xlsx, txt..."
+              icon="upload_file"
+              @upload="handleResourceUpload"
+            />
           </div>
         </q-card-section>
 
@@ -197,7 +238,18 @@ import { getCourseForEdit } from '../../api/instructor'
 import { createSection, updateSection, deleteSection, reorderSections } from '../../api/sectionEditor'
 import { createLesson, updateLesson, deleteLesson, reorderLessons } from '../../api/lessonEditor'
 import RichTextEditor from '../../components/RichTextEditor.vue'
+import FileUploader from '../../components/FileUploader.vue'
 import draggable from 'vuedraggable'
+import {
+  listResources,
+  uploadResource,
+  uploadLessonContent,
+  deleteResource as deleteResourceApi,
+  formatFileSize,
+  resourceIcon,
+  resourceColor,
+} from '../../api/resources'
+import type { LessonResource } from '../../api/resources'
 
 const route = useRoute()
 const $q = useQuasar()
@@ -318,7 +370,12 @@ async function executeDelete() {
   }
 }
 
-function openLessonDialog(sectionId: string, lesson?: any) {
+// Resources for editing lesson
+const lessonResources = ref<LessonResource[]>([])
+const resourceUploaderRef = ref<InstanceType<typeof FileUploader> | null>(null)
+const contentUploaderRef = ref<InstanceType<typeof FileUploader> | null>(null)
+
+async function openLessonDialog(sectionId: string, lesson?: any) {
   currentSectionId.value = sectionId
   editingLesson.value = lesson || null
   lessonForm.value = {
@@ -331,6 +388,55 @@ function openLessonDialog(sectionId: string, lesson?: any) {
     isFree: lesson?.isFree || false,
   }
   lessonDialog.value = true
+
+  // Load resources if editing
+  if (lesson?.id) {
+    try {
+      lessonResources.value = await listResources(lesson.id)
+    } catch {
+      lessonResources.value = []
+    }
+  } else {
+    lessonResources.value = []
+  }
+}
+
+async function handleResourceUpload(file: File, onProgress: (pct: number) => void) {
+  if (!editingLesson.value) return
+  try {
+    const resource = await uploadResource(editingLesson.value.id, file, onProgress)
+    lessonResources.value.push(resource)
+    resourceUploaderRef.value?.finish()
+    $q.notify({ type: 'positive', message: 'Recurso subido', position: 'bottom-right' })
+  } catch (err: any) {
+    const msg = err?.response?.data?.message || 'Error al subir'
+    resourceUploaderRef.value?.finish(msg)
+    $q.notify({ type: 'negative', message: msg, position: 'bottom-right' })
+  }
+}
+
+async function handleContentUpload(file: File, onProgress: (pct: number) => void) {
+  if (!editingLesson.value) return
+  try {
+    const url = await uploadLessonContent(editingLesson.value.id, file, onProgress)
+    lessonForm.value.contentUrl = url
+    contentUploaderRef.value?.finish()
+    $q.notify({ type: 'positive', message: 'Archivo subido', position: 'bottom-right' })
+  } catch (err: any) {
+    const msg = err?.response?.data?.message || 'Error al subir'
+    contentUploaderRef.value?.finish(msg)
+    $q.notify({ type: 'negative', message: msg, position: 'bottom-right' })
+  }
+}
+
+async function handleDeleteResource(id: string) {
+  try {
+    await deleteResourceApi(id)
+    lessonResources.value = lessonResources.value.filter(r => r.id !== id)
+    $q.notify({ type: 'positive', message: 'Recurso eliminado', position: 'bottom-right' })
+  } catch {
+    $q.notify({ type: 'negative', message: 'Error al eliminar', position: 'bottom-right' })
+  }
 }
 
 async function saveLesson() {

@@ -82,6 +82,9 @@ public class CourseEntity {
     @JoinColumn(name = "created_by", nullable = false)
     private UserEntity createdBy;
 
+    @Column(name = "storage_bytes", nullable = false)
+    private Long storageBytes = 0L;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

@@ -58,12 +58,29 @@
             <div class="text-subtitle2 q-mb-xs">Descripcion completa</div>
             <RichTextEditor v-model="form.description" placeholder="Describe tu curso en detalle..." />
 
-            <q-input
-              v-model="form.thumbnailUrl"
-              label="URL del thumbnail"
-              outlined
-              hint="Pega la URL de una imagen (se podra subir directamente en el futuro)"
-            />
+            <div>
+              <div class="text-caption text-grey-7 q-mb-xs">Thumbnail del curso</div>
+              <div v-if="form.thumbnailUrl" class="q-mb-sm">
+                <img :src="form.thumbnailUrl" style="max-width: 200px; border-radius: 8px" />
+              </div>
+              <FileUploader
+                v-if="isEditing"
+                ref="thumbnailUploaderRef"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                :max-size-mb="5"
+                label="Subir imagen"
+                hint="JPG, PNG, WebP, GIF hasta 5 MB"
+                icon="image"
+                @upload="handleThumbnailUpload"
+              />
+              <q-input
+                v-else
+                v-model="form.thumbnailUrl"
+                label="URL del thumbnail"
+                outlined
+                hint="Guarda el curso primero para subir imagenes directamente"
+              />
+            </div>
 
             <div class="row q-gutter-md items-center">
               <q-toggle v-model="form.isFree" label="Curso gratuito" />
@@ -147,6 +164,8 @@ import { useQuasar } from 'quasar'
 import { createCourse, updateCourse, getCourseForEdit } from '../../api/instructor'
 import { getCategories } from '../../api/course'
 import RichTextEditor from '../../components/RichTextEditor.vue'
+import FileUploader from '../../components/FileUploader.vue'
+import { uploadCourseThumbnail } from '../../api/resources'
 
 const route = useRoute()
 const router = useRouter()
@@ -193,6 +212,22 @@ function generateSlug() {
 
 function goStep(s: number) {
   step.value = s
+}
+
+const thumbnailUploaderRef = ref<InstanceType<typeof FileUploader> | null>(null)
+
+async function handleThumbnailUpload(file: File, onProgress: (pct: number) => void) {
+  if (!courseId.value) return
+  try {
+    const url = await uploadCourseThumbnail(courseId.value, file, onProgress)
+    form.value.thumbnailUrl = url
+    thumbnailUploaderRef.value?.finish()
+    $q.notify({ type: 'positive', message: 'Thumbnail subido', position: 'bottom-right' })
+  } catch (err: any) {
+    const msg = err?.response?.data?.message || 'Error al subir thumbnail'
+    thumbnailUploaderRef.value?.finish(msg)
+    $q.notify({ type: 'negative', message: msg, position: 'bottom-right' })
+  }
 }
 
 async function handleSave() {

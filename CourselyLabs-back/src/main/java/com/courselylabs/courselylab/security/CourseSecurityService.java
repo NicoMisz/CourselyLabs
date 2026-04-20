@@ -8,11 +8,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.courselylabs.courselylab.entity.CourseEntity;
 import com.courselylabs.courselylab.entity.LessonEntity;
+import com.courselylabs.courselylab.entity.LessonResourceEntity;
 import com.courselylabs.courselylab.entity.SectionEntity;
 import com.courselylabs.courselylab.entity.UserEntity;
 import com.courselylabs.courselylab.repository.CourseInstructorRepository;
 import com.courselylabs.courselylab.repository.CourseRepository;
+import com.courselylabs.courselylab.repository.EnrollmentRepository;
 import com.courselylabs.courselylab.repository.LessonRepository;
+import com.courselylabs.courselylab.repository.LessonResourceRepository;
 import com.courselylabs.courselylab.repository.SectionRepository;
 import com.courselylabs.courselylab.repository.UserRepository;
 
@@ -25,17 +28,23 @@ public class CourseSecurityService {
     private final UserRepository userRepository;
     private final SectionRepository sectionRepository;
     private final LessonRepository lessonRepository;
+    private final LessonResourceRepository resourceRepository;
+    private final EnrollmentRepository enrollmentRepository;
 
     public CourseSecurityService(CourseRepository courseRepository,
                                   CourseInstructorRepository courseInstructorRepository,
                                   UserRepository userRepository,
                                   SectionRepository sectionRepository,
-                                  LessonRepository lessonRepository) {
+                                  LessonRepository lessonRepository,
+                                  LessonResourceRepository resourceRepository,
+                                  EnrollmentRepository enrollmentRepository) {
         this.courseRepository = courseRepository;
         this.courseInstructorRepository = courseInstructorRepository;
         this.userRepository = userRepository;
         this.sectionRepository = sectionRepository;
         this.lessonRepository = lessonRepository;
+        this.resourceRepository = resourceRepository;
+        this.enrollmentRepository = enrollmentRepository;
     }
 
     public boolean isOwnerOrInstructor(UUID courseId, Authentication auth) {
@@ -69,6 +78,50 @@ public class CourseSecurityService {
         LessonEntity lesson = lessonRepository.findById(lessonId).orElse(null);
         if (lesson == null) return false;
         return isOwnerOrInstructorOrAdmin(lesson.getSection().getCourse().getId(), auth);
+    }
+
+    public boolean canEditResource(UUID resourceId, Authentication auth) {
+        LessonResourceEntity resource = resourceRepository.findById(resourceId).orElse(null);
+        if (resource == null) return false;
+        return isOwnerOrInstructorOrAdmin(resource.getLesson().getSection().getCourse().getId(), auth);
+    }
+
+    /**
+     * Can the user access a lesson's content (including resources)?
+     * Rules:
+     * - Lesson is free: anyone authenticated
+     * - Lesson is not free: user must be enrolled OR instructor/owner/admin
+     * - Course is premium (not free) and user is not enrolled: also requires premium subscription
+     */
+    public boolean canAccessLesson(UUID lessonId, Authentication auth) {
+        LessonEntity lesson = lessonRepository.findById(lessonId).orElse(null);
+        if (lesson == null) return false;
+
+        CourseEntity course = lesson.getSection().getCourse();
+        UUID courseId = course.getId();
+
+        UserEntity user = getUser(auth);
+
+        // Free lesson — anyone authenticated
+        if (Boolean.TRUE.equals(lesson.getIsFree())) {
+            return user != null;
+        }
+
+        if (user == null) return false;
+
+        // Instructor/owner/admin always access
+        if (isAdmin(user) || isOwner(courseId, user) || isInstructor(courseId, user)) {
+            return true;
+        }
+
+        // Student: must be enrolled
+        return enrollmentRepository.existsByUserIdAndCourseId(user.getId(), courseId);
+    }
+
+    public boolean canAccessResource(UUID resourceId, Authentication auth) {
+        LessonResourceEntity resource = resourceRepository.findById(resourceId).orElse(null);
+        if (resource == null) return false;
+        return canAccessLesson(resource.getLesson().getId(), auth);
     }
 
     private boolean isOwner(UUID courseId, UserEntity user) {

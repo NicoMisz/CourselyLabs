@@ -113,6 +113,11 @@
             <artifactId>stripe-java</artifactId>
             <version>26.3.0</version>
         </dependency>
+        <dependency>
+            <groupId>io.minio</groupId>
+            <artifactId>minio</artifactId>
+            <version>8.5.17</version>
+        </dependency>
     </dependencies>
 
 	<build>
