@@ -54,6 +54,21 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/VerifyEmailView.vue'),
         meta: { title: 'Verificar email — CourselyLabs' },
       },
+      {
+        path: 'premium',
+        component: () => import('@/views/PremiumPage.vue'),
+        meta: { title: 'Premium — CourselyLabs' },
+      },
+      {
+        path: 'pago/exito',
+        component: () => import('@/views/PaymentSuccessView.vue'),
+        meta: { title: 'Pago exitoso — CourselyLabs' },
+      },
+      {
+        path: 'pago/cancelado',
+        component: () => import('@/views/PaymentCancelledView.vue'),
+        meta: { title: 'Pago cancelado — CourselyLabs' },
+      },
     ],
   },
   {

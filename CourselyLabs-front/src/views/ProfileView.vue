@@ -203,6 +203,74 @@
               </template>
             </q-card-section>
           </q-card>
+
+          <!-- Suscripcion -->
+          <q-card flat bordered>
+            <q-card-section>
+              <div class="text-subtitle1 text-weight-medium q-mb-md">Suscripcion</div>
+
+              <template v-if="subscription && subscription.status === 'active'">
+                <div class="row items-center q-gutter-sm q-mb-md">
+                  <q-icon name="workspace_premium" size="28px" color="amber-8" />
+                  <div>
+                    <div class="text-body1 text-weight-medium">
+                      Premium {{ subscription.plan === 'annual' ? 'Anual' : 'Mensual' }}
+                    </div>
+                    <div class="text-caption text-grey-6">
+                      Activa hasta {{ formattedDate(subscription.currentPeriodEnd) }}
+                    </div>
+                  </div>
+                </div>
+                <q-btn
+                  flat
+                  color="negative"
+                  label="Cancelar suscripcion"
+                  no-caps
+                  icon="cancel"
+                  :loading="cancellingSubscription"
+                  @click="handleCancelSubscription"
+                />
+              </template>
+
+              <template v-else-if="subscription && subscription.status === 'cancelled'">
+                <div class="text-body2 text-grey-7 q-mb-sm">
+                  Suscripcion cancelada. Acceso hasta {{ formattedDate(subscription.currentPeriodEnd) }}.
+                </div>
+                <q-btn outline color="primary" label="Renovar suscripcion" to="/premium" no-caps />
+              </template>
+
+              <template v-else>
+                <div class="text-body2 text-grey-7 q-mb-sm">No tienes una suscripcion activa.</div>
+                <q-btn outline color="amber-8" label="Hazte Premium" to="/premium" no-caps icon="workspace_premium" />
+              </template>
+            </q-card-section>
+          </q-card>
+
+          <!-- Historial de pagos -->
+          <q-card v-if="payments.length > 0" flat bordered>
+            <q-card-section>
+              <div class="text-subtitle1 text-weight-medium q-mb-md">Historial de pagos</div>
+              <q-list separator dense>
+                <q-item v-for="payment in payments" :key="payment.id">
+                  <q-item-section>
+                    <q-item-label>{{ payment.description }}</q-item-label>
+                    <q-item-label caption>{{ formattedDate(payment.createdAt) }}</q-item-label>
+                  </q-item-section>
+                  <q-item-section side>
+                    <q-item-label class="text-weight-medium">{{ payment.amount }} {{ payment.currency.toUpperCase() }}</q-item-label>
+                    <q-chip
+                      :color="payment.status === 'completed' ? 'positive' : 'grey'"
+                      text-color="white"
+                      size="xs"
+                      dense
+                    >
+                      {{ payment.status === 'completed' ? 'Completado' : payment.status }}
+                    </q-chip>
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-card-section>
+          </q-card>
         </div>
 
         <!-- Columna derecha — stats -->
@@ -256,6 +324,8 @@ import { useQuasar } from 'quasar'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/api/axios'
 import { getMyCourses } from '@/api/enrollment'
+import { getSubscription, cancelSubscription, getPaymentHistory } from '@/api/payments'
+import type { SubscriptionInfo, PaymentRecord } from '@/api/payments'
 import type { EnrolledCourse } from '@/types/enrollment'
 
 const $q = useQuasar()
@@ -384,15 +454,44 @@ async function resendFromProfile() {
 // --- Stats ---
 const stats = reactive({ enrolled: 0, completed: 0, inProgress: 0 })
 
-onMounted(async () => {
+// Subscription & payments
+const subscription = ref<SubscriptionInfo | null>(null)
+const payments = ref<PaymentRecord[]>([])
+const cancellingSubscription = ref(false)
+
+async function handleCancelSubscription() {
+  cancellingSubscription.value = true
   try {
-    const courses: EnrolledCourse[] = await getMyCourses()
-    stats.enrolled = courses.length
-    stats.completed = courses.filter(c => c.progressStatus === 'completado').length
-    stats.inProgress = courses.filter(c => c.progressStatus === 'en-curso').length
+    await cancelSubscription()
+    subscription.value = await getSubscription()
+    $q.notify({ type: 'info', message: 'Suscripcion cancelada. Mantendras acceso hasta el final del periodo.', position: 'bottom-right' })
   } catch {
-    // stats stay at 0
+    $q.notify({ type: 'negative', message: 'Error al cancelar la suscripcion', position: 'bottom-right' })
+  } finally {
+    cancellingSubscription.value = false
   }
+}
+
+onMounted(async () => {
+  const promises: Promise<void>[] = []
+
+  promises.push(
+    getMyCourses().then((courses: EnrolledCourse[]) => {
+      stats.enrolled = courses.length
+      stats.completed = courses.filter(c => c.progressStatus === 'completado').length
+      stats.inProgress = courses.filter(c => c.progressStatus === 'en-curso').length
+    }).catch(() => {})
+  )
+
+  promises.push(
+    getSubscription().then(sub => { subscription.value = sub }).catch(() => {})
+  )
+
+  promises.push(
+    getPaymentHistory().then(list => { payments.value = list }).catch(() => {})
+  )
+
+  await Promise.all(promises)
 })
 </script>
 

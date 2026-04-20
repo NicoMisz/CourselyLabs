@@ -15,7 +15,6 @@
       :outline="isGuest"
       :loading="loading"
       :icon="buttonIcon"
-      :disable="buttonDisabled"
       unelevated
       no-caps
       class="full-width q-mt-md"
@@ -53,29 +52,25 @@ const authStore = useAuthStore();
 
 const isGuest = computed(() => !authStore.isLoggedIn);
 
-const isPaid = computed(() => !props.isFree);
-
 const buttonLabel = computed(() => {
   if (isGuest.value) return 'Inicia sesion para inscribirte';
   if (props.enrolled) return 'Continuar curso';
   if (props.isFree) return 'Inscribirme gratis';
-  return 'Proximamente';
+  return 'Hazte Premium';
 });
 
 const buttonColor = computed(() => {
   if (props.enrolled) return 'primary';
   if (props.isFree) return 'positive';
-  return 'grey-5';
+  return 'amber-8';
 });
 
 const buttonIcon = computed(() => {
   if (isGuest.value) return 'login';
   if (props.enrolled) return 'play_circle';
   if (props.isFree) return 'check_circle';
-  return 'lock';
+  return 'workspace_premium';
 });
-
-const buttonDisabled = computed(() => isPaid.value && !props.enrolled && !isGuest.value);
 
 function handleClick() {
   if (isGuest.value) {
@@ -90,6 +85,8 @@ function handleClick() {
     emit('enroll');
     return;
   }
+  // Premium course — redirect to premium page
+  router.push('/premium');
 }
 </script>
 
