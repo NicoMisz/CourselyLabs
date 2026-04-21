@@ -237,6 +237,29 @@ public class CourseService {
         CourseEntity entity = courseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Course", "id", id));
 
+        // Validate requirements
+        if (entity.getTitle() == null || entity.getTitle().length() < 3) {
+            throw new BadRequestException("El curso necesita un titulo (minimo 3 caracteres)");
+        }
+        String descText = entity.getDescription() == null
+                ? ""
+                : entity.getDescription().replaceAll("<[^>]*>", "").trim();
+        if (descText.length() < 20) {
+            throw new BadRequestException("La descripcion debe tener al menos 20 caracteres");
+        }
+        if (entity.getCategory() == null) {
+            throw new BadRequestException("Selecciona una categoria para el curso");
+        }
+
+        var sections = sectionRepository.findByCourseIdOrderByPositionAsc(id);
+        if (sections.isEmpty()) {
+            throw new BadRequestException("El curso necesita al menos una seccion");
+        }
+        boolean anyLesson = sections.stream().anyMatch(s -> s.getLessons() != null && !s.getLessons().isEmpty());
+        if (!anyLesson) {
+            throw new BadRequestException("El curso necesita al menos una leccion");
+        }
+
         entity.setStatus("pending_review");
         entity = courseRepository.save(entity);
         return courseMapper.toDTO(entity);

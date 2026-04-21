@@ -3,7 +3,6 @@
     <div
       class="uploader-zone"
       :class="{ 'uploader-zone--drag': isDragging, 'uploader-zone--disabled': disabled || uploading }"
-      @click="triggerInput"
       @dragenter.prevent="isDragging = true"
       @dragover.prevent="isDragging = true"
       @dragleave.prevent="isDragging = false"
@@ -17,21 +16,32 @@
         @change="handleInput"
       />
 
-      <div v-if="uploading" class="text-center">
+      <div v-if="uploading" class="uploader-progress">
         <q-linear-progress :value="progress / 100" color="primary" size="8px" rounded class="q-mb-sm" />
         <div class="text-caption text-grey-7">Subiendo... {{ progress }}%</div>
       </div>
 
-      <div v-else class="text-center">
-        <q-icon :name="icon" size="36px" :color="isDragging ? 'primary' : 'grey-6'" />
-        <div class="text-body2 q-mt-sm">
-          <span class="text-weight-medium">{{ label }}</span>
-          <div class="text-caption text-grey-6">{{ hint }}</div>
-        </div>
+      <div v-else class="uploader-content">
+        <q-icon :name="icon" size="36px" :color="isDragging ? 'primary' : 'grey-5'" class="q-mb-sm" />
+        <div class="text-body2 text-weight-medium q-mb-xs">{{ label }}</div>
+        <div v-if="hint" class="text-caption text-grey-6 q-mb-sm">{{ hint }}</div>
+        <q-btn
+          color="primary"
+          :label="buttonLabel"
+          icon="folder_open"
+          unelevated
+          no-caps
+          size="sm"
+          :disable="disabled || uploading"
+          @click="triggerInput"
+        />
+        <div class="text-caption text-grey-5 q-mt-xs">o arrastra el archivo aqui</div>
       </div>
     </div>
 
-    <div v-if="error" class="text-caption text-negative q-mt-xs">{{ error }}</div>
+    <div v-if="error" class="text-caption text-negative q-mt-xs">
+      <q-icon name="error" size="14px" /> {{ error }}
+    </div>
   </div>
 </template>
 
@@ -44,13 +54,15 @@ const props = withDefaults(defineProps<{
   label?: string
   hint?: string
   icon?: string
+  buttonLabel?: string
   disabled?: boolean
 }>(), {
   accept: '*',
   maxSizeMb: 100,
-  label: 'Click o arrastra un archivo',
+  label: 'Subir archivo',
   hint: '',
   icon: 'cloud_upload',
+  buttonLabel: 'Elegir archivo',
   disabled: false,
 })
 
@@ -112,28 +124,33 @@ defineExpose({ finish })
 
 <style scoped>
 .uploader-zone {
-  border: 2px dashed #d1d5db;
-  border-radius: 8px;
+  border: 2px dashed #cbd5e1;
+  border-radius: 10px;
   padding: 1.5rem;
-  background: #f9fafb;
-  cursor: pointer;
+  background: #f8fafc;
   transition: all 0.15s ease;
-}
-
-.uploader-zone:hover {
-  border-color: #0f766e;
-  background: #f0fdfa;
 }
 
 .uploader-zone--drag {
   border-color: #0f766e;
   background: #f0fdfa;
+  border-style: solid;
 }
 
 .uploader-zone--disabled {
   opacity: 0.5;
-  cursor: not-allowed;
   pointer-events: none;
+}
+
+.uploader-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.uploader-progress {
+  text-align: center;
 }
 
 .hidden-input {

@@ -13,8 +13,8 @@
         label="Nuevo curso"
         no-caps
         unelevated
-        to="/instructor/cursos/nuevo"
         :disable="limits !== null && limits.currentCourses >= limits.maxCourses && limits.maxCourses !== 2147483647"
+        @click="openCreateDialog"
       />
     </div>
 
@@ -30,7 +30,7 @@
       <q-icon name="add_circle" size="64px" color="grey-4" />
       <div class="text-h6 text-grey-6 q-mt-md">Crea tu primer curso</div>
       <p class="text-body2 text-grey-5">Comparte tus conocimientos con el mundo</p>
-      <q-btn color="primary" label="Nuevo curso" icon="add" to="/instructor/cursos/nuevo" no-caps unelevated class="q-mt-sm" />
+      <q-btn color="primary" label="Nuevo curso" icon="add" no-caps unelevated class="q-mt-sm" @click="openCreateDialog" />
     </div>
 
     <!-- Course list -->
@@ -74,7 +74,6 @@
 
           <q-card-actions>
             <q-btn flat dense no-caps icon="edit" label="Editar" :to="`/instructor/cursos/${course.id}/editar`" />
-            <q-btn flat dense no-caps icon="list" label="Contenido" :to="`/instructor/cursos/${course.id}/contenido`" />
             <q-space />
             <q-btn flat dense round icon="more_vert">
               <q-menu>
@@ -130,6 +129,39 @@
       </q-card>
     </q-dialog>
 
+    <!-- Quick create dialog -->
+    <q-dialog v-model="createDialog" persistent>
+      <q-card style="min-width: 400px">
+        <q-card-section>
+          <div class="text-h6">Nuevo curso</div>
+          <p class="text-body2 text-grey-7 q-mt-xs q-mb-none">
+            Empieza con un titulo. Podras completar el resto desde el editor.
+          </p>
+        </q-card-section>
+        <q-card-section>
+          <q-input
+            v-model="newCourseTitle"
+            label="Titulo del curso"
+            outlined
+            autofocus
+            :rules="[v => v.length >= 3 || 'Minimo 3 caracteres']"
+            @keyup.enter="handleCreate"
+          />
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn flat label="Cancelar" v-close-popup :disable="creating" />
+          <q-btn
+            color="primary"
+            label="Crear borrador"
+            unelevated
+            :loading="creating"
+            :disable="newCourseTitle.length < 3"
+            @click="handleCreate"
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
     <!-- Submit review dialog -->
     <q-dialog v-model="submitDialog">
       <q-card style="min-width: 400px">
@@ -165,16 +197,62 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
-import { getMyCreatedCourses, getMyCourseLimits, deleteCourse, submitForReview, getCourseForEdit } from '../../api/instructor'
+import { useRouter } from 'vue-router'
+import { getMyCreatedCourses, getMyCourseLimits, deleteCourse, submitForReview, createCourse } from '../../api/instructor'
 import { getCourseSections } from '../../api/lesson'
 import type { CourseLimits } from '../../api/instructor'
 
 const $q = useQuasar()
+const router = useRouter()
 const loading = ref(true)
 const courses = ref<any[]>([])
 const limits = ref<CourseLimits | null>(null)
 const deleteDialog = ref(false)
 const courseToDelete = ref<any>(null)
+
+// Quick create
+const createDialog = ref(false)
+const newCourseTitle = ref('')
+const creating = ref(false)
+
+function openCreateDialog() {
+  newCourseTitle.value = ''
+  createDialog.value = true
+}
+
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 80) || 'curso-' + Date.now()
+}
+
+async function handleCreate() {
+  if (newCourseTitle.value.length < 3) return
+  creating.value = true
+  try {
+    const payload = {
+      title: newCourseTitle.value,
+      slug: slugify(newCourseTitle.value) + '-' + Math.random().toString(36).slice(2, 6),
+      description: '',
+      isFree: true,
+    }
+    const created = await createCourse(payload)
+    createDialog.value = false
+    $q.notify({ type: 'positive', message: 'Borrador creado', position: 'bottom-right' })
+    router.push(`/instructor/cursos/${created.id}/editar`)
+  } catch (err: any) {
+    const msg = err?.response?.data?.message || 'Error al crear el curso'
+    $q.notify({ type: 'negative', message: msg, position: 'bottom-right' })
+  } finally {
+    creating.value = false
+  }
+}
 
 // Submit review
 const submitDialog = ref(false)

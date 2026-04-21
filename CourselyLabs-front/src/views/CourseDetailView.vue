@@ -75,7 +75,8 @@
 
           <q-tab-panels v-model="tab" animated>
             <q-tab-panel name="descripcion">
-              <p>{{ course.description || 'Sin descripcion completa por ahora.' }}</p>
+              <div v-if="course.description" class="rich-content" v-html="course.description" />
+              <p v-else class="text-grey-7">Sin descripcion completa por ahora.</p>
             </q-tab-panel>
 
             <q-tab-panel name="contenido">
