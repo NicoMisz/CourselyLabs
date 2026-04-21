@@ -32,5 +32,22 @@ export interface BlockedPrerequisite {
 }
 
 export interface CreateCoursePrerequisitePayload {
-    prerequisiteCourseId: string;
+    prerequisiteCourseId: string
+    completionThreshold?: number
+}
+
+export interface SyncCoursePrerequisitesPayload {
+    prerequisites: CreateCoursePrerequisitePayload[]
+}
+
+export interface RelatedCourseItem {
+    courseId: string
+    title: string
+    slug: string
+    completionThreshold?: number
+}
+
+export interface CourseRelatedResponse {
+    prerequisites: RelatedCourseItem[]
+    requiredBy: RelatedCourseItem[]
 }

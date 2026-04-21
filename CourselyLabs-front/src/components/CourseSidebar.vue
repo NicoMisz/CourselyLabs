@@ -9,16 +9,10 @@
       <div><strong>Valoracion:</strong> {{ averageRating?.toFixed(1) || 'N/A' }}</div>
     </div>
 
-      <q-banner v-if="hasBlockedPrerequisites" rounded class="bg-orange-1 text-orange-10 q-mb-md" inline-actions>
-        Completa los cursos requeridos antes de inscribirte.
-        <template #action>
-          <q-btn flat color="orange-9" label="Ver prerequisitos" />
-        </template>
-      </q-banner>
-
     <PrerequisiteBlockBanner
       v-if="prerequisiteBlockers?.length"
       :blockers="prerequisiteBlockers"
+      @open-related-tab="$emit('open-related-tab')"
     />
 
     <q-btn
@@ -42,6 +36,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 
 import type { BlockedPrerequisite } from '@/types/prerequisite'
+import PrerequisiteBlockBanner from './PrerequisiteBlockBanner.vue';
 
 const props = defineProps<{
   level?: string;
@@ -58,8 +53,9 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  enroll: [];
-  continue: [];
+  (e: 'enroll'): void
+  (e: 'continue'): void
+  (e: 'open-related-tab'): void
 }>();
 
 const router = useRouter();

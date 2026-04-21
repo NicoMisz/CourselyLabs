@@ -1,6 +1,7 @@
 import api from './axios'
 import type { CoursePrerequisiteStatus } from '@/types/prerequisite'
 import type { SyncCoursePrerequisitesPayload } from '@/types/prerequisite'
+import type { CourseRelatedResponse } from '@/types/prerequisite'
 
 import type {
     BlockedPrerequisite,
@@ -40,4 +41,9 @@ export async function syncCoursePrerequisites(
 
 export async function deleteCoursePrerequisite(courseId: string, prereqId: string): Promise<void> {
     await api.delete(`/api/courses/${courseId}/prerequisites/${prereqId}`)
+}
+
+export async function getCourseRelated(courseId: string): Promise<CourseRelatedResponse> {
+    const { data } = await api.get<CourseRelatedResponse>(`/api/courses/${courseId}/related`)
+    return data
 }

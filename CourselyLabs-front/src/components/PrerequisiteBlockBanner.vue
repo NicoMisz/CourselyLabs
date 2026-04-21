@@ -11,13 +11,17 @@ defineProps<{
         requiredThreshold: number
     }[]
 }>()
+
+defineEmits<{
+    (e: 'open-related-tab'): void
+}>()
 </script>
 
 <template>
     <q-banner v-if="blockers.length" rounded class="bg-orange-1 text-orange-10 q-mb-md" inline-actions>
         Completa los cursos requeridos antes de inscribirte.
         <template #action>
-            <q-btn flat color="orange-9" label="Ver prerequisitos" />
+            <q-btn flat color="orange-9" label="Ver cursos relacionados" @click="$emit('open-related-tab')"/>
         </template>
     </q-banner>
 </template>

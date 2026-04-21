@@ -66,7 +66,7 @@
             indicator-color="primary"
           >
             <q-tab name="descripcion" label="Descripcion" />
-            <q-tab name="prerequisitos" label="Prerequisitos" />
+            <q-tab name="prerequisitos" label="Relacionados" />
             <q-tab name="contenido" label="Contenido" />
             <q-tab name="instructores" label="Instructores" />
             <q-tab name="valoraciones" label="Valoraciones" />
@@ -83,6 +83,7 @@
               <div class="column q-gutter-md">
                 <CoursePrerequisitesTab
                   :statuses="prerequisiteStatuses"
+                  :required-by="requiredBy"
                   :loading="prerequisiteStatusInitialLoading"
                 />
               </div>
@@ -146,6 +147,7 @@
               :prerequisite-blockers="prerequisiteBlockers" 
               @enroll="handleEnroll"
               @continue="handleContinueCourse"
+              @open-related-tab="tab = 'prerequisitos'"
           />
 
           <!-- Banner de bloqueo si no cumple prerequisitos
@@ -185,6 +187,10 @@ import CoursePrerequisitesTab from '@/components/CoursePrerequisitesTab.vue'
 import { getCoursePrerequisites, getCoursePrerequisiteBlockers, getCoursePrerequisiteStatus } from '@/api/prerequisite'
 import type { CoursePrerequisite, BlockedPrerequisite, CoursePrerequisiteStatus } from '@/types/prerequisite'
 
+// Nuevo: endpoint para cursos relacionados (reemplaza "Relacionados" por "Prerequisitos" y muestra progreso y bloqueo)
+import { getCourseRelated } from '@/api/prerequisite'
+import type { RelatedCourseItem } from '@/types/prerequisite'
+
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
@@ -207,6 +213,8 @@ const prerequisiteStatuses = ref<CoursePrerequisiteStatus[]>([])
 const prerequisiteStatusInitialLoading = ref(false)
 const prerequisiteStatusRefreshing = ref(false)
 let prerequisitesPollTimer: ReturnType<typeof setInterval> | null = null
+
+const requiredBy = ref<RelatedCourseItem[]>([]) // Nuevo: cursos que requieren este curso como prerequisito
 
 function setOgMeta(name: string, content: string) {
   const selector = `meta[property="${name}"]`
@@ -361,6 +369,22 @@ async function fetchPrerequisiteStatus(courseId?: string, silent = false) {
   }
 }
 
+// Nuevo: cargar cursos relacionados (reemplaza "Relacionados" por "Prerequisitos" y 
+// muestra progreso y bloqueo)
+async function fetchRelatedAuth(courseId?: string) {
+  if (!courseId ) {
+    requiredBy.value = []
+    return
+  }
+
+  try {
+    const data = await getCourseRelated(courseId)
+    requiredBy.value = data.requiredBy ?? []
+  } catch {
+    requiredBy.value = []
+  }
+}
+
 // Nuevo: iniciar polling de estado de prerequisitos cada 15s cuando se vea la pestaña de prerequisitos
 function startPrerequisitesPolling() {
   stopPrerequisitesPolling()
@@ -413,6 +437,16 @@ watch(
     { immediate: true }
 )
 
+// Nuevo: cargar cursos relacionados (reemplaza "Relacionados" por "Prerequisitos" y muestra progreso y bloqueo)
+watch(
+  () => course.value?.id,
+  (id) => {
+    if (!id) return
+    fetchRelatedAuth(id)
+  },
+  { immediate: true }
+)
+
 watch(tab, (newTab) => {
     if (newTab === 'prerequisitos' && course.value?.id) {
         fetchPrerequisiteStatus(course.value.id)
@@ -427,6 +461,15 @@ watch(
             fetchPrerequisiteStatus(course.value.id)
         }
     }
+)
+
+// Nuevo: recargar cursos relacionados (reemplaza "Relacionados" por "Prerequisitos" y muestra progreso y bloqueo) si cambia el estado de login
+watch(
+  () => authStore.isLoggedIn,
+  () => {
+    if (!course.value?.id) return
+    fetchRelatedAuth(course.value.id)
+  }
 )
 
 onMounted(() => {
