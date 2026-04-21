@@ -11,7 +11,9 @@ import org.springframework.transaction.annotation.Transactional;
 import com.courselylabs.courselylab.dto.BlockedPrerequisiteDTO;
 import com.courselylabs.courselylab.dto.CoursePrerequisiteDTO;
 import com.courselylabs.courselylab.dto.CoursePrerequisiteStatusDTO;
+import com.courselylabs.courselylab.dto.CourseRelatedResponseDTO;
 import com.courselylabs.courselylab.dto.CreateCoursePrerequisiteRequestDTO;
+import com.courselylabs.courselylab.dto.RelatedCourseDTO;
 import com.courselylabs.courselylab.entity.CourseEntity;
 import com.courselylabs.courselylab.entity.CoursePrerequisiteEntity;
 import com.courselylabs.courselylab.entity.UserEntity;
@@ -293,5 +295,84 @@ public class CoursePrerequisiteService {
                         progressPercent,
                         threshold
         );
+    }
+
+    // --- Sincronizacion completa de prerequisitos (solo instructor del curso o admin) ---
+    public void syncPrerequisites(UUID courseId, List<CreateCoursePrerequisiteRequestDTO> incoming, String email) {
+        assertCanManagePrerequisites(courseId, email);
+
+        CourseEntity course = requireCourse(courseId);
+
+        // Regla clave: un curso gratis no mantiene prerequisitos.
+        if (Boolean.TRUE.equals(course.getIsFree())) {
+            for (CoursePrerequisiteEntity current : prerequisiteRepository.findByCourseId(courseId)) {
+                prerequisiteRepository.delete(current);
+            }
+            return;
+        }
+
+        List<CreateCoursePrerequisiteRequestDTO> desired = incoming == null ? List.of() : incoming;
+
+        Set<UUID> desiredIds = desired.stream()
+                .map(CreateCoursePrerequisiteRequestDTO::getPrerequisiteCourseId)
+                .collect(java.util.stream.Collectors.toSet());
+
+        List<CoursePrerequisiteEntity> current = prerequisiteRepository.findByCourseId(courseId);
+
+        // Eliminar relaciones ya no seleccionadas
+        for (CoursePrerequisiteEntity cp : current) {
+            UUID currentPrereqId = cp.getPrerequisiteCourse().getId();
+            if (!desiredIds.contains(currentPrereqId)) {
+                prerequisiteRepository.delete(cp);
+            }
+        }
+
+        // Crear o actualizar relaciones seleccionadas
+        for (CreateCoursePrerequisiteRequestDTO req : desired) {
+            if (req.getPrerequisiteCourseId().equals(courseId)) {
+                throw new BadRequestException("A course cannot be its own prerequisite");
+            }
+
+            CoursePrerequisiteEntity cp = prerequisiteRepository
+                    .findByCourseIdAndPrerequisiteCourseId(courseId, req.getPrerequisiteCourseId())
+                    .orElseGet(() -> {
+                        CoursePrerequisiteEntity e = new CoursePrerequisiteEntity();
+                        e.setCourse(course);
+                        e.setPrerequisiteCourse(requireCourse(req.getPrerequisiteCourseId()));
+                        return e;
+                    });
+
+            cp.setCompletionThreshold(req.getCompletionThreshold());
+            prerequisiteRepository.save(cp);
+        }
+    }
+
+    // --- Cursos relacionados en los "prerequisitos"(solo premium o admin) ---
+    @Transactional(readOnly = true)
+    public CourseRelatedResponseDTO findRelatedCourses(UUID courseId, String email) {
+        assertIsPremiumOrAdmin(email);
+
+        List<RelatedCourseDTO> prerequisites = prerequisiteRepository
+                .findWithPrerequisiteCourseByCourseId(courseId)
+                .stream()
+                .map(cp -> new RelatedCourseDTO(
+                        cp.getPrerequisiteCourse().getId(),
+                        cp.getPrerequisiteCourse().getTitle(),
+                        cp.getPrerequisiteCourse().getSlug(),
+                        cp.getCompletionThreshold()))
+                .toList();
+
+        List<RelatedCourseDTO> requiredBy = prerequisiteRepository
+                .findWithCourseByPrerequisiteCourseId(courseId)
+                .stream()
+                .filter(cp -> Boolean.TRUE.equals(cp.getCourse().getIsPublished()))
+                .map(cp -> new RelatedCourseDTO(
+                        cp.getCourse().getId(),
+                        cp.getCourse().getTitle(),
+                        cp.getCourse().getSlug(),
+                        cp.getCompletionThreshold()))
+                .toList();
+
+        return new CourseRelatedResponseDTO(prerequisites, requiredBy);
     }
 }
