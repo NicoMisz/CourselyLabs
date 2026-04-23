@@ -62,11 +62,10 @@ public class CoursePrerequisiteService {
         this.subscriptionRepository = subscriptionRepository;
     }
 
-    // --- Lectura (solo premium o admin) ---
+    // --- Lectura (abierto a cualquier usuario autenticado) ---
 
     @Transactional(readOnly = true)
     public List<CoursePrerequisiteDTO> findByCourseId(UUID courseId, String email) {
-            assertIsPremiumOrAdmin(email);
             return prerequisiteRepository.findWithPrerequisiteCourseByCourseId(courseId)
                 .stream()
                 .map(this::toDTO)
@@ -111,11 +110,12 @@ public class CoursePrerequisiteService {
         prerequisiteRepository.delete(entity);
     }
 
-    // --- Blockers (solo premium o admin) ---
+    // --- Blockers (cualquier usuario autenticado puede ver los suyos) ---
 
     @Transactional(readOnly = true)
     public List<BlockedPrerequisiteDTO> findBlockedPrerequisites(UUID courseId, String email) {
-            UserEntity user = requirePremiumOrAdminUser(email);
+            UserEntity user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
 
             return prerequisiteRepository.findWithPrerequisiteCourseByCourseId(courseId)
                 .stream()
@@ -258,10 +258,11 @@ public class CoursePrerequisiteService {
                 threshold);
     }
 
-    // --- Status de prerequisitos para un curso (solo premium o admin) ---
+    // --- Status de prerequisitos para un curso (cualquier usuario autenticado) ---
     @Transactional(readOnly = true)
     public List<CoursePrerequisiteStatusDTO> findPrerequisiteStatus(UUID courseId, String email) {
-            UserEntity user = requirePremiumOrAdminUser(email);
+            UserEntity user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
 
             return prerequisiteRepository.findWithPrerequisiteCourseByCourseId(courseId)
                 .stream()
@@ -347,11 +348,9 @@ public class CoursePrerequisiteService {
         }
     }
 
-    // --- Cursos relacionados en los "prerequisitos"(solo premium o admin) ---
+    // --- Cursos relacionados (cualquier usuario autenticado) ---
     @Transactional(readOnly = true)
     public CourseRelatedResponseDTO findRelatedCourses(UUID courseId, String email) {
-        assertIsPremiumOrAdmin(email);
-
         List<RelatedCourseDTO> prerequisites = prerequisiteRepository
                 .findWithPrerequisiteCourseByCourseId(courseId)
                 .stream()
