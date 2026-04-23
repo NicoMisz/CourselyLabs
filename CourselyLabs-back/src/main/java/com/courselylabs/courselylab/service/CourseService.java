@@ -321,17 +321,12 @@ public class CourseService {
         dto.setSections(sectionMapper.toDTOList(
                 sectionRepository.findByCourseIdOrderByPositionAsc(entity.getId())));
 
-        // Prerequisitos solo para premium/admin
-        boolean isPremiumOrAdmin = currentUser != null && (
-            "premium".equalsIgnoreCase(currentUser.getRole())
-            || "admin".equalsIgnoreCase(currentUser.getRole())
-        );
-
-        if (Boolean.TRUE.equals(entity.getIsFree())) {
-            dto.setPrerequisites(List.of());
-        } else if (isPremiumOrAdmin) {
-            dto.setPrerequisites(coursePrerequisiteService.findByCourseId(entity.getId(), currentUser.getEmail()));
-        } else {
+        // Prerequisitos: visibles para cualquier usuario (y publico si no hay auth).
+        // Solo la creacion/edicion de prerequisitos esta restringida a premium/admin.
+        String emailForLookup = currentUser != null ? currentUser.getEmail() : "";
+        try {
+            dto.setPrerequisites(coursePrerequisiteService.findByCourseId(entity.getId(), emailForLookup));
+        } catch (Exception e) {
             dto.setPrerequisites(List.of());
         }
 

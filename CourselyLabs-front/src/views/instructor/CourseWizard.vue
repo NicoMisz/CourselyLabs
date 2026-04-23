@@ -201,12 +201,25 @@
             </div>
 
             <div class="q-mt-md">
-              <q-toggle v-model="details.isPremium" label="Curso Premium" />
+              <q-toggle
+                v-model="details.isPremium"
+                label="Curso Premium"
+                :disable="!canUsePremiumFeatures"
+              />
               <div class="text-caption text-grey-7 q-mt-xs">
                 {{ details.isPremium
                   ? 'Solo accesible con suscripcion Premium activa.'
                   : 'Accesible para cualquier usuario autenticado.' }}
               </div>
+              <q-banner v-if="!canUsePremiumFeatures" rounded class="bg-amber-1 q-mt-sm" dense>
+                <template #avatar>
+                  <q-icon name="workspace_premium" color="amber-8" />
+                </template>
+                Crear cursos Premium es una funcion exclusiva para miembros Premium.
+                <template #action>
+                  <q-btn flat dense color="amber-8" label="Hazte Premium" no-caps to="/premium" />
+                </template>
+              </q-banner>
             </div>
 
             <div class="panel-actions">
@@ -222,61 +235,82 @@
               Ideal para crear rutas de aprendizaje.
             </p>
 
-            <q-select
-              v-model="prerequisiteIds"
-              :options="prerequisiteOptions"
-              label="Cursos requeridos"
-              outlined
-              use-input
-              input-debounce="300"
-              multiple
-              use-chips
-              emit-value
-              map-options
-              @filter="filterPrerequisiteOptions"
-              :loading="loadingPrereqOptions"
-            >
-              <template #no-option>
-                <q-item>
-                  <q-item-section class="text-grey-6">Sin resultados</q-item-section>
+            <!-- Locked for non-premium -->
+            <div v-if="!canUsePremiumFeatures" class="premium-lock">
+              <q-icon name="workspace_premium" size="48px" color="amber-8" />
+              <div class="text-h6 q-mt-md">Funcion exclusiva Premium</div>
+              <p class="text-body2 text-grey-7 q-mb-md" style="max-width: 480px; margin-left: auto; margin-right: auto">
+                Enlazar cursos con prerequisitos es una de las ventajas de la suscripcion Premium.
+                Puedes seguir creando tu curso con el resto de funciones.
+              </p>
+              <q-btn
+                color="amber-8"
+                text-color="white"
+                unelevated
+                no-caps
+                icon="workspace_premium"
+                label="Hazte Premium"
+                to="/premium"
+              />
+            </div>
+
+            <template v-else>
+              <q-select
+                v-model="prerequisiteIds"
+                :options="prerequisiteOptions"
+                label="Cursos requeridos"
+                outlined
+                use-input
+                input-debounce="300"
+                multiple
+                use-chips
+                emit-value
+                map-options
+                @filter="filterPrerequisiteOptions"
+                :loading="loadingPrereqOptions"
+              >
+                <template #no-option>
+                  <q-item>
+                    <q-item-section class="text-grey-6">Sin resultados</q-item-section>
+                  </q-item>
+                </template>
+              </q-select>
+
+              <q-list v-if="prerequisiteIds.length > 0" bordered separator class="q-mt-md">
+                <q-item v-for="id in prerequisiteIds" :key="id">
+                  <q-item-section avatar>
+                    <q-icon name="school" color="primary" />
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label>{{ prerequisiteTitleById[id] || 'Curso' }}</q-item-label>
+                    <q-item-label caption>
+                      Umbral de completacion:
+                      <span class="text-weight-medium">{{ prerequisiteThresholds[id] ?? 80 }}%</span>
+                    </q-item-label>
+                  </q-item-section>
+                  <q-item-section side style="min-width: 160px">
+                    <q-slider
+                      :model-value="prerequisiteThresholds[id] ?? 80"
+                      :min="0" :max="100" :step="10"
+                      label
+                      label-always
+                      color="primary"
+                      @update:model-value="(v) => setThreshold(id, (v as number))"
+                    />
+                  </q-item-section>
+                  <q-item-section side>
+                    <q-btn flat dense round icon="close" color="negative" @click="removePrerequisite(id)" />
+                  </q-item-section>
                 </q-item>
-              </template>
-            </q-select>
+              </q-list>
+              <div v-else class="empty-hint">
+                Sin prerequisitos. Este curso es accesible sin haber completado otros cursos.
+              </div>
 
-            <q-list v-if="prerequisiteIds.length > 0" bordered separator class="q-mt-md">
-              <q-item v-for="id in prerequisiteIds" :key="id">
-                <q-item-section avatar>
-                  <q-icon name="school" color="primary" />
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label>{{ prerequisiteTitleById[id] || 'Curso' }}</q-item-label>
-                  <q-item-label caption>
-                    Umbral de completacion:
-                    <span class="text-weight-medium">{{ prerequisiteThresholds[id] ?? 80 }}%</span>
-                  </q-item-label>
-                </q-item-section>
-                <q-item-section side style="min-width: 160px">
-                  <q-slider
-                    :model-value="prerequisiteThresholds[id] ?? 80"
-                    :min="0" :max="100" :step="10"
-                    label
-                    label-always
-                    color="primary"
-                    @update:model-value="(v) => setThreshold(id, (v as number))"
-                  />
-                </q-item-section>
-                <q-item-section side>
-                  <q-btn flat dense round icon="close" color="negative" @click="removePrerequisite(id)" />
-                </q-item-section>
-              </q-item>
-            </q-list>
-            <div v-else class="empty-hint">
-              Sin prerequisitos. Este curso es accesible sin haber completado otros cursos.
-            </div>
-
-            <div class="panel-actions">
-              <q-btn color="primary" unelevated no-caps label="Guardar prerequisitos" :loading="saving" @click="savePrerequisites" />
-            </div>
+              <div class="panel-actions">
+                <q-btn color="primary" unelevated no-caps label="Guardar prerequisitos" :loading="saving" @click="savePrerequisites" />
+              </div>
+            </template>
           </div>
 
           <!-- Seccion -->
@@ -503,6 +537,7 @@ import { useAuthStore } from '../../stores/auth'
 import { formatFileSize as fmtBytes } from '../../api/resources'
 import { searchCourses } from '@/api/courseSearch'
 import { getCoursePrerequisites, syncCoursePrerequisites } from '@/api/prerequisite'
+import { checkIsPremium } from '@/api/payments'
 
 type Selected =
   | { type: 'info' }
@@ -516,6 +551,9 @@ const route = useRoute()
 const router = useRouter()
 const $q = useQuasar()
 const authStore = useAuthStore()
+
+// Can this user use Premium-only features? Checked against backend (active subscription or admin role)
+const canUsePremiumFeatures = ref(false)
 
 const courseId = computed(() => route.params.id as string)
 const course = ref<any>(null)
@@ -735,14 +773,9 @@ function openFile(url: string) {
 async function loadData() {
   loadingCourse.value = true
   try {
-    const [c, cats, secs] = await Promise.all([
-      getCourseForEdit(courseId.value),
-      getCategories().catch(() => []),
-      getCourseSections(courseId.value).catch(() => []),
-    ])
+    // El curso es lo critico — si esto falla abortamos
+    const c = await getCourseForEdit(courseId.value)
     course.value = c
-    categoryOptions.value = cats.map((cat: any) => ({ label: cat.name, value: cat.id }))
-    sections.value = secs
 
     info.title = c.title
     info.slug = c.slug
@@ -754,12 +787,29 @@ async function loadData() {
     details.thumbnailUrl = c.thumbnailUrl || ''
     details.isPremium = c.isFree === false
 
-    await Promise.all([
-      loadAllCoursesForPicker(),
-      loadExistingPrerequisites(),
+    // Premium check (for enabling/disabling premium-only features)
+    canUsePremiumFeatures.value = await checkIsPremium().catch(() => false)
+
+    // Auxiliares — cada uno atrapa su propio error
+    const [cats, secs] = await Promise.all([
+      getCategories().catch(err => { console.error('[loadData] getCategories failed:', err); return [] }),
+      getCourseSections(courseId.value).catch(err => { console.error('[loadData] getCourseSections failed:', err); return [] }),
     ])
-  } catch {
-    $q.notify({ type: 'negative', message: 'Error al cargar el curso', position: 'bottom-right' })
+    categoryOptions.value = (cats as any[]).map((cat: any) => ({ label: cat.name, value: cat.id }))
+    sections.value = secs as any[]
+
+    // Prerequisitos (opcional, falla silenciosamente)
+    await Promise.all([
+      loadAllCoursesForPicker().catch(err => console.error('[loadData] loadAllCoursesForPicker failed:', err)),
+      loadExistingPrerequisites().catch(err => console.error('[loadData] loadExistingPrerequisites failed:', err)),
+    ])
+  } catch (err: any) {
+    console.error('[loadData] Failed to load course:', err)
+    const msg = err?.response?.data?.message
+      || err?.response?.statusText
+      || err?.message
+      || 'Error al cargar el curso'
+    $q.notify({ type: 'negative', message: `${msg} (${err?.response?.status || '?'})`, position: 'bottom-right' })
     router.push('/instructor/cursos')
   } finally {
     loadingCourse.value = false
@@ -1133,6 +1183,14 @@ onMounted(loadData)
   color: #6b7280;
   font-size: 0.875rem;
   text-align: center;
+}
+
+.premium-lock {
+  text-align: center;
+  padding: 40px 24px;
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border: 1px dashed #d97706;
+  border-radius: 12px;
 }
 
 .thumbnail-preview {
