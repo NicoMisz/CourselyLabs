@@ -391,40 +391,39 @@ Tracking del progreso del estudiante: marcar lecciones como completadas, guardar
 
 ---
 
-## 8. `feature/course-prerequisites` 🆕 PENDIENTE
+## 8. `feature/course-prerequisites` ✅ COMPLETADO
 
 **Prioridad:** Media
 **Dependencias:** `feature/student-progress`
 
-### Descripción
-Un curso puede requerir haber completado otro al 100% antes de permitir la inscripción. Validación en backend y feedback visual en frontend.
+### Descripcion
+Un curso puede requerir que el estudiante haya alcanzado un % de progreso en otros cursos (prerequisitos) antes de permitir la inscripcion. Los prerequisitos son una **funcion Premium para crear**, pero cualquier usuario puede **inscribirse** en cursos que los tengan (si los cumple).
 
-### Tareas
+### Estado actual
 
-#### Backend — Entidad nueva
-- [ ] `CoursePrerequisiteEntity`: id, courseId, prerequisiteCourseId, createdAt
-- [ ] Constraint unique `(courseId, prerequisiteCourseId)`
-- [ ] Migración Flyway
+| Elemento | Estado |
+|---|---|
+| Flyway V8 — tabla `course_prerequisites` | Hecho — (courseId, prerequisiteCourseId) unique, umbral configurable |
+| `CoursePrerequisiteEntity` + Repository | Hecho |
+| `GET /api/courses/{id}/prerequisites` | Hecho — abierto a cualquier usuario autenticado |
+| `POST /api/courses/{id}/prerequisites` | Hecho — solo instructor/admin + requiere Premium activa |
+| `PUT /api/courses/{id}/prerequisites` (sync) | Hecho — reemplaza todos los prerequisitos del curso |
+| `DELETE /api/courses/{id}/prerequisites/{prereqId}` | Hecho |
+| `GET /api/courses/{id}/prerequisites/blockers` | Hecho — qué prerequisitos faltan al usuario actual |
+| `GET /api/courses/{id}/prerequisites/status` | Hecho — progreso del usuario en cada prerequisito |
+| `GET /api/courses/{id}/related` | Hecho — prerequisitos + cursos que requieren este |
+| Deteccion de ciclos | Hecho — DFS en `wouldCreateCycle` al añadir prereq |
+| Validacion al inscribirse | Hecho — `assertCanEnroll` bloquea con `PrerequisiteConflictException` |
+| Seeders con ejemplos | Hecho — `init_db/05_seed_prerequisites.sql` con 4 relaciones |
+| `CoursePrerequisitesTab.vue` (vista estudiante) | Hecho — tab "Relacionados" en detalle de curso |
+| `PrerequisiteBlockBanner.vue` | Hecho — banner bajo el sidebar si faltan prerequisitos |
+| Panel "Prerequisitos" en CourseWizard | Hecho — selector con slider de umbral, bloqueado para no-premium |
+| Restriccion Premium para crear | Hecho — `assertCanManagePrerequisites` requiere suscripcion activa |
 
-#### Backend — Endpoints
-- [ ] `GET /api/courses/{id}/prerequisites` — listar prerequisitos con datos del curso y progreso del usuario autenticado
-- [ ] `POST /api/courses/{id}/prerequisites` — añadir prerequisito (solo instructor del curso)
-- [ ] `DELETE /api/courses/{id}/prerequisites/{prereqId}` — eliminar prerequisito
+### Pendiente menor
 
-#### Backend — Lógica
-- [ ] En `POST /api/enrollments`: verificar que el usuario tiene progreso 100% en todos los prerequisitos; si no, devolver 409 con lista de cursos bloqueantes
-- [ ] Detección de ciclos al añadir un prerequisito (DFS sobre el grafo de dependencias)
-
-#### Frontend — Componentes
-- [ ] `CoursePrerequisites.vue` — sección "Antes de empezar" en pestaña Descripción; mini-card por prerequisito con thumbnail, título, nivel badge y estado (completado / en curso / no inscrito)
-- [ ] `PrerequisiteBlockBanner.vue` — `q-banner` bajo el botón de inscripción cuando faltan prerequisitos
-- [ ] `PrerequisiteSelector.vue` — `q-select` con búsqueda y chips para el editor de curso del instructor
-
-#### UX/UI
-- [ ] Botón de inscripción deshabilitado con tooltip "Completa los cursos requeridos primero"
 - [ ] Icono de candado en el hero si el usuario no cumple los prerequisitos
-- [ ] Aviso si la cadena de prerequisitos tiene N cursos ("Este curso requiere completar una cadena de 3 cursos")
-- [ ] No mostrar la sección si el curso no tiene prerequisitos
+- [ ] Aviso visual de cadena larga de prerequisitos ("Este curso requiere completar una cadena de 3 cursos")
 
 ---
 
@@ -1023,16 +1022,16 @@ develop
  ├── feature/course-sections-lessons  ✅ Completado
  ├── feature/student-progress         ✅ Completado
  ├── feature/search-filters           ✅ Completado
+ ├── feature/reviews-frontend         ✅ Completado (en paralelo)
  ├── feature/course-creation          ✅ Completado
  ├── feature/admin-dashboard          ✅ Completado
- ├── feature/reviews-frontend         ✅ Completado (en paralelo)
+ ├── feature/payments-stripe          ✅ Completado
+ ├── feature/downloadable-resources   ✅ Completado
+ ├── feature/course-prerequisites     ✅ Completado
  │
  │   --- Proximas ramas ---
  │
- ├── feature/downloadable-resources   (tras course-sections-lessons)
- ├── feature/course-prerequisites     (tras student-progress)
  ├── feature/assessments              (tras student-progress)
- ├── feature/payments-stripe          (tras enrollment-flow)
  ├── feature/forums                   (tras course-detail-page)
  ├── feature/messaging                (independiente)
  ├── feature/notifications            (tras forums + messaging)
@@ -1050,10 +1049,11 @@ Sistema de inicializacion de DB para que `docker compose up -d` con volumen limp
 
 | Archivo | Contenido |
 |---|---|
-| `01_schema.sql` | Schema completo (V1+V2+V3+V4+V5+V6): 11 tablas (incl. verification_tokens, created_by, rejection_reason), triggers, vistas, funciones |
-| `02_seed_base.sql` | 11 usuarios, 6 categorias, 8 cursos, enrollments, reviews |
+| `01_schema.sql` | Schema completo (V1..V9): 15 tablas (users, refresh_tokens, categories, courses, course_instructors, enrollments, reviews, sections, lessons, lesson_progress, verification_tokens, subscriptions, payments, lesson_resources, course_prerequisites), triggers, vistas, funciones |
+| `02_seed_base.sql` | 11 usuarios, 6 categorias, 8 cursos (todos premium sin precio numerico), enrollments, reviews |
 | `03_seed_postgresql.sql` | 4 secciones, 10 lecciones para curso PostgreSQL |
 | `04_seed_flamenco.sql` | 5 secciones, 14 lecciones, enrollments, reviews, lesson_progress |
+| `05_seed_prerequisites.sql` | 4 relaciones de prerequisitos entre cursos (Vue→PostgreSQL, Algoritmos→Python, etc.) |
 
 ### Uso
 
@@ -1074,6 +1074,8 @@ docker compose down -v && docker compose up -d
 | admin@cursos.com | admin123 | admin |
 | instructor@cursos.com | admin123 | user (instructor) |
 | student@cursos.com | admin123 | user (estudiante) |
+
+> Si el login del seed falla por incompatibilidad del hash bcrypt con Spring Security, registra un usuario manualmente desde `/register` o pide a un admin logueado que te conceda premium desde el panel de admin.
 
 ---
 
