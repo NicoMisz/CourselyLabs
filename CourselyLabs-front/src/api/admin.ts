@@ -61,6 +61,15 @@ export async function unbanUser(userId: string) {
   return data
 }
 
+export async function grantPremium(userId: string, expiresAt: string) {
+  const { data } = await api.post(`/api/admin/users/${userId}/grant-premium`, { expiresAt })
+  return data
+}
+
+export async function revokePremium(userId: string) {
+  await api.delete(`/api/admin/users/${userId}/premium`)
+}
+
 export async function getPendingCourses() {
   const { data } = await api.get('/api/admin/courses/pending')
   return data

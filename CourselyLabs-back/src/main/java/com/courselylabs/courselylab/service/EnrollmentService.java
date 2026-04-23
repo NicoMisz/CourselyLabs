@@ -124,9 +124,8 @@ public class EnrollmentService {
         }
 
         if (!Boolean.TRUE.equals(course.getIsFree())) {
-            // Premium courses require active subscription or admin role
-            boolean isPremium = "admin".equals(user.getRole())
-                    || subscriptionRepository.existsByUserIdAndStatus(user.getId(), "active");
+            // Premium courses require active subscription (admins included)
+            boolean isPremium = subscriptionRepository.existsByUserIdAndStatus(user.getId(), "active");
             if (!isPremium) {
                 throw new BadRequestException("Este curso requiere una suscripcion Premium");
             }

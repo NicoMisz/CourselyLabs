@@ -15,12 +15,14 @@ import jakarta.persistence.criteria.Predicate;
 
 import com.courselylabs.courselylab.dto.CourseDTO;
 import com.courselylabs.courselylab.entity.CourseEntity;
+import com.courselylabs.courselylab.entity.SubscriptionEntity;
 import com.courselylabs.courselylab.entity.UserEntity;
 import com.courselylabs.courselylab.exception.BadRequestException;
 import com.courselylabs.courselylab.exception.ResourceNotFoundException;
 import com.courselylabs.courselylab.mapper.CourseMapper;
 import com.courselylabs.courselylab.repository.CourseRepository;
 import com.courselylabs.courselylab.repository.EnrollmentRepository;
+import com.courselylabs.courselylab.repository.SubscriptionRepository;
 import com.courselylabs.courselylab.repository.UserRepository;
 
 @Service
@@ -31,15 +33,18 @@ public class AdminService {
     private final CourseRepository courseRepository;
     private final CourseMapper courseMapper;
     private final EnrollmentRepository enrollmentRepository;
+    private final SubscriptionRepository subscriptionRepository;
 
     public AdminService(UserRepository userRepository,
                         CourseRepository courseRepository,
                         CourseMapper courseMapper,
-                        EnrollmentRepository enrollmentRepository) {
+                        EnrollmentRepository enrollmentRepository,
+                        SubscriptionRepository subscriptionRepository) {
         this.userRepository = userRepository;
         this.courseRepository = courseRepository;
         this.courseMapper = courseMapper;
         this.enrollmentRepository = enrollmentRepository;
+        this.subscriptionRepository = subscriptionRepository;
     }
 
     // --- Stats ---
@@ -114,6 +119,50 @@ public class AdminService {
 
         user.setIsActive(true);
         return userRepository.save(user);
+    }
+
+    /**
+     * Grants a manual Premium subscription to a user without going through Stripe.
+     * Useful for admins, comp accounts, giveaways, etc.
+     *
+     * @param userId target user
+     * @param expiresAt when the subscription expires (ISO date)
+     */
+    public SubscriptionEntity grantPremium(UUID userId, LocalDateTime expiresAt) {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+
+        if (expiresAt == null || expiresAt.isBefore(LocalDateTime.now())) {
+            throw new BadRequestException("La fecha de expiracion debe ser futura");
+        }
+
+        // Cancel any existing active subscription for this user (so we always have at most one)
+        subscriptionRepository.findByUserIdAndStatus(user.getId(), "active")
+                .ifPresent(existing -> {
+                    existing.setStatus("expired");
+                    subscriptionRepository.save(existing);
+                });
+
+        SubscriptionEntity sub = new SubscriptionEntity();
+        sub.setUser(user);
+        sub.setPlan("annual");
+        sub.setStatus("active");
+        sub.setCurrentPeriodStart(LocalDateTime.now());
+        sub.setCurrentPeriodEnd(expiresAt);
+        // No stripeSubscriptionId / stripeCustomerId — manual grant
+        return subscriptionRepository.save(sub);
+    }
+
+    public void revokePremium(UUID userId) {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+
+        subscriptionRepository.findByUserIdAndStatus(user.getId(), "active")
+                .ifPresent(sub -> {
+                    sub.setStatus("expired");
+                    sub.setCancelledAt(LocalDateTime.now());
+                    subscriptionRepository.save(sub);
+                });
     }
 
     // --- Course moderation ---
