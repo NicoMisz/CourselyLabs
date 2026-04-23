@@ -58,6 +58,10 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/payments/pricing").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/courses/mine").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/courses/mine/limits").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/courses/*/prerequisites").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/courses/*/prerequisites/blockers").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/courses/*/prerequisites/status").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/courses/*/related").authenticated() //relación entre cursos "prerequisitos"
                 .requestMatchers(HttpMethod.GET, "/api/courses/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/lessons/**").permitAll()

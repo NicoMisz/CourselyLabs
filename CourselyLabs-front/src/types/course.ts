@@ -1,3 +1,5 @@
+import type { CoursePrerequisite } from './prerequisite';
+
 export interface Course {
   id: string
   slug: string
@@ -38,4 +40,5 @@ export interface CourseDetail {
   updatedAt?: string;
   instructors?: InstructorSummary[];
   sections?: Section[];
+  prerequisites?: CoursePrerequisite[];
 }

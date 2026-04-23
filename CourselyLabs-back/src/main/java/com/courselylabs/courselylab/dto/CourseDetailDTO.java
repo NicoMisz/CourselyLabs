@@ -38,4 +38,6 @@ public class CourseDetailDTO {
     private BigDecimal averageRating;
     private List<InstructorSummaryDTO> instructors;
     private List<SectionDTO> sections;
+
+    private List<CoursePrerequisiteDTO> prerequisites;
 }

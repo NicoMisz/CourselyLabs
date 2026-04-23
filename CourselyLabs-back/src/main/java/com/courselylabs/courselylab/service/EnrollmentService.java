@@ -36,19 +36,22 @@ public class EnrollmentService {
     private final EnrollmentMapper enrollmentMapper;
     private final LessonProgressRepository lessonProgressRepository;
     private final SectionRepository sectionRepository;
+    private final CoursePrerequisiteService coursePrerequisiteService;
     private final SubscriptionRepository subscriptionRepository;
 
     public EnrollmentService(EnrollmentRepository enrollmentRepository, UserRepository userRepository,
                              CourseRepository courseRepository, EnrollmentMapper enrollmentMapper,
                              LessonProgressRepository lessonProgressRepository,
                              SectionRepository sectionRepository,
-                             SubscriptionRepository subscriptionRepository) {
+                             SubscriptionRepository subscriptionRepository,
+                             CoursePrerequisiteService coursePrerequisiteService) {
         this.enrollmentRepository = enrollmentRepository;
         this.userRepository = userRepository;
         this.courseRepository = courseRepository;
         this.enrollmentMapper = enrollmentMapper;
         this.lessonProgressRepository = lessonProgressRepository;
         this.sectionRepository = sectionRepository;
+        this.coursePrerequisiteService = coursePrerequisiteService;
         this.subscriptionRepository = subscriptionRepository;
     }
 
@@ -76,13 +79,11 @@ public class EnrollmentService {
         return enrollmentMapper.toDTO(entity);
     }
 
-    
     @Transactional(readOnly = true)
     public boolean isEnrolled(UUID userId, UUID courseId) {
         return enrollmentRepository.existsByUserIdAndCourseId(userId, courseId);
     }
 
-    
     public EnrollmentDTO enroll(EnrollmentDTO dto) {
         if (isEnrolled(dto.getUserId(), dto.getCourseId())) {
             throw new BadRequestException("User is already enrolled in this course");
@@ -133,8 +134,10 @@ public class EnrollmentService {
         }
 
         if (enrollmentRepository.existsByUserIdAndCourseId(user.getId(), course.getId())) {
-        throw new BadRequestException("Ya estas inscrito en este curso");
+            throw new BadRequestException("Ya estas inscrito en este curso");
         }
+
+        coursePrerequisiteService.assertCanEnroll(email, course.getId());
 
         EnrollmentEntity enrollment = new EnrollmentEntity();
         enrollment.setUser(user);
@@ -152,18 +155,17 @@ public class EnrollmentService {
         UserEntity user = getUserByEmail(email);
 
         return enrollmentRepository.findAllByUserIdOrderByLastAccessedAtDesc(user.getId())
-            .stream()
-            .map(this::toEnrolledCourseDTO)
-            .sorted(Comparator.comparing(
-                EnrolledCourseDTO::getLastAccessedAt,
-                Comparator.nullsLast(Comparator.reverseOrder())
-            ))
-            .toList();
+                .stream()
+                .map(this::toEnrolledCourseDTO)
+                .sorted(Comparator.comparing(
+                        EnrolledCourseDTO::getLastAccessedAt,
+                        Comparator.nullsLast(Comparator.reverseOrder())))
+                .toList();
     }
 
     private UserEntity getUserByEmail(String email) {
         return userRepository.findByEmail(email)
-            .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
     }
 
     private EnrolledCourseDTO toEnrolledCourseDTO(EnrollmentEntity entity) {
@@ -189,20 +191,19 @@ public class EnrollmentService {
         }
 
         return new EnrolledCourseDTO(
-            entity.getId(),
-            courseId,
-            course.getSlug(),
-            course.getTitle(),
-            course.getShortDescription(),
-            course.getThumbnailUrl(),
-            course.getLevel(),
-            course.getIsFree(),
-            course.getPrice(),
-            progressPercent,
-            progressStatus,
-            entity.getEnrolledAt(),
-            entity.getLastAccessedAt()
-        );
+                entity.getId(),
+                courseId,
+                course.getSlug(),
+                course.getTitle(),
+                course.getShortDescription(),
+                course.getThumbnailUrl(),
+                course.getLevel(),
+                course.getIsFree(),
+                course.getPrice(),
+                progressPercent,
+                progressStatus,
+                entity.getEnrolledAt(),
+                entity.getLastAccessedAt());
     }
 
     public EnrollmentDTO updateLastAccessed(UUID id) {
@@ -227,12 +228,12 @@ public class EnrollmentService {
     }
 
     public void updateLastAccessForCurrentUser(String email, UUID courseId) {
-    UserEntity user = getUserByEmail(email);
+        UserEntity user = getUserByEmail(email);
 
-    EnrollmentEntity enrollment = enrollmentRepository.findByUserIdAndCourseId(user.getId(), courseId)
-        .orElseThrow(() -> new ResourceNotFoundException("Enrollment", "courseId", courseId));
+        EnrollmentEntity enrollment = enrollmentRepository.findByUserIdAndCourseId(user.getId(), courseId)
+                .orElseThrow(() -> new ResourceNotFoundException("Enrollment", "courseId", courseId));
 
-    enrollment.setLastAccessedAt(LocalDateTime.now());
-    enrollmentRepository.save(enrollment);
+        enrollment.setLastAccessedAt(LocalDateTime.now());
+        enrollmentRepository.save(enrollment);
     }
 }
