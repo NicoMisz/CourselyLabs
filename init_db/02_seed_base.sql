@@ -38,23 +38,23 @@ INSERT INTO courses (title, slug, description, short_description, category_id, l
 
 ('Desenvolupament web amb Vue 3', 'vue3-desenvolupament-web',
  'Curs complet de Vue 3 amb Composition API, Pinia, Vue Router i integracio amb backends REST.',
- 'Domina Vue 3 i construeix aplicacions web modernes', 1, 'intermediate', FALSE, 49.99, 'published', TRUE, CURRENT_TIMESTAMP - INTERVAL '15 days'),
+ 'Domina Vue 3 i construeix aplicacions web modernes', 1, 'intermediate', FALSE, NULL, 'published', TRUE, CURRENT_TIMESTAMP - INTERVAL '15 days'),
 
 ('Algorismes i estructures de dades', 'algorismes-estructures-dades',
  'Estudi profund d''algorismes de cerca, ordenacio, grafos i estructures com piles, cues i arbres.',
- 'Prepara''t per a entrevistes tecniques', 1, 'advanced', FALSE, 79.99, 'published', TRUE, CURRENT_TIMESTAMP - INTERVAL '60 days'),
+ 'Prepara''t per a entrevistes tecniques', 1, 'advanced', FALSE, NULL, 'published', TRUE, CURRENT_TIMESTAMP - INTERVAL '60 days'),
 
 ('Disseny UI/UX des de zero', 'disseny-ui-ux',
  'Apren els fonaments del disseny d''interficies i experiencia d''usuari. Figma, prototipat i tests.',
- 'Crea productes digitals que la gent estima', 2, 'beginner', FALSE, 59.99, 'published', TRUE, CURRENT_TIMESTAMP - INTERVAL '20 days'),
+ 'Crea productes digitals que la gent estima', 2, 'beginner', FALSE, NULL, 'published', TRUE, CURRENT_TIMESTAMP - INTERVAL '20 days'),
 
 ('Marketing digital per a negocis', 'marketing-digital-negocis',
  'Estrategies de marqueting digital: SEO, SEM, xarxes socials, email marqueting i analitica web.',
- 'Fes creixer el teu negoci al mon digital', 4, 'beginner', FALSE, 39.99, 'published', TRUE, CURRENT_TIMESTAMP - INTERVAL '10 days'),
+ 'Fes creixer el teu negoci al mon digital', 4, 'beginner', FALSE, NULL, 'published', TRUE, CURRENT_TIMESTAMP - INTERVAL '10 days'),
 
 ('Introduccio a la Intel·ligencia Artificial', 'introduccio-ia',
  'Curs en preparacio sobre IA i machine learning per a no tecnics.',
- 'Enten la IA sense necessitat de programar', 1, 'beginner', FALSE, 69.99, 'draft', FALSE, NULL);
+ 'Enten la IA sense necessitat de programar', 1, 'beginner', FALSE, NULL, 'draft', FALSE, NULL);
 
 -- Instructores
 INSERT INTO course_instructors (course_id, instructor_id, is_main)

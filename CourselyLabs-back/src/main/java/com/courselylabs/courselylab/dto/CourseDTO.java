@@ -23,7 +23,6 @@ public class CourseDTO {
     @NotBlank(message = "Slug is required")
     private String slug;
 
-    @NotBlank(message = "Description is required")
     private String description;
 
     @Size(max = 500, message = "Short description must be less than 500 characters")

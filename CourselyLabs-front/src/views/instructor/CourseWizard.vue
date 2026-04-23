@@ -57,7 +57,7 @@
               @click="selected = { type: 'details' }"
             >
               <q-item-section avatar><q-icon name="description" /></q-item-section>
-              <q-item-section>Detalles y precio</q-item-section>
+              <q-item-section>Detalles</q-item-section>
             </q-item>
           </q-list>
 
