@@ -54,6 +54,8 @@ public class CourseDTO {
 
     private UUID createdById;
 
+    private Long storageBytes;
+
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;

@@ -36,6 +36,7 @@ export interface CourseDetail {
   durationText?: string;
   studentsCount?: number;
   averageRating?: number;
+  storageBytes?: number;
   updatedAt?: string;
   instructors?: InstructorSummary[];
   sections?: Section[];

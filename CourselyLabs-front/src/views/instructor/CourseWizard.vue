@@ -113,6 +113,26 @@
               @click="showAddSection = true"
             />
           </div>
+
+          <!-- Storage indicator -->
+          <div class="storage-panel">
+            <div class="row items-center justify-between q-mb-xs">
+              <span class="text-caption text-weight-medium text-grey-7">
+                <q-icon name="storage" size="14px" /> Almacenamiento
+              </span>
+              <span class="text-caption text-grey-6">{{ storageLabel }}</span>
+            </div>
+            <q-linear-progress
+              :value="storageRatio"
+              :color="storageColor"
+              track-color="grey-3"
+              size="6px"
+              rounded
+            />
+            <div v-if="!isUnlimited" class="text-caption text-grey-6 q-mt-xs">
+              {{ Math.round(storageRatio * 100) }}% usado
+            </div>
+          </div>
         </aside>
 
         <!-- Main panel -->
@@ -405,6 +425,8 @@ import {
 import type { LessonResource } from '../../api/resources'
 import RichTextEditor from '../../components/RichTextEditor.vue'
 import FileUploader from '../../components/FileUploader.vue'
+import { useAuthStore } from '../../stores/auth'
+import { formatFileSize as fmtBytes } from '../../api/resources'
 
 type Selected =
   | { type: 'info' }
@@ -416,12 +438,44 @@ type Selected =
 const route = useRoute()
 const router = useRouter()
 const $q = useQuasar()
+const authStore = useAuthStore()
 
 const courseId = computed(() => route.params.id as string)
 const course = ref<any>(null)
 const sections = ref<any[]>([])
 const loadingCourse = ref(true)
 const saving = ref(false)
+
+// Storage limits per role (bytes)
+const LIMIT_USER = 300 * 1024 * 1024          // 300 MB
+const LIMIT_PREMIUM = 1024 * 1024 * 1024      // 1 GB
+
+const storageLimit = computed<number>(() => {
+  const role = authStore.user?.role || 'user'
+  if (role === 'admin') return Infinity
+  if (role === 'premium') return LIMIT_PREMIUM
+  return LIMIT_USER
+})
+
+const isUnlimited = computed(() => storageLimit.value === Infinity)
+
+const storageUsed = computed(() => course.value?.storageBytes || 0)
+
+const storageRatio = computed(() => {
+  if (isUnlimited.value) return 0
+  return Math.min(1, storageUsed.value / storageLimit.value)
+})
+
+const storageLabel = computed(() => {
+  if (isUnlimited.value) return `${fmtBytes(storageUsed.value)} (sin limite)`
+  return `${fmtBytes(storageUsed.value)} / ${fmtBytes(storageLimit.value)}`
+})
+
+const storageColor = computed(() => {
+  if (storageRatio.value >= 0.9) return 'negative'
+  if (storageRatio.value >= 0.7) return 'warning'
+  return 'primary'
+})
 
 const selected = ref<Selected>({ type: 'info' })
 
@@ -850,6 +904,14 @@ onMounted(loadData)
   background: rgba(15, 118, 110, 0.08);
   color: #0f766e;
   font-weight: 500;
+}
+
+.storage-panel {
+  padding: 12px 14px;
+  margin: 8px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
 }
 
 .edit-main {

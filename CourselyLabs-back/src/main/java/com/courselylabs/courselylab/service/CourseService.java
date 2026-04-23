@@ -305,6 +305,8 @@ public class CourseService {
                 : BigDecimal.valueOf(avg).setScale(2, RoundingMode.HALF_UP);
         dto.setAverageRating(avgRating);
 
+        dto.setStorageBytes(entity.getStorageBytes() == null ? 0L : entity.getStorageBytes());
+
         List<CourseInstructorEntity> links = courseInstructorRepository.findByCourseId(entity.getId());
         dto.setInstructors(mapInstructors(links));
 
