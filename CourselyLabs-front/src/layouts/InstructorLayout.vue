@@ -23,10 +23,6 @@
           <q-item-section avatar><q-icon name="dashboard" /></q-item-section>
           <q-item-section>Mis cursos</q-item-section>
         </q-item>
-        <q-item clickable to="/instructor/cursos/nuevo" active-class="text-primary">
-          <q-item-section avatar><q-icon name="add_circle" /></q-item-section>
-          <q-item-section>Crear curso</q-item-section>
-        </q-item>
       </q-list>
     </q-drawer>
 

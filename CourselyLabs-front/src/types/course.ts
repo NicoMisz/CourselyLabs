@@ -33,10 +33,12 @@ export interface CourseDetail {
   price?: number;
   isFree: boolean;
   thumbnailUrl?: string;
+  categoryId?: number;
   categoryName?: string;
   durationText?: string;
   studentsCount?: number;
   averageRating?: number;
+  storageBytes?: number;
   updatedAt?: string;
   instructors?: InstructorSummary[];
   sections?: Section[];

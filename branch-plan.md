@@ -309,47 +309,47 @@ Entidades de secciones y lecciones en backend y vista de leccion en frontend con
 
 ---
 
-## 6. `feature/downloadable-resources` 🆕 PENDIENTE
+## 6. `feature/downloadable-resources` ✅ COMPLETADO
 
 **Prioridad:** Media
 **Dependencias:** `feature/course-sections-lessons`
 
-### Descripción
-Archivos descargables adjuntos a lecciones (PDFs, código fuente, assets). Descarga protegida por inscripción.
+### Descripcion
+Sistema de upload con MinIO (S3-compatible). Tres casos de uso: recursos descargables en lecciones, thumbnails de cursos, y contenido de lecciones (videos/PDFs). URLs presignadas de 15 min para descarga directa. Limites por curso segun rol (user 300MB, premium 1GB, admin ilimitado). Ver [docs/downloadable-resources.md](docs/downloadable-resources.md) para detalles completos.
 
-### Tareas
+### Estado actual
 
-#### Backend — Entidad nueva
-- [ ] `LessonResourceEntity`: id, lessonId, fileName, fileUrl, fileSize, mimeType, downloadCount, position, createdAt
-- [ ] Migración Flyway
+| Elemento | Estado |
+|---|---|
+| MinIO en `docker-compose.yml` | Hecho — puertos 9000 (API) + 9001 (consola) |
+| `minio-java` SDK en pom.xml | Hecho |
+| Flyway V9 — `lesson_resources` + `courses.storage_bytes` | Hecho |
+| `LessonResourceEntity` + DTO + repository | Hecho |
+| `FileStorageService` — upload, getPresignedUrl, delete, auto-crea bucket | Hecho |
+| `LessonResourceService` — CRUD recursos + uploads genericos + limites | Hecho |
+| Limites por rol (user 300MB, premium 1GB, admin ∞) | Hecho — tracking en `courses.storage_bytes` |
+| Tipos permitidos (PDF, imagenes, docs, zip, codigo) | Hecho — validacion en servicio |
+| `LessonResourceController` — CRUD + download con URL presignada | Hecho |
+| Endpoints genericos: `POST /courses/{id}/thumbnail`, `POST /lessons/{id}/content-upload` | Hecho |
+| `CourseSecurityService.canAccessLesson/Resource` | Hecho — leccion free=publica, no free=inscrito/instructor/admin |
+| `CourseSecurityService.canEditResource` | Hecho |
+| Variables de entorno Storage | Hecho |
+| `api/resources.ts` — API client + formatters + iconos por mime | Hecho |
+| `FileUploader.vue` — componente reutilizable drag&drop + progress | Hecho |
+| `LessonResources.vue` — vista estudiante con descarga directa | Hecho |
+| Integracion en `LessonView` (estudiante) | Hecho |
+| Integracion en `CourseContentEditor` (dialog leccion: uploader contenido + recursos) | Hecho |
+| Integracion en `CourseWizard` (thumbnail upload) | Hecho |
+| Documentacion completa | Hecho — `docs/downloadable-resources.md` |
+| `init_db/01_schema.sql` actualizado | Hecho |
 
-#### Backend — Endpoints
-- [ ] `GET /api/lessons/{lessonId}/resources` — listar recursos (público si la lección es free, protegido si no)
-- [ ] `POST /api/lessons/{lessonId}/resources` — subir recurso (multipart, solo instructor del curso)
-- [ ] `GET /api/resources/{id}/download` — descarga protegida (solo inscritos); incrementa `downloadCount`
-- [ ] `DELETE /api/resources/{id}` — eliminar recurso (solo instructor)
-- [ ] `PATCH /api/resources/reorder` — reordenar recursos de una lección
+### Pendiente para futuras iteraciones
 
-#### Backend — Almacenamiento (sistema de upload reutilizable)
-- [ ] Servicio generico `FileStorageService` con interfaz comun: `upload(file, path)`, `delete(path)`, `getUrl(path)`
-- [ ] Implementacion `LocalFileStorageService` para dev — guarda en `/uploads/` con URL relativa
-- [ ] Implementacion `S3FileStorageService` para prod — AWS S3 con URLs firmadas (expiracion configurable, default 1h)
-- [ ] MinIO en `docker-compose.yml` como S3 compatible para dev (alternativa a disco local)
-- [ ] Endpoint generico `POST /api/upload` — recibe `multipart/form-data`, valida tipo y tamaño, devuelve URL. Reutilizable para thumbnails de cursos, contenido de lecciones (video/pdf) y recursos descargables
-- [ ] Validación: tipos permitidos (pdf, zip, txt, código, imagenes, video), máximo configurable via `application.properties` (default 50 MB recursos, 500 MB videos)
-- [ ] Conectar `thumbnailUrl` de cursos y `contentUrl` de lecciones a este mismo sistema de upload
-
-#### Frontend — Componentes
-- [ ] `LessonResources.vue` — card "Recursos descargables" con lista de archivos; icono por tipo (PDF rojo, ZIP amarillo, código azul, imagen verde), nombre, tamaño legible, botón descarga
-- [ ] `ResourcePreviewModal.vue` — preview de PDFs e imágenes en modal antes de descargar
-- [ ] `ResourceUploader.vue` — zona drag & drop, múltiples archivos, barra de progreso individual, reordenación
-- [ ] `ResourceItem.vue` — item individual de recurso con hover sutil y acción de eliminar (instructor)
-
-#### UX/UI
-- [ ] Posición en la vista de lección: debajo del contenido, antes de "Marcar como completada"
-- [ ] En el árbol de contenido: icono de clip al lado del título si la lección tiene recursos
-- [ ] Click en nombre de PDF/imagen → abre `ResourcePreviewModal` con opción de descargar
-- [ ] Click en otros tipos → descarga directa
+- [ ] Drag & drop para reordenar recursos
+- [ ] Preview inline de PDFs/imagenes en modal antes de descargar
+- [ ] Multiples uploads simultaneos
+- [ ] Virus scan (ClamAV)
+- [ ] Transcodificacion de video a HLS
 
 ---
 

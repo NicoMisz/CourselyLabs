@@ -177,7 +177,6 @@ public class StripeService {
     public boolean isUserPremium(String email) {
         UserEntity user = userRepository.findByEmail(email).orElse(null);
         if (user == null) return false;
-        if ("admin".equals(user.getRole())) return true;
         return subscriptionRepository.existsByUserIdAndStatus(user.getId(), "active");
     }
 

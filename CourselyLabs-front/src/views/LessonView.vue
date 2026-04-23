@@ -98,6 +98,8 @@
                 @click="handleToggleComplete"
               />
             </div>
+
+            <LessonResources :lesson-id="lessonId" class="q-mt-lg" />
           </div>
 
           <LessonNavBar
@@ -140,6 +142,7 @@ import LessonNavBar from '../components/LessonNavBar.vue'
 import LessonVideoPlayer from '../components/LessonVideoPlayer.vue'
 import LessonTextViewer from '../components/LessonTextViewer.vue'
 import LessonPdfViewer from '../components/LessonPdfViewer.vue'
+import LessonResources from '../components/LessonResources.vue'
 
 const route = useRoute()
 const router = useRouter()

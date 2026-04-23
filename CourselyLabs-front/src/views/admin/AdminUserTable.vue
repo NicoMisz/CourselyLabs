@@ -113,6 +113,14 @@
                   <q-item-section avatar><q-icon name="swap_horiz" size="20px" /></q-item-section>
                   <q-item-section>Cambiar rol</q-item-section>
                 </q-item>
+                <q-item clickable v-close-popup @click="openGrantPremiumDialog(props.row)">
+                  <q-item-section avatar><q-icon name="workspace_premium" size="20px" color="amber-8" /></q-item-section>
+                  <q-item-section>Conceder Premium</q-item-section>
+                </q-item>
+                <q-item clickable v-close-popup @click="handleRevokePremium(props.row)">
+                  <q-item-section avatar><q-icon name="cancel_presentation" size="20px" color="grey-7" /></q-item-section>
+                  <q-item-section>Revocar Premium</q-item-section>
+                </q-item>
                 <q-item
                   v-if="props.row.isActive && props.row.role !== 'admin'"
                   clickable v-close-popup
@@ -167,13 +175,74 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
+
+    <!-- Grant premium dialog -->
+    <q-dialog v-model="grantDialog">
+      <q-card style="min-width: 420px">
+        <q-card-section>
+          <div class="text-h6 row items-center">
+            <q-icon name="workspace_premium" color="amber-8" size="24px" class="q-mr-sm" />
+            Conceder Premium
+          </div>
+          <p class="text-body2 q-mt-sm">
+            {{ grantUser?.firstName }} {{ grantUser?.lastName }} ({{ grantUser?.email }})
+          </p>
+        </q-card-section>
+
+        <q-card-section class="q-gutter-sm">
+          <div class="text-caption text-grey-7">Duracion:</div>
+          <div class="row q-gutter-xs">
+            <q-btn
+              v-for="preset in presets"
+              :key="preset.label"
+              :outline="grantDuration !== preset.value"
+              :color="grantDuration === preset.value ? 'primary' : 'grey-7'"
+              :label="preset.label"
+              no-caps
+              size="sm"
+              @click="selectPreset(preset.value)"
+            />
+          </div>
+
+          <q-input
+            v-model="grantExpiresDate"
+            label="Expira el"
+            outlined
+            mask="####-##-##"
+            hint="YYYY-MM-DD"
+            class="q-mt-sm"
+          >
+            <template #append>
+              <q-icon name="event" class="cursor-pointer">
+                <q-popup-proxy>
+                  <q-date v-model="grantExpiresDate" mask="YYYY-MM-DD" />
+                </q-popup-proxy>
+              </q-icon>
+            </template>
+          </q-input>
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat label="Cancelar" v-close-popup />
+          <q-btn
+            color="amber-8"
+            text-color="white"
+            label="Conceder Premium"
+            icon="check"
+            :loading="grantingPremium"
+            :disable="!grantExpiresDate"
+            @click="handleGrantPremium"
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
-import { getAdminUsers, changeUserRole, banUser, unbanUser } from '../../api/admin'
+import { getAdminUsers, changeUserRole, banUser, unbanUser, grantPremium, revokePremium } from '../../api/admin'
 
 const $q = useQuasar()
 const loading = ref(true)
@@ -221,6 +290,81 @@ const roleDialog = ref(false)
 const roleUser = ref<any>(null)
 const newRole = ref('')
 const savingRole = ref(false)
+
+// Grant premium
+const grantDialog = ref(false)
+const grantUser = ref<any>(null)
+const grantDuration = ref<string>('year')
+const grantExpiresDate = ref<string>('')
+const grantingPremium = ref(false)
+
+const presets = [
+  { label: '1 mes', value: 'month' },
+  { label: '3 meses', value: '3months' },
+  { label: '6 meses', value: '6months' },
+  { label: '1 año', value: 'year' },
+  { label: '10 años', value: 'decade' },
+]
+
+function toISODate(d: Date): string {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+function selectPreset(value: string) {
+  grantDuration.value = value
+  const now = new Date()
+  const target = new Date(now)
+  switch (value) {
+    case 'month': target.setMonth(target.getMonth() + 1); break
+    case '3months': target.setMonth(target.getMonth() + 3); break
+    case '6months': target.setMonth(target.getMonth() + 6); break
+    case 'year': target.setFullYear(target.getFullYear() + 1); break
+    case 'decade': target.setFullYear(target.getFullYear() + 10); break
+  }
+  grantExpiresDate.value = toISODate(target)
+}
+
+function openGrantPremiumDialog(user: any) {
+  grantUser.value = user
+  selectPreset('year')
+  grantDialog.value = true
+}
+
+async function handleGrantPremium() {
+  if (!grantUser.value || !grantExpiresDate.value) return
+  grantingPremium.value = true
+  try {
+    const iso = `${grantExpiresDate.value.replace(/\//g, '-')}T23:59:59`
+    await grantPremium(grantUser.value.id, iso)
+    grantDialog.value = false
+    $q.notify({
+      type: 'positive',
+      message: `Premium concedido hasta ${grantExpiresDate.value}`,
+      position: 'bottom-right',
+    })
+  } catch (err: any) {
+    const msg = err?.response?.data?.message || 'Error al conceder Premium'
+    $q.notify({ type: 'negative', message: msg, position: 'bottom-right' })
+  } finally {
+    grantingPremium.value = false
+  }
+}
+
+async function handleRevokePremium(user: any) {
+  try {
+    await revokePremium(user.id)
+    $q.notify({
+      type: 'info',
+      message: `Premium revocado para ${user.firstName} ${user.lastName}`,
+      position: 'bottom-right',
+    })
+  } catch {
+    $q.notify({ type: 'negative', message: 'Error al revocar Premium', position: 'bottom-right' })
+  }
+}
 
 function roleColor(role: string) {
   switch (role) {

@@ -92,8 +92,7 @@ const routes: RouteRecordRaw[] = [
       },
       {
         path: 'cursos/nuevo',
-        component: () => import('@/views/instructor/CourseWizard.vue'),
-        meta: { title: 'Crear curso — Instructor' },
+        redirect: '/instructor/cursos',
       },
       {
         path: 'cursos/:id/editar',
@@ -102,8 +101,7 @@ const routes: RouteRecordRaw[] = [
       },
       {
         path: 'cursos/:id/contenido',
-        component: () => import('@/views/instructor/CourseContentEditor.vue'),
-        meta: { title: 'Contenido del curso — Instructor' },
+        redirect: to => `/instructor/cursos/${to.params.id}/editar`,
       },
     ],
   },

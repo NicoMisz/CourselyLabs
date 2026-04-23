@@ -77,6 +77,7 @@ CREATE TABLE courses (
     total_students INTEGER DEFAULT 0,
     average_rating DECIMAL(3,2) DEFAULT 0.00,
     created_by UUID REFERENCES users(id),
+    storage_bytes BIGINT NOT NULL DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -247,6 +248,24 @@ CREATE TABLE payments (
 
 CREATE INDEX idx_payments_user_id ON payments(user_id);
 CREATE INDEX idx_payments_stripe_session ON payments(stripe_session_id);
+
+-- ============================================
+-- LESSON RESOURCES
+-- ============================================
+
+CREATE TABLE lesson_resources (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    lesson_id       UUID NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
+    file_name       VARCHAR(255) NOT NULL,
+    storage_key     VARCHAR(500) NOT NULL,
+    file_size       BIGINT NOT NULL,
+    mime_type       VARCHAR(100),
+    download_count  INTEGER NOT NULL DEFAULT 0,
+    position        INTEGER NOT NULL DEFAULT 0,
+    created_at      TIMESTAMP NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_lesson_resources_lesson_id ON lesson_resources(lesson_id);
 
 -- ============================================
 -- TRIGGERS

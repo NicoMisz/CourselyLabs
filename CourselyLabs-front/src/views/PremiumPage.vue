@@ -89,7 +89,7 @@
       </div>
 
       <!-- Benefits -->
-      <div class="text-center q-mb-lg">
+      <div class="text-center q-my-lg">
         <h2 class="text-h4 q-my-none" style="font-family: Monda, sans-serif">Todo lo que incluye</h2>
         <p class="text-body2 text-grey-7 q-mt-sm">Beneficios para disfrutar y crear sin limites.</p>
       </div>
