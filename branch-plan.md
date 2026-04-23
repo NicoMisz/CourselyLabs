@@ -516,13 +516,13 @@ Sistema de evaluación con cuestionarios autocorregidos y entregas de proyectos.
 
 ---
 
-## 11. `feature/payments-stripe` 🆕 PENDIENTE
+## 11. `feature/payments-stripe` ✅ COMPLETADO
 
 **Prioridad:** Alta
 **Dependencias:** `feature/enrollment-flow`
 
-### Descripción
-Integración completa con Stripe: pago único por curso, suscripciones mensuales/anuales y cupones de descuento. Al completar el pago se crea el enrollment automáticamente.
+### Descripcion
+Suscripcion Premium via Stripe. Los cursos de pago son "Premium" — solo accesibles con suscripcion activa. Al suscribirse, el rol del usuario cambia a `premium` (mas cursos, badge, acceso a cursos premium).
 
 ### Configuración inicial — Stripe test mode
 
@@ -616,55 +616,41 @@ VITE_STRIPE_PUBLIC_KEY=pk_test_xxxxx
 
 ---
 
-### Tareas
+### Estado actual
 
-#### Backend — Dependencias
-- [ ] Añadir `stripe-java` SDK al `pom.xml`
+| Elemento | Estado |
+|---|---|
+| `stripe-java` SDK en pom.xml | Hecho |
+| Flyway V7 — tablas `subscriptions` + `payments` | Hecho |
+| `SubscriptionEntity` + `PaymentEntity` | Hecho |
+| `SubscriptionRepository` + `PaymentRepository` | Hecho |
+| `StripeConfig` (init API key) | Hecho |
+| `StripeService` — checkout, webhook, cancel, history, isPremium | Hecho |
+| `PaymentController` — 6 endpoints | Hecho |
+| Webhook handler — checkout.session.completed, invoice.paid, subscription.updated/deleted | Hecho |
+| Auto-upgrade rol a `premium` al suscribirse | Hecho |
+| Auto-downgrade rol a `user` al expirar suscripcion | Hecho |
+| Idempotencia en webhook por `stripeSessionId` | Hecho |
+| Webhook publico en SecurityConfig | Hecho |
+| `EnrollmentService` — cursos premium requieren suscripcion activa | Hecho |
+| Variables Stripe en `application.properties` | Hecho |
+| `api/payments.ts` — checkout, subscription, cancel, history, isPremium | Hecho |
+| `PremiumPage.vue` — 6 beneficios + pricing mensual/anual + FAQs | Hecho |
+| `PaymentSuccessView.vue` — checkmark + refresh session | Hecho |
+| `PaymentCancelledView.vue` — info + volver | Hecho |
+| `CourseSidebar` — boton "Hazte Premium" para cursos premium | Hecho |
+| `ProfileView` — seccion suscripcion (activa/cancelada/sin) + cancelar | Hecho |
+| `ProfileView` — historial de pagos | Hecho |
+| `AppSidebar` — badge premium en avatar + enlace "Hazte Premium" para no-premium | Hecho |
+| Rutas: `/premium`, `/pago/exito`, `/pago/cancelado` | Hecho |
+| Modelo simplificado: sin compra individual de cursos, solo suscripcion | Hecho |
+| Precios: 7 EUR/mes, 60 EUR/ano | Hecho |
 
-#### Backend — Entidades nuevas
-- [ ] `PaymentEntity`: id, userId, courseId (nullable), type (`one_time/subscription`), stripePaymentIntentId, stripeSessionId, amount, currency, status (`pending/completed/failed/refunded`), createdAt
-- [ ] `SubscriptionEntity`: id, userId, stripeSubscriptionId, stripeCustomerId, plan (`monthly/annual`), status (`active/cancelled/past_due`), currentPeriodStart, currentPeriodEnd, cancelledAt, createdAt
-- [ ] `CouponEntity`: id, code (unique), discountType (`percentage/fixed`), discountValue, maxUses, currentUses, expiresAt, isActive, applicableTo (`all/specific_courses`), createdAt
-- [ ] `CouponCourseEntity`: id, couponId, courseId
-- [ ] Migraciones Flyway
+### Pendiente para futuras iteraciones
 
-#### Backend — Endpoints
-- [ ] `POST /api/payments/checkout` — crear sesión Stripe Checkout para compra de curso; acepta `couponCode` opcional
-- [ ] `POST /api/payments/subscribe` — crear suscripción mensual/anual
-- [ ] `POST /api/payments/webhook` — receptor de webhooks Stripe; verificación de firma `STRIPE_WEBHOOK_SECRET`; idempotencia por `stripeSessionId`
-- [ ] `GET /api/payments/history` — historial de pagos del usuario autenticado
-- [ ] `POST /api/payments/cancel-subscription` — cancelar suscripción (cancela al final del período)
-- [ ] `GET /api/payments/subscription` — estado actual de suscripción del usuario
-- [ ] `POST /api/coupons/validate` — validar código: activo, no expirado, usos < maxUsos, aplicable al curso
-- [ ] CRUD de cupones (admin): `GET/POST/PUT/DELETE /api/admin/coupons`
-
-#### Backend — Lógica
-- [ ] Webhook `checkout.session.completed` → crear enrollment automáticamente + marcar pago como `completed`
-- [ ] Webhook `invoice.paid` → renovar suscripción, extender `currentPeriodEnd`
-- [ ] Webhook `customer.subscription.updated/deleted` → actualizar estado de suscripción
-- [ ] Suscriptor activo → acceso a todos los cursos de pago (verificar en `EnrollmentService`)
-
-#### Backend — Variables de entorno
-- [ ] `STRIPE_SECRET_KEY`, `STRIPE_PUBLIC_KEY`, `STRIPE_WEBHOOK_SECRET`
-- [ ] `STRIPE_MONTHLY_PRICE_ID`, `STRIPE_ANNUAL_PRICE_ID`
-
-#### Frontend — Componentes
-- [ ] `CheckoutButton.vue` — reemplaza `EnrollButton` para cursos de pago; incluye badge "Pago seguro 🔒" + logos Visa/MC
-- [ ] `CouponInput.vue` — link "¿Tienes un cupón?" que expande input; al aplicar: spinner → check verde "−20%" o X roja "No válido"
-- [ ] `SubscriptionPlans.vue` — pricing table con toggle mensual/anual, plan recomendado destacado, comparativa de features
-- [ ] `PricingToggle.vue` — toggle mensual/anual con badge "Ahorra 20%"
-- [ ] `PaymentSuccessView.vue` — checkmark animado + resumen + botón "Ir al curso"
-- [ ] `PaymentCancelledView.vue` — icono info + "Pago cancelado" + botón volver
-- [ ] `PaymentHistory.vue` — tabla fecha/concepto/importe/estado + botón descargar factura
-- [ ] `SubscriptionManager.vue` — plan actual, próxima fecha cobro, método pago, cancelar suscripción
-
-#### Frontend — Configuración
-- [ ] Añadir `VITE_STRIPE_PUBLIC_KEY` a `.env`
-- [ ] Rutas: `/suscripcion`, `/pago/exito?session_id=`, `/pago/cancelado`, `/perfil/pagos`, `/perfil/suscripcion`
-
-#### UX/UI
-- [ ] Precio en el sidebar del curso: fuente Monda 28px; con cupón → precio original tachado + descuento badge
-- [ ] Suscriptor activo → badge "Incluido en tu suscripción" con icono de corona en lugar del precio
+- [ ] Cupones de descuento
+- [ ] Facturas descargables (Stripe Invoicing)
+- [ ] Cambio de plan mensual ↔ anual
 
 ---
 
@@ -928,55 +914,45 @@ Sistema de notificaciones en tiempo real via WebSocket (STOMP). Campana en el he
 
 ---
 
-## 17. `feature/admin-dashboard` 🆕 PENDIENTE
+## 17. `feature/admin-dashboard` ✅ COMPLETADO
 
 **Prioridad:** Media
 **Dependencias:** Ninguna técnica (puede hacerse en paralelo con otras features)
 
 ### Descripción
-Panel de administración accesible solo para rol `ADMIN`. Gestión de usuarios, moderación de cursos, reportes, categorías, historial de actividad y cupones.
+Panel de administración accesible solo para rol `ADMIN`. Gestión de usuarios y moderación de cursos.
 
-### Tareas
+### Estado actual
 
-#### Backend — Entidades nuevas
-- [ ] `ActivityLogEntity`: id, actorId, action, targetType, targetId, details (JSON), createdAt
-- [ ] `CourseReviewRequestEntity`: id, courseId, reviewerId (admin), status (`pending/approved/rejected`), rejectionReason, reviewedAt, createdAt
-- [ ] `UserReportEntity`: id, reporterId, reportedUserId, reason, status (`open/resolved/dismissed`), resolvedBy, createdAt
-- [ ] Migraciones Flyway
+| Elemento | Estado |
+|---|---|
+| `AdminService` | Hecho — stats, getUsers (paginado), changeRole, ban, unban, getPendingCourses, approveCourse, rejectCourse |
+| `AdminController` con `@PreAuthorize("hasRole('ADMIN')")` | Hecho — todos los endpoints bajo proteccion de rol |
+| `GET /api/admin/stats` | Hecho — totalUsers, publishedCourses, pendingCourses, totalEnrollments |
+| `GET /api/admin/users` | Hecho — paginado con Spring Pageable |
+| `PATCH /api/admin/users/{id}/role` | Hecho — valida roles (user/premium/admin) |
+| `PATCH /api/admin/users/{id}/ban` + `/unban` | Hecho — no permite banear admins |
+| `GET /api/admin/courses/pending` | Hecho — cursos con status `pending_review` |
+| `PATCH /api/admin/courses/{id}/approve` | Hecho — auto-publica (status=published, isPublished=true, publishedAt=now) |
+| `PATCH /api/admin/courses/{id}/reject` | Hecho — acumula rejectionReason ("1: motivo; 2: motivo") |
+| `api/admin.ts` | Hecho — todas las llamadas API |
+| `AdminLayout.vue` | Hecho — sidebar con badge de pendientes |
+| Rutas `/admin/*` con guard `requiresRole: 'admin'` | Hecho |
+| `AdminDashboard.vue` | Hecho — 4 tarjetas de metricas + quick links |
+| `AdminCourseQueue.vue` | Hecho — cards con preview, aprobar y rechazar con motivo obligatorio |
+| `AdminUserTable.vue` | Hecho — q-table server-side, cambiar rol, ban/unban |
+| Enlace "Administracion" en AppSidebar (solo admin) | Hecho |
+| Fix duplicado "Mi perfil" en sidebar | Hecho — eliminado de authLinks, queda solo el avatar item |
+| Fix pom.xml dependencias fuera de `<dependencies>` | Hecho |
+| Modal enviar a revision con aviso publicacion automatica | Hecho |
 
-#### Backend — Endpoints (todos bajo `@PreAuthorize("hasRole('ADMIN')")`)
-- [ ] `GET /api/admin/stats` — usuarios totales, cursos publicados, inscripciones del mes, ingresos del mes + variación vs mes anterior
-- [ ] `GET /api/admin/users` — listado con filtros (rol, estado activo/baneado, fechas), paginado, ordenable
-- [ ] `PATCH /api/admin/users/{id}/role` — cambiar rol
-- [ ] `PATCH /api/admin/users/{id}/ban` — banear/desbanear con campo `reason` obligatorio
-- [ ] `GET /api/admin/courses/pending` — cola de cursos pendientes de revisión (ordenados por antigüedad)
-- [ ] `PATCH /api/admin/courses/{id}/approve` — aprobar curso → publica automáticamente
-- [ ] `PATCH /api/admin/courses/{id}/reject` — rechazar con `rejectionReason` obligatorio
-- [ ] `GET /api/admin/reports` — reportes de usuarios paginados y filtrables
-- [ ] `DELETE /api/admin/reviews/{id}` — eliminar review inapropiada
-- [ ] `GET /api/admin/activity-log` — historial de acciones admin (paginado, filtros por tipo/fecha/actor)
-- [ ] Registrar automáticamente en `ActivityLogEntity` cada acción admin ejecutada
+### Pendiente para futuras iteraciones
 
-#### Frontend — Ruta y layout
-- [ ] Ruta `/admin` con `meta: { requiresAuth: true, requiresRole: 'admin' }` y guard en router
-- [ ] `AdminLayout.vue` — sidebar propio con navegación y badges de contadores (cursos pendientes, reportes abiertos)
-
-#### Frontend — Vistas y componentes
-- [ ] `AdminDashboard.vue` — 4 tarjetas de métricas: Usuarios, Cursos, Inscripciones (mes), Ingresos (mes)
-- [ ] `AdminMetricCard.vue` — número con counter-up animado + variación "↑12%" / "↓3%" + sparkline últimos 7 días
-- [ ] `AdminUserTable.vue` — `q-table` server-side; columnas: avatar+nombre, email, rol (chip), estado, fecha registro, acciones; tabs "Todos / Activos / Baneados / Pendientes verificar"; selección múltiple para acciones en lote
-- [ ] `AdminCourseQueue.vue` — lista de cursos pendientes; badge "Urgente" si lleva >48h en cola
-- [ ] `AdminCoursePreview.vue` — vista previa completa del curso (reutiliza `CourseDetailView` en modo read-only) + botones "Aprobar" / "Rechazar" con textarea de motivo
-- [ ] `AdminReportList.vue` — listado de reportes filtrables; acciones: resolver, descartar, banear usuario
-- [ ] `AdminCategoryManager.vue` — CRUD de categorías (backend ya existe)
-- [ ] `AdminActivityLog.vue` — `q-timeline` vertical; filtros por tipo/fecha/admin; expandir para ver detalles JSON
-- [ ] `ConfirmActionDialog.vue` — dialog reutilizable; botón de acción en `$negative` con el verbo específico; input de motivo obligatorio para baneos
-
-#### UX/UI
-- [ ] Acciones destructivas (banear, eliminar): `ConfirmActionDialog` con nombre del usuario en el mensaje
-- [ ] Moderación de cursos: al aprobar/rechazar, el curso desaparece de la cola con animación slide-out + toast
-- [ ] Tablas → formato card-list en mobile
-- [ ] Enlace a `/admin` en `AppHeader.vue` solo si `userRole === 'admin'`
+- [ ] `ActivityLogEntity` + historial de acciones admin
+- [ ] `AdminCategoryManager.vue` — CRUD de categorias (backend ya existe)
+- [ ] Reportes de usuarios
+- [ ] Eliminar reviews inapropiadas
+- [ ] Filtros avanzados en tabla de usuarios (por rol, estado, fecha)
 
 ---
 
@@ -1047,19 +1023,19 @@ develop
  ├── feature/course-sections-lessons  ✅ Completado
  ├── feature/student-progress         ✅ Completado
  ├── feature/search-filters           ✅ Completado
+ ├── feature/course-creation          ✅ Completado
+ ├── feature/admin-dashboard          ✅ Completado
+ ├── feature/reviews-frontend         ✅ Completado (en paralelo)
  │
  │   --- Proximas ramas ---
  │
- ├── feature/reviews-frontend         (tras enrollment-flow) ← SUGERIDO SIGUIENTE
  ├── feature/downloadable-resources   (tras course-sections-lessons)
  ├── feature/course-prerequisites     (tras student-progress)
  ├── feature/assessments              (tras student-progress)
  ├── feature/payments-stripe          (tras enrollment-flow)
- ├── feature/course-creation          (tras course-sections-lessons + student-progress) ← ALTA PRIORIDAD
  ├── feature/forums                   (tras course-detail-page)
  ├── feature/messaging                (independiente)
  ├── feature/notifications            (tras forums + messaging)
- ├── feature/admin-dashboard          (independiente)
  └── chore/deployment                 (en cualquier momento)
 ```
 
@@ -1074,7 +1050,7 @@ Sistema de inicializacion de DB para que `docker compose up -d` con volumen limp
 
 | Archivo | Contenido |
 |---|---|
-| `01_schema.sql` | Schema completo (V1+V2+V3): 10 tablas, triggers, vistas, funciones |
+| `01_schema.sql` | Schema completo (V1+V2+V3+V4+V5+V6): 11 tablas (incl. verification_tokens, created_by, rejection_reason), triggers, vistas, funciones |
 | `02_seed_base.sql` | 11 usuarios, 6 categorias, 8 cursos, enrollments, reviews |
 | `03_seed_postgresql.sql` | 4 secciones, 10 lecciones para curso PostgreSQL |
 | `04_seed_flamenco.sql` | 5 secciones, 14 lecciones, enrollments, reviews, lesson_progress |

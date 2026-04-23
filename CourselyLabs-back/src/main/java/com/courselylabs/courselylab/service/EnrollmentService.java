@@ -23,6 +23,7 @@ import com.courselylabs.courselylab.repository.CourseRepository;
 import com.courselylabs.courselylab.repository.EnrollmentRepository;
 import com.courselylabs.courselylab.repository.LessonProgressRepository;
 import com.courselylabs.courselylab.repository.SectionRepository;
+import com.courselylabs.courselylab.repository.SubscriptionRepository;
 import com.courselylabs.courselylab.repository.UserRepository;
 
 @Service
@@ -36,12 +37,14 @@ public class EnrollmentService {
     private final LessonProgressRepository lessonProgressRepository;
     private final SectionRepository sectionRepository;
     private final CoursePrerequisiteService coursePrerequisiteService;
+    private final SubscriptionRepository subscriptionRepository;
 
     public EnrollmentService(EnrollmentRepository enrollmentRepository, UserRepository userRepository,
-            CourseRepository courseRepository, EnrollmentMapper enrollmentMapper,
-            LessonProgressRepository lessonProgressRepository,
-            SectionRepository sectionRepository,
-            CoursePrerequisiteService coursePrerequisiteService) {
+                             CourseRepository courseRepository, EnrollmentMapper enrollmentMapper,
+                             LessonProgressRepository lessonProgressRepository,
+                             SectionRepository sectionRepository,
+                             SubscriptionRepository subscriptionRepository,
+                             CoursePrerequisiteService coursePrerequisiteService) {
         this.enrollmentRepository = enrollmentRepository;
         this.userRepository = userRepository;
         this.courseRepository = courseRepository;
@@ -49,6 +52,7 @@ public class EnrollmentService {
         this.lessonProgressRepository = lessonProgressRepository;
         this.sectionRepository = sectionRepository;
         this.coursePrerequisiteService = coursePrerequisiteService;
+        this.subscriptionRepository = subscriptionRepository;
     }
 
     @Transactional(readOnly = true)
@@ -121,7 +125,12 @@ public class EnrollmentService {
         }
 
         if (!Boolean.TRUE.equals(course.getIsFree())) {
-            throw new BadRequestException("Este curso requiere pago previo antes de la inscripcion");
+            // Premium courses require active subscription or admin role
+            boolean isPremium = "admin".equals(user.getRole())
+                    || subscriptionRepository.existsByUserIdAndStatus(user.getId(), "active");
+            if (!isPremium) {
+                throw new BadRequestException("Este curso requiere una suscripcion Premium");
+            }
         }
 
         if (enrollmentRepository.existsByUserIdAndCourseId(user.getId(), course.getId())) {
@@ -133,7 +142,7 @@ public class EnrollmentService {
         EnrollmentEntity enrollment = new EnrollmentEntity();
         enrollment.setUser(user);
         enrollment.setCourse(course);
-        enrollment.setAccessType("free");
+        enrollment.setAccessType(Boolean.TRUE.equals(course.getIsFree()) ? "free" : "premium");
 
         EnrollmentEntity saved = enrollmentRepository.save(enrollment);
         course.setTotalStudents((course.getTotalStudents() == null ? 0 : course.getTotalStudents()) + 1);

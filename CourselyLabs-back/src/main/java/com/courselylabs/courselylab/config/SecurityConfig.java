@@ -54,6 +54,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.PATCH, "/api/auth/change-password").authenticated()
                 .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/payments/webhook").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/payments/pricing").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/courses/mine").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/courses/mine/limits").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/courses/*/prerequisites").authenticated()

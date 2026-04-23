@@ -1,5 +1,6 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
+import axios from 'axios'
 import api, { setSessionCallbacks } from '@/api/axios'
 import type { User, LoginRequest, RegisterRequest, AuthResponse } from '@/types/auth'
 
@@ -67,5 +68,20 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem('user')
   }
 
-  return { accessToken, refreshToken, user, isLoggedIn, userRole, login, register, logout, updateUser }
+  async function checkSession(): Promise<void> {
+    const storedRefresh = localStorage.getItem('refreshToken')
+    if (!storedRefresh || !user.value) return
+
+    try {
+      const { data } = await axios.post<AuthResponse>(
+        `${import.meta.env.VITE_API_BASE_URL}/api/auth/refresh`,
+        { refreshToken: storedRefresh },
+      )
+      setSession(data)
+    } catch {
+      clearSession()
+    }
+  }
+
+  return { accessToken, refreshToken, user, isLoggedIn, userRole, login, register, logout, updateUser, checkSession }
 })

@@ -47,10 +47,19 @@
 
         <q-separator class="q-my-sm" />
 
+        <!-- Premium upsell -->
+        <SidebarItem
+          v-if="!isPremiumOrAdmin"
+          title="Hazte Premium"
+          icon="workspace_premium"
+          link="/premium"
+          :mini="mini"
+        />
+
         <!-- Usuario -->
         <q-item clickable to="/profile" active-class="text-primary">
           <q-item-section avatar>
-            <q-avatar size="32px" color="primary" text-color="white" font-size="14px">
+            <q-avatar size="32px" :color="isPremiumOrAdmin ? 'amber-8' : 'primary'" text-color="white" font-size="14px">
               {{ initials }}
             </q-avatar>
             <q-tooltip v-if="mini" anchor="center right" self="center left" :offset="[10, 0]">
@@ -58,7 +67,10 @@
             </q-tooltip>
           </q-item-section>
           <q-item-section>
-            <q-item-label>{{ authStore.user?.firstName }} {{ authStore.user?.lastName }}</q-item-label>
+            <q-item-label>
+              {{ authStore.user?.firstName }} {{ authStore.user?.lastName }}
+              <q-icon v-if="isPremiumOrAdmin" name="workspace_premium" color="amber-8" size="16px" class="q-ml-xs" />
+            </q-item-label>
             <q-item-label caption>{{ rolLabel }}</q-item-label>
           </q-item-section>
         </q-item>
@@ -119,16 +131,25 @@ const rolLabel = computed(() => {
   }
 })
 
+const isPremiumOrAdmin = computed(() =>
+  authStore.user?.role === 'premium' || authStore.user?.role === 'admin'
+)
+
 const navLinks = [
   { title: 'Inicio', icon: 'home', link: '/' },
   { title: 'Cursos', icon: 'school', link: '/cursos' },
 ]
 
-const authLinks = [
-  { title: 'Mis cursos', icon: 'menu_book', link: '/mis-cursos' },
-  { title: 'Crear curso', icon: 'add_circle', link: '/instructor/cursos' },
-  { title: 'Mi perfil', icon: 'person', link: '/profile' },
-]
+const authLinks = computed(() => {
+  const links = [
+    { title: 'Cursos inscritos', icon: 'menu_book', link: '/mis-cursos' },
+    { title: 'Cursos creados', icon: 'edit_note', link: '/instructor/cursos' },
+  ]
+  if (authStore.user?.role === 'admin') {
+    links.push({ title: 'Administracion', icon: 'admin_panel_settings', link: '/admin' })
+  }
+  return links
+})
 
 async function handleLogout() {
   await authStore.logout()

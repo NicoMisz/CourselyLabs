@@ -54,6 +54,21 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/VerifyEmailView.vue'),
         meta: { title: 'Verificar email — CourselyLabs' },
       },
+      {
+        path: 'premium',
+        component: () => import('@/views/PremiumPage.vue'),
+        meta: { title: 'Premium — CourselyLabs' },
+      },
+      {
+        path: 'pago/exito',
+        component: () => import('@/views/PaymentSuccessView.vue'),
+        meta: { title: 'Pago exitoso — CourselyLabs' },
+      },
+      {
+        path: 'pago/cancelado',
+        component: () => import('@/views/PaymentCancelledView.vue'),
+        meta: { title: 'Pago cancelado — CourselyLabs' },
+      },
     ],
   },
   {
@@ -89,6 +104,28 @@ const routes: RouteRecordRaw[] = [
         path: 'cursos/:id/contenido',
         component: () => import('@/views/instructor/CourseContentEditor.vue'),
         meta: { title: 'Contenido del curso — Instructor' },
+      },
+    ],
+  },
+  {
+    path: '/admin',
+    component: () => import('@/layouts/AdminLayout.vue'),
+    meta: { requiresAuth: true, requiresRole: 'admin' },
+    children: [
+      {
+        path: '',
+        component: () => import('@/views/admin/AdminDashboard.vue'),
+        meta: { title: 'Panel admin — CourselyLabs' },
+      },
+      {
+        path: 'cursos',
+        component: () => import('@/views/admin/AdminCourseQueue.vue'),
+        meta: { title: 'Cursos pendientes — Admin' },
+      },
+      {
+        path: 'usuarios',
+        component: () => import('@/views/admin/AdminUserTable.vue'),
+        meta: { title: 'Usuarios — Admin' },
       },
     ],
   },
