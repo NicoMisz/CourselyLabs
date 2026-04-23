@@ -59,6 +59,15 @@
               <q-item-section avatar><q-icon name="description" /></q-item-section>
               <q-item-section>Detalles</q-item-section>
             </q-item>
+            <q-item
+              clickable
+              :active="selected?.type === 'prerequisites'"
+              active-class="active-item"
+              @click="selected = { type: 'prerequisites' }"
+            >
+              <q-item-section avatar><q-icon name="account_tree" /></q-item-section>
+              <q-item-section>Prerequisitos</q-item-section>
+            </q-item>
           </q-list>
 
           <q-separator class="q-my-sm" />
@@ -202,6 +211,71 @@
 
             <div class="panel-actions">
               <q-btn color="primary" unelevated no-caps label="Guardar cambios" :loading="saving" @click="saveDetails" />
+            </div>
+          </div>
+
+          <!-- Prerequisitos -->
+          <div v-else-if="selected?.type === 'prerequisites'" class="panel">
+            <h2 class="panel-title">Prerequisitos</h2>
+            <p class="text-body2 text-grey-7">
+              Los estudiantes necesitaran completar estos cursos antes de poder inscribirse en este.
+              Ideal para crear rutas de aprendizaje.
+            </p>
+
+            <q-select
+              v-model="prerequisiteIds"
+              :options="prerequisiteOptions"
+              label="Cursos requeridos"
+              outlined
+              use-input
+              input-debounce="300"
+              multiple
+              use-chips
+              emit-value
+              map-options
+              @filter="filterPrerequisiteOptions"
+              :loading="loadingPrereqOptions"
+            >
+              <template #no-option>
+                <q-item>
+                  <q-item-section class="text-grey-6">Sin resultados</q-item-section>
+                </q-item>
+              </template>
+            </q-select>
+
+            <q-list v-if="prerequisiteIds.length > 0" bordered separator class="q-mt-md">
+              <q-item v-for="id in prerequisiteIds" :key="id">
+                <q-item-section avatar>
+                  <q-icon name="school" color="primary" />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label>{{ prerequisiteTitleById[id] || 'Curso' }}</q-item-label>
+                  <q-item-label caption>
+                    Umbral de completacion:
+                    <span class="text-weight-medium">{{ prerequisiteThresholds[id] ?? 80 }}%</span>
+                  </q-item-label>
+                </q-item-section>
+                <q-item-section side style="min-width: 160px">
+                  <q-slider
+                    :model-value="prerequisiteThresholds[id] ?? 80"
+                    :min="0" :max="100" :step="10"
+                    label
+                    label-always
+                    color="primary"
+                    @update:model-value="(v) => setThreshold(id, (v as number))"
+                  />
+                </q-item-section>
+                <q-item-section side>
+                  <q-btn flat dense round icon="close" color="negative" @click="removePrerequisite(id)" />
+                </q-item-section>
+              </q-item>
+            </q-list>
+            <div v-else class="empty-hint">
+              Sin prerequisitos. Este curso es accesible sin haber completado otros cursos.
+            </div>
+
+            <div class="panel-actions">
+              <q-btn color="primary" unelevated no-caps label="Guardar prerequisitos" :loading="saving" @click="savePrerequisites" />
             </div>
           </div>
 
@@ -427,26 +501,16 @@ import RichTextEditor from '../../components/RichTextEditor.vue'
 import FileUploader from '../../components/FileUploader.vue'
 import { useAuthStore } from '../../stores/auth'
 import { formatFileSize as fmtBytes } from '../../api/resources'
+import { searchCourses } from '@/api/courseSearch'
+import { getCoursePrerequisites, syncCoursePrerequisites } from '@/api/prerequisite'
 
 type Selected =
   | { type: 'info' }
   | { type: 'details' }
+  | { type: 'prerequisites' }
   | { type: 'section'; id: string }
   | { type: 'lesson'; id: string; sectionId: string }
   | null
-
-// Para gestionar los prerequisitos, aunque no se muestran en el UI de este 
-// wizard, se cargan las opciones para que estén disponibles en el editor de 
-// contenido posteriormente
-import { searchCourses } from '@/api/courseSearch'
-import { getCoursePrerequisites, syncCoursePrerequisites } from '@/api/prerequisite'
-//import type { CreateCoursePrerequisitePayload } from '@/types/prerequisite'
-
-// Estado para selector de cursos relacionados (prerequisitos)
-const selectedRelatedCourseIds = ref<string[]>([]) // IDs de cursos relacionados seleccionados
-const allRelatedCourses = ref<Array<{ id: string; title: string; categoryId?: number | null }>>([]) // Lista completa de cursos para el selector de relacionados
-const relatedOptions = ref<Array<{ label: string; value: string }>>([])
-const relatedLoading = ref(false)
 
 const route = useRoute()
 const router = useRouter()
@@ -458,59 +522,6 @@ const course = ref<any>(null)
 const sections = ref<any[]>([])
 const loadingCourse = ref(true)
 const saving = ref(false)
-
-// Storage limits per role (bytes)
-const LIMIT_USER = 300 * 1024 * 1024          // 300 MB
-const LIMIT_PREMIUM = 1024 * 1024 * 1024      // 1 GB
-
-const storageLimit = computed<number>(() => {
-  const role = authStore.user?.role || 'user'
-  if (role === 'admin') return Infinity
-  if (role === 'premium') return LIMIT_PREMIUM
-  return LIMIT_USER
-// Estado para gestión de prerequisitos (aunque no se muestran en este wizard, se cargan para estar disponibles en el editor de contenido)
-const prerequisiteOptions = ref<Array<{ label: string; value: string }>>([])
-const prerequisiteLoading = ref(false)
-const selectedPrerequisites = ref<Array<{
-  prerequisiteCourseId: string
-  completionThreshold: number
-}>>([])
-
-// Cambiar el estado del selector para evitar inconsistencia con `emit-value`
-const selectedPrerequisiteIds = ref<string[]>([])
-const prerequisiteThresholdById = ref<Record<string, number>>({})
-
-const form = ref({
-  title: '',
-  slug: '',
-  description: '',
-  shortDescription: '',
-  thumbnailUrl: '',
-  categoryId: null as number | null,
-  level: 'beginner',
-  isFree: true,
-  price: 0,
-})
-
-const isUnlimited = computed(() => storageLimit.value === Infinity)
-
-const storageUsed = computed(() => course.value?.storageBytes || 0)
-
-const storageRatio = computed(() => {
-  if (isUnlimited.value) return 0
-  return Math.min(1, storageUsed.value / storageLimit.value)
-})
-
-const storageLabel = computed(() => {
-  if (isUnlimited.value) return `${fmtBytes(storageUsed.value)} (sin limite)`
-  return `${fmtBytes(storageUsed.value)} / ${fmtBytes(storageLimit.value)}`
-})
-
-const storageColor = computed(() => {
-  if (storageRatio.value >= 0.9) return 'negative'
-  if (storageRatio.value >= 0.7) return 'warning'
-  return 'primary'
-})
 
 const selected = ref<Selected>({ type: 'info' })
 
@@ -535,6 +546,112 @@ const lessonForm = reactive({
   title: '', type: 'text', description: '', contentText: '', contentUrl: '', isFree: false,
 })
 const lessonResources = ref<LessonResource[]>([])
+
+// Prerequisites
+const prerequisiteIds = ref<string[]>([])
+const prerequisiteThresholds = reactive<Record<string, number>>({})
+const prerequisiteTitleById = reactive<Record<string, string>>({})
+const allPrereqCourses = ref<{ label: string; value: string }[]>([])
+const prerequisiteOptions = ref<{ label: string; value: string }[]>([])
+const loadingPrereqOptions = ref(false)
+
+function setThreshold(id: string, value: number) {
+  prerequisiteThresholds[id] = value
+}
+
+function removePrerequisite(id: string) {
+  prerequisiteIds.value = prerequisiteIds.value.filter(x => x !== id)
+  delete prerequisiteThresholds[id]
+}
+
+async function loadAllCoursesForPicker() {
+  loadingPrereqOptions.value = true
+  try {
+    const page = await searchCourses({ page: 0, size: 200, sortBy: 'recent' })
+    allPrereqCourses.value = (page.content || [])
+      .filter((c: any) => c.id && c.id !== courseId.value)
+      .map((c: any) => ({ label: c.title, value: c.id }))
+    // Keep title cache for rendering existing selections
+    for (const opt of allPrereqCourses.value) {
+      prerequisiteTitleById[opt.value] = opt.label
+    }
+    prerequisiteOptions.value = allPrereqCourses.value
+  } finally {
+    loadingPrereqOptions.value = false
+  }
+}
+
+function filterPrerequisiteOptions(val: string, update: (fn: () => void) => void) {
+  update(() => {
+    const needle = val.toLowerCase().trim()
+    if (!needle) {
+      prerequisiteOptions.value = allPrereqCourses.value
+    } else {
+      prerequisiteOptions.value = allPrereqCourses.value.filter(o => o.label.toLowerCase().includes(needle))
+    }
+  })
+}
+
+async function loadExistingPrerequisites() {
+  if (!courseId.value) return
+  try {
+    const list = await getCoursePrerequisites(courseId.value)
+    prerequisiteIds.value = list.map(p => p.prerequisiteCourseId)
+    for (const p of list) {
+      prerequisiteThresholds[p.prerequisiteCourseId] = p.completionThreshold ?? 80
+      prerequisiteTitleById[p.prerequisiteCourseId] = p.prerequisiteTitle
+    }
+  } catch {
+    // ignore
+  }
+}
+
+async function savePrerequisites() {
+  saving.value = true
+  try {
+    await syncCoursePrerequisites(courseId.value, {
+      prerequisites: prerequisiteIds.value.map(id => ({
+        prerequisiteCourseId: id,
+        completionThreshold: prerequisiteThresholds[id] ?? 80,
+      })),
+    })
+    $q.notify({ type: 'positive', message: 'Prerequisitos guardados', position: 'bottom-right' })
+  } catch (err: any) {
+    $q.notify({ type: 'negative', message: err?.response?.data?.message || 'Error al guardar prerequisitos', position: 'bottom-right' })
+  } finally {
+    saving.value = false
+  }
+}
+
+// Storage limits per role (bytes)
+const LIMIT_USER = 300 * 1024 * 1024          // 300 MB
+const LIMIT_PREMIUM = 1024 * 1024 * 1024      // 1 GB
+
+const storageLimit = computed<number>(() => {
+  const role = authStore.user?.role || 'user'
+  if (role === 'admin') return Infinity
+  if (role === 'premium') return LIMIT_PREMIUM
+  return LIMIT_USER
+})
+
+const isUnlimited = computed(() => storageLimit.value === Infinity)
+const storageUsed = computed(() => course.value?.storageBytes || 0)
+
+const storageRatio = computed(() => {
+  if (isUnlimited.value) return 0
+  return Math.min(1, storageUsed.value / storageLimit.value)
+})
+
+const storageLabel = computed(() => {
+  if (isUnlimited.value) return `${fmtBytes(storageUsed.value)} (sin limite)`
+  return `${fmtBytes(storageUsed.value)} / ${fmtBytes(storageLimit.value)}`
+})
+
+const storageColor = computed(() => {
+  if (storageRatio.value >= 0.9) return 'negative'
+  if (storageRatio.value >= 0.7) return 'warning'
+  return 'primary'
+})
 
 // Uploader refs
 const thumbnailUploaderRef = ref<InstanceType<typeof FileUploader> | null>(null)
@@ -576,24 +693,6 @@ function lessonTypeIcon(type: string) {
     case 'video': return 'play_circle'
     case 'pdf': return 'picture_as_pdf'
     default: return 'article'
-// Sincronizar los IDs seleccionados con el formato requerido para el API
-const normalizedPrerequisites = computed(() =>
-  selectedPrerequisiteIds.value.map((id) => ({
-    prerequisiteCourseId: id,
-    completionThreshold: prerequisiteThresholdById.value[id] ?? 80,
-  }))
-)
-
-function generateSlug() {
-  if (!isEditing.value) {
-    form.value.slug = form.value.title
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '')
   }
 }
 
@@ -654,6 +753,11 @@ async function loadData() {
     details.description = c.description || ''
     details.thumbnailUrl = c.thumbnailUrl || ''
     details.isPremium = c.isFree === false
+
+    await Promise.all([
+      loadAllCoursesForPicker(),
+      loadExistingPrerequisites(),
+    ])
   } catch {
     $q.notify({ type: 'negative', message: 'Error al cargar el curso', position: 'bottom-right' })
     router.push('/instructor/cursos')
@@ -714,35 +818,6 @@ async function saveDetails() {
     })
     course.value = { ...course.value, ...updated }
     $q.notify({ type: 'positive', message: 'Guardado', position: 'bottom-right' })
-    const saved = isEditing.value
-      ? await updateCourse(courseId.value!, payload)
-      : await createCourse(payload)
-
-    const savedCourseId = isEditing.value ? courseId.value! : saved.id
-
-    await syncCoursePrerequisites(savedCourseId, {
-      prerequisites: form.value.isFree
-        ? []
-        : selectedRelatedCourseIds.value.map((id) => ({
-          prerequisiteCourseId: id,
-          completionThreshold: 80,
-        })),
-    })
-
-    $q.notify({ type: 'positive', message: isEditing.value ? 'Curso actualizado' : 'Curso creado como borrador', position: 'bottom-right' })
-
-    if (!isEditing.value) {
-      router.push(`/instructor/cursos/${savedCourseId}/contenido`)
-    }
-
-    /* if (isEditing.value) {
-      await updateCourse(courseId.value!, payload)
-      $q.notify({ type: 'positive', message: 'Curso actualizado', position: 'bottom-right' })
-    } else {
-      const created = await createCourse(payload)
-      $q.notify({ type: 'positive', message: 'Curso creado como borrador', position: 'bottom-right' })
-      router.push(`/instructor/cursos/${created.id}/contenido`)
-    } */
   } catch (err: any) {
     $q.notify({ type: 'negative', message: err?.response?.data?.message || 'Error al guardar', position: 'bottom-right' })
   } finally {
@@ -944,80 +1019,6 @@ async function doSubmitReview() {
 }
 
 onMounted(loadData)
-// Carga opciones de cursos para prerequisitos, excluyendo el curso actual
-async function loadPrerequisiteOptions() {
-  prerequisiteLoading.value = true
-  try {
-    const page = await searchCourses({ page: 0, size: 100, sortBy: 'recent' })
-    prerequisiteOptions.value = (page.content || [])
-      .filter((c) => c.id && c.slug !== form.value.slug)
-      .map((c) => ({
-        label: c.title,
-        value: c.id,
-      }))
-  } finally {
-    prerequisiteLoading.value = false
-  }
-}
-
-// Carga los prerequisitos actuales del curso (si se está editando uno existente y no es gratuito) para mostrarlos seleccionados en el formulario
-async function loadExistingPrerequisites() {
-  if (!isEditing.value || !courseId.value || form.value.isFree) {
-    selectedPrerequisiteIds.value = []
-    prerequisiteThresholdById.value = {}
-    return
-  }
-
-  const current = await getCoursePrerequisites(courseId.value)
-  selectedPrerequisiteIds.value = current.map((p) => p.prerequisiteCourseId)
-  prerequisiteThresholdById.value = Object.fromEntries(
-    current.map((p) => [p.prerequisiteCourseId, p.completionThreshold ?? 80])
-  )
-}
-
-// Carga opciones de cursos relacionados para el selector de prerequisitos, filtrando por categoría para 
-// mayor relevancia (aunque no se muestran en el UI de este wizard, se cargan para estar disponibles en 
-// el editor de contenido posteriormente)
-async function loadRelatedCourseOptions() {
-  const filtered = selectedCategoryId == null
-    ? base
-    : base.filter((c) => c.categoryId === selectedCategoryId)
-
-  relatedOptions.value = filtered.map((c) => ({ label: c.title, value: c.id }))
-}
-
-// Si el curso se marca como gratuito, limpiar los prerequisitos seleccionados para evitar inconsistencia, 
-// ya que no se guardarán en el backend (aunque no se muestran en el UI de este wizard, se cargan las opciones 
-// para que estén disponibles en el editor de contenido posteriormente)
-watch(
-  () => form.value.isFree,
-  (isFree) => {
-    if (isFree) {
-      selectedPrerequisites.value = []
-      selectedRelatedCourseIds.value = []
-    }
-  },
-)
-
-// Si cambia la categoría, recargar las opciones de cursos relacionados para el selector de prerequisitos, para 
-// mostrar opciones más relevantes (aunque no se muestran en el UI de este wizard, se cargan las opciones para que 
-// estén disponibles en el editor de contenido posteriormente)
-watch(
-  () => form.value.categoryId,
-  async () => {
-    // Si cambia la categoria, limpiamos seleccion previa para evitar mezcla de categorias
-    selectedRelatedCourseIds.value = []
-    applyRelatedFilterByCategory()
-  }
-)
-
-
-onMounted(async () => {
-  await loadCategories()
-  await loadCourse()
-  await loadPrerequisiteOptions()
-  await loadExistingPrerequisites()
-})
 </script>
 
 <style scoped>

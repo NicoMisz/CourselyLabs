@@ -268,6 +268,21 @@ CREATE TABLE lesson_resources (
 CREATE INDEX idx_lesson_resources_lesson_id ON lesson_resources(lesson_id);
 
 -- ============================================
+-- COURSE PREREQUISITES
+-- ============================================
+
+CREATE TABLE course_prerequisites (
+    id                     UUID          NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+    course_id              UUID          NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+    prerequisite_course_id UUID          NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+    completion_threshold   INT           NOT NULL DEFAULT 80,
+    created_at             TIMESTAMP     NOT NULL DEFAULT now(),
+    UNIQUE (course_id, prerequisite_course_id)
+);
+
+CREATE INDEX idx_course_prerequisites_course_id ON course_prerequisites(course_id);
+
+-- ============================================
 -- TRIGGERS
 -- ============================================
 
