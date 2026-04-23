@@ -32,7 +32,7 @@
         <q-chip v-if="keyword" removable @remove="removeFilterChip('keyword')">{{ keyword }}</q-chip>
         <q-chip v-if="level" removable @remove="removeFilterChip('level')">{{ level }}</q-chip>
         <q-chip v-if="isFree !== null" removable @remove="removeFilterChip('isFree')">
-          {{ isFree ? 'Gratis' : 'De pago' }}
+          {{ isFree ? 'Gratis' : 'Premium' }}
         </q-chip>
         <q-chip v-if="minRating" removable @remove="removeFilterChip('minRating')">
           {{ minRating }}★ y mas

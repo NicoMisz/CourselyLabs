@@ -27,6 +27,7 @@ import com.courselylabs.courselylab.repository.CourseRepository;
 import com.courselylabs.courselylab.repository.EnrollmentRepository;
 import com.courselylabs.courselylab.repository.LessonProgressRepository;
 import com.courselylabs.courselylab.repository.SectionRepository;
+import com.courselylabs.courselylab.repository.SubscriptionRepository;
 import com.courselylabs.courselylab.repository.UserRepository;
 
 @Service
@@ -40,6 +41,7 @@ public class CoursePrerequisiteService {
     private final LessonProgressRepository lessonProgressRepository;
     private final SectionRepository sectionRepository;
     private final UserRepository userRepository;
+    private final SubscriptionRepository subscriptionRepository;
 
     public CoursePrerequisiteService(
             CoursePrerequisiteRepository prerequisiteRepository,
@@ -48,7 +50,8 @@ public class CoursePrerequisiteService {
             EnrollmentRepository enrollmentRepository,
             LessonProgressRepository lessonProgressRepository,
             SectionRepository sectionRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            SubscriptionRepository subscriptionRepository) {
         this.prerequisiteRepository = prerequisiteRepository;
         this.courseInstructorRepository = courseInstructorRepository;
         this.courseRepository = courseRepository;
@@ -56,6 +59,7 @@ public class CoursePrerequisiteService {
         this.lessonProgressRepository = lessonProgressRepository;
         this.sectionRepository = sectionRepository;
         this.userRepository = userRepository;
+        this.subscriptionRepository = subscriptionRepository;
     }
 
     // --- Lectura (solo premium o admin) ---
@@ -126,18 +130,8 @@ public class CoursePrerequisiteService {
     // --- Validacion al inscribirse ---
 
     public void assertCanEnroll(String email, UUID courseId) {
-        // Solo aplica la logica de prerequisitos a usuarios premium o admin.
-        // Usuarios free no tienen acceso a esta feature: se les deniega directamente.
-        UserEntity user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
-
-        boolean isPremiumOrAdmin = "premium".equalsIgnoreCase(user.getRole())
-                || "admin".equalsIgnoreCase(user.getRole());
-
-        if (!isPremiumOrAdmin) {
-            throw new UnauthorizedException("Prerequisites are a premium feature. Upgrade your plan to access this course.");
-        }
-
+        // Cualquier usuario autenticado puede inscribirse si cumple los prerequisitos.
+        // El rol premium solo afecta a la CREACION de cursos con prerequisitos (editor).
         List<BlockedPrerequisiteDTO> blocked = findBlockedPrerequisites(courseId, email);
         if (!blocked.isEmpty()) {
             throw new PrerequisiteConflictException(
@@ -200,6 +194,12 @@ public class CoursePrerequisiteService {
         boolean isInstructor = courseInstructorRepository.existsByCourseIdAndInstructorId(courseId, user.getId());
         if (!isInstructor) {
             throw new UnauthorizedException("Only the course instructor or an admin can manage prerequisites");
+        }
+
+        // Crear cursos con prerequisitos requiere suscripcion Premium activa.
+        boolean hasPremium = subscriptionRepository.existsByUserIdAndStatus(user.getId(), "active");
+        if (!hasPremium) {
+            throw new UnauthorizedException("Crear prerequisitos entre cursos es una funcion Premium. Hazte Premium para usarla.");
         }
     }
 

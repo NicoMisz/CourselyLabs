@@ -201,7 +201,7 @@ const benefits = [
     icon: 'school',
     bg: 'linear-gradient(135deg, #0f766e, #14b8a6)',
     title: 'Todos los cursos premium',
-    description: 'Acceso ilimitado a todos los cursos de pago. Nuevos cursos cada semana.',
+    description: 'Acceso ilimitado a todos los cursos Premium. Nuevos cursos cada semana.',
   },
   {
     icon: 'add_circle',

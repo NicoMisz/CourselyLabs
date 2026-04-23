@@ -102,7 +102,7 @@ public class EnrollmentService {
         EnrollmentEntity entity = new EnrollmentEntity();
         entity.setUser(user);
         entity.setCourse(course);
-        entity.setAccessType(course.getIsFree() ? "free" : "paid");
+        entity.setAccessType(course.getIsFree() ? "free" : "premium");
 
         entity = enrollmentRepository.save(entity);
         return enrollmentMapper.toDTO(entity);
