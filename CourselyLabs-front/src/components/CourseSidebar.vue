@@ -9,6 +9,12 @@
       <div><strong>Valoracion:</strong> {{ averageRating?.toFixed(1) || 'N/A' }}</div>
     </div>
 
+    <PrerequisiteBlockBanner
+      v-if="prerequisiteBlockers?.length"
+      :blockers="prerequisiteBlockers"
+      @open-related-tab="$emit('open-related-tab')"
+    />
+
     <q-btn
       :label="buttonLabel"
       :color="buttonColor"
@@ -24,9 +30,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
-import { useAuthStore } from '../stores/auth';
+import { computed } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
+
+import type { BlockedPrerequisite } from '@/types/prerequisite'
+import PrerequisiteBlockBanner from './PrerequisiteBlockBanner.vue';
 
 const props = defineProps<{
   level?: string;
@@ -39,11 +48,13 @@ const props = defineProps<{
   price?: number;
   enrolled: boolean;
   loading?: boolean;
+  prerequisiteBlockers?: BlockedPrerequisite[];
 }>();
 
 const emit = defineEmits<{
-  enroll: [];
-  continue: [];
+  (e: 'enroll'): void
+  (e: 'continue'): void
+  (e: 'open-related-tab'): void
 }>();
 
 const router = useRouter();

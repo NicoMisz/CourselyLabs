@@ -39,4 +39,6 @@ public class CourseDetailDTO {
     private Long storageBytes;
     private List<InstructorSummaryDTO> instructors;
     private List<SectionDTO> sections;
+
+    private List<CoursePrerequisiteDTO> prerequisites;
 }
