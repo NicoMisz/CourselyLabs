@@ -6,6 +6,36 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es/1.1.0/).
 
 ---
 
+## [Sin version] - 2026-04-27 — Refactor multi-bloque + dashboard de calificacion
+
+### Agregado
+
+- **src/api/lessonBlock.ts**: Cliente CRUD + reorder de bloques de leccion (`/api/lessons/:id/blocks`, `/api/blocks/:id`, `/api/lessons/:id/blocks/reorder`).
+- **src/api/grading.ts**: Cliente para `/api/grading/pending` con tipo `PendingSubmission` (incluye `courseId/courseTitle/lessonTitle/blockId/assessmentType`).
+- **src/types/lesson.ts**: Tipo `LessonBlock` y `BlockType`. `Lesson` ahora incluye `blocks?: LessonBlock[]`.
+- **src/views/instructor/GradingDashboard.vue**: Vista global de entregas pendientes con dropdown de filtro por curso, dialog de calificacion y descarga de archivos.
+- **src/layouts/InstructorLayout.vue**: Item "Calificar" en sidebar con icono `assignment_turned_in`.
+- **src/router/routes.ts**: Ruta `/instructor/calificar`.
+
+### Cambiado
+
+- **src/views/instructor/CourseWizard.vue**: Panel de leccion rediseñado — eliminado el selector de tipo unico; ahora es una **lista drag-and-drop de bloques** (text/video/pdf/quiz/project/open_text) con boton `+ Añadir bloque`. Cada bloque renderiza su editor (RichTextEditor, FileUploader o AssessmentEditor) y se guarda independientemente.
+- **src/views/LessonView.vue**: Itera `lesson.blocks` en orden; mantiene fallback legacy para lecciones sin bloques migradas.
+- **src/components/AssessmentEditor.vue**: Recibe `blockId` (no `lessonId`). Crea evaluacion via `POST /api/blocks/:blockId/assessment`. Emite evento `created` para sincronizar con el padre.
+- **src/components/AssessmentLessonView.vue**: Recibe `blockId`. Carga evaluacion via `GET /api/blocks/:blockId/assessment`.
+- **src/api/assessment.ts**: Endpoints reescritos a la API basada en bloque (`getAssessmentByBlock`, `getAssessmentForEditByBlock`, `createAssessmentForBlock`).
+- **src/types/assessment.ts**: `Assessment` ahora incluye `blockId?`.
+
+### Backend (CourselyLabs-back)
+
+- **Flyway V11 `lesson_blocks.sql`**: Tabla `lesson_blocks`, columna `block_id` en `assessments` (1:1 unique), migracion de datos (cada leccion existente → 1 bloque), `lesson.type` y `assessments.lesson_id` ahora nullable.
+- **Entidades**: Nueva `LessonBlockEntity`. `AssessmentEntity` cambia `lesson` de `@OneToOne` a `@ManyToOne` y añade `block` (`@OneToOne`).
+- **Endpoints nuevos**: `GET/POST /api/lessons/:id/blocks`, `PUT/DELETE /api/blocks/:id`, `PATCH /api/lessons/:id/blocks/reorder`, `GET /api/grading/pending`, `GET/POST /api/blocks/:blockId/assessment`.
+- **`CourseSecurityService`**: `canEditBlock` y `canAccessBlock`.
+- **`LessonMapper`**: Hidrata `blocks[]` en cada leccion.
+
+---
+
 ## [Sin version] - 2026-03-19
 
 ### Agregado

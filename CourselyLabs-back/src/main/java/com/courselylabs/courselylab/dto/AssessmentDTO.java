@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 public class AssessmentDTO {
     private UUID id;
     private UUID lessonId;
+    private UUID blockId;
     private String type;
     private String description;
     private Integer maxAttempts;

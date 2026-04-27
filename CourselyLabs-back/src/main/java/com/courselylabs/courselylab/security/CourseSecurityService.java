@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.courselylabs.courselylab.entity.AssessmentAttemptEntity;
 import com.courselylabs.courselylab.entity.AssessmentEntity;
 import com.courselylabs.courselylab.entity.CourseEntity;
+import com.courselylabs.courselylab.entity.LessonBlockEntity;
 import com.courselylabs.courselylab.entity.LessonEntity;
 import com.courselylabs.courselylab.entity.LessonResourceEntity;
 import com.courselylabs.courselylab.entity.SectionEntity;
@@ -19,6 +20,7 @@ import com.courselylabs.courselylab.repository.AssessmentRepository;
 import com.courselylabs.courselylab.repository.CourseInstructorRepository;
 import com.courselylabs.courselylab.repository.CourseRepository;
 import com.courselylabs.courselylab.repository.EnrollmentRepository;
+import com.courselylabs.courselylab.repository.LessonBlockRepository;
 import com.courselylabs.courselylab.repository.LessonRepository;
 import com.courselylabs.courselylab.repository.LessonResourceRepository;
 import com.courselylabs.courselylab.repository.SectionRepository;
@@ -34,6 +36,7 @@ public class CourseSecurityService {
     private final UserRepository userRepository;
     private final SectionRepository sectionRepository;
     private final LessonRepository lessonRepository;
+    private final LessonBlockRepository blockRepository;
     private final LessonResourceRepository resourceRepository;
     private final EnrollmentRepository enrollmentRepository;
     private final AssessmentRepository assessmentRepository;
@@ -45,6 +48,7 @@ public class CourseSecurityService {
                                   UserRepository userRepository,
                                   SectionRepository sectionRepository,
                                   LessonRepository lessonRepository,
+                                  LessonBlockRepository blockRepository,
                                   LessonResourceRepository resourceRepository,
                                   EnrollmentRepository enrollmentRepository,
                                   AssessmentRepository assessmentRepository,
@@ -55,6 +59,7 @@ public class CourseSecurityService {
         this.userRepository = userRepository;
         this.sectionRepository = sectionRepository;
         this.lessonRepository = lessonRepository;
+        this.blockRepository = blockRepository;
         this.resourceRepository = resourceRepository;
         this.enrollmentRepository = enrollmentRepository;
         this.assessmentRepository = assessmentRepository;
@@ -93,6 +98,18 @@ public class CourseSecurityService {
         LessonEntity lesson = lessonRepository.findById(lessonId).orElse(null);
         if (lesson == null) return false;
         return isOwnerOrInstructorOrAdmin(lesson.getSection().getCourse().getId(), auth);
+    }
+
+    public boolean canEditBlock(UUID blockId, Authentication auth) {
+        LessonBlockEntity block = blockRepository.findById(blockId).orElse(null);
+        if (block == null) return false;
+        return isOwnerOrInstructorOrAdmin(block.getLesson().getSection().getCourse().getId(), auth);
+    }
+
+    public boolean canAccessBlock(UUID blockId, Authentication auth) {
+        LessonBlockEntity block = blockRepository.findById(blockId).orElse(null);
+        if (block == null) return false;
+        return canAccessLesson(block.getLesson().getId(), auth);
     }
 
     public boolean canEditResource(UUID resourceId, Authentication auth) {

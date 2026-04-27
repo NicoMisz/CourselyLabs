@@ -14,7 +14,12 @@ import com.courselylabs.courselylab.entity.AssessmentEntity;
 @Repository
 public interface AssessmentRepository extends JpaRepository<AssessmentEntity, UUID> {
 
+    /** Legacy: returns the FIRST assessment of a lesson. With multi-block lessons there can be multiple. */
     Optional<AssessmentEntity> findByLessonId(UUID lessonId);
+
+    Optional<AssessmentEntity> findByBlockId(UUID blockId);
+
+    List<AssessmentEntity> findAllByLessonId(UUID lessonId);
 
     @Query("SELECT a FROM AssessmentEntity a " +
            "WHERE a.lesson.section.course.id = :courseId AND a.type = :type")

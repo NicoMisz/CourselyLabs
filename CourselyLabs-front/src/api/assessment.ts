@@ -9,11 +9,11 @@ import type {
   Submission,
 } from '../types/assessment'
 
-// --- Read ---
+// --- Read (block-based) ---
 
-export async function getAssessmentByLesson(lessonId: string): Promise<Assessment | null> {
+export async function getAssessmentByBlock(blockId: string): Promise<Assessment | null> {
   try {
-    const { data } = await api.get<Assessment>(`/api/lessons/${lessonId}/assessment`)
+    const { data } = await api.get<Assessment>(`/api/blocks/${blockId}/assessment`)
     return data
   } catch (e: any) {
     if (e?.response?.status === 204) return null
@@ -21,9 +21,9 @@ export async function getAssessmentByLesson(lessonId: string): Promise<Assessmen
   }
 }
 
-export async function getAssessmentForEdit(lessonId: string): Promise<Assessment | null> {
+export async function getAssessmentForEditByBlock(blockId: string): Promise<Assessment | null> {
   try {
-    const { data } = await api.get<Assessment>(`/api/lessons/${lessonId}/assessment/edit`)
+    const { data } = await api.get<Assessment>(`/api/blocks/${blockId}/assessment/edit`)
     return data
   } catch {
     return null
@@ -32,8 +32,8 @@ export async function getAssessmentForEdit(lessonId: string): Promise<Assessment
 
 // --- CRUD (instructor) ---
 
-export async function createAssessment(lessonId: string, dto: Partial<Assessment>): Promise<Assessment> {
-  const { data } = await api.post<Assessment>(`/api/lessons/${lessonId}/assessment`, dto)
+export async function createAssessmentForBlock(blockId: string, dto: Partial<Assessment>): Promise<Assessment> {
+  const { data } = await api.post<Assessment>(`/api/blocks/${blockId}/assessment`, dto)
   return data
 }
 

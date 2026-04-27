@@ -118,7 +118,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import {
-  getAssessmentByLesson,
+  getAssessmentByBlock,
   getMyAttempts,
   startAttempt,
   getAttemptResult,
@@ -131,7 +131,7 @@ import AssessmentResultsView from './AssessmentResultsView.vue'
 
 type Screen = 'intro' | 'quiz' | 'project' | 'open_text' | 'results'
 
-const props = defineProps<{ lessonId: string }>()
+const props = defineProps<{ blockId: string }>()
 
 const $q = useQuasar()
 const loading = ref(true)
@@ -188,7 +188,7 @@ async function loadAll() {
   loading.value = true
   reset()
   try {
-    assessment.value = await getAssessmentByLesson(props.lessonId)
+    assessment.value = await getAssessmentByBlock(props.blockId)
     if (assessment.value) {
       attempts.value = await getMyAttempts(assessment.value.id)
     }
@@ -258,7 +258,7 @@ function reset() {
   currentResult.value = null
 }
 
-watch(() => props.lessonId, loadAll)
+watch(() => props.blockId, loadAll)
 onMounted(loadAll)
 </script>
 

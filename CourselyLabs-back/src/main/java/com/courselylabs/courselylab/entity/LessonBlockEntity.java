@@ -14,7 +14,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -24,38 +23,31 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "assessments")
-public class AssessmentEntity {
+@Table(name = "lesson_blocks")
+public class LessonBlockEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "lesson_id")
+    @JoinColumn(name = "lesson_id", nullable = false)
     private LessonEntity lesson;
-
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "block_id", unique = true)
-    private LessonBlockEntity block;
 
     @Column(name = "type", nullable = false, length = 20)
     private String type;
 
-    @Column(name = "description", columnDefinition = "TEXT")
-    private String description;
+    @Column(name = "position", nullable = false)
+    private Integer position = 0;
 
-    @Column(name = "max_attempts", nullable = false)
-    private Integer maxAttempts = 3;
+    @Column(name = "text_content", columnDefinition = "TEXT")
+    private String textContent;
 
-    @Column(name = "time_limit_minutes")
-    private Integer timeLimitMinutes;
+    @Column(name = "video_url", length = 500)
+    private String videoUrl;
 
-    @Column(name = "passing_score", nullable = false)
-    private Integer passingScore = 70;
-
-    @Column(name = "shuffle_options", nullable = false)
-    private Boolean shuffleOptions = true;
+    @Column(name = "pdf_url", length = 500)
+    private String pdfUrl;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false, nullable = false)

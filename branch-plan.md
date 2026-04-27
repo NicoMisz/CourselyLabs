@@ -460,10 +460,20 @@ Interfaz completa para el sistema de reviews (backend ya implementado en `Review
 
 ---
 
-## 10. `feature/assessments` ✅ COMPLETADO
+## 10. `feature/assessments` ✅ COMPLETADO (refactor multi-bloque hecho en V11)
 
 **Prioridad:** Media
 **Dependencias:** `feature/course-sections-lessons`, `feature/student-progress`, `feature/downloadable-resources` (reutiliza `FileStorageService`)
+
+### Refactor multi-bloque (Flyway V11)
+- Una leccion ahora es un **contenedor** de bloques ordenados (`text`, `video`, `pdf`, `quiz`, `project`, `open_text`); el campo `lesson.type` queda como legacy (nullable).
+- Tabla nueva `lesson_blocks` con `position`, `text_content`, `video_url`, `pdf_url`. Migracion convierte cada leccion existente en 1 bloque del tipo previo.
+- `assessments` ahora vincula con `block_id` (1:1 unique). Una leccion puede tener varias evaluaciones (una por bloque assessment-type).
+- Endpoints assessment migrados a `/api/blocks/{blockId}/assessment` (legacy `/lessons/{lessonId}/assessment` eliminado).
+- Endpoints nuevos: `/api/lessons/{id}/blocks` (CRUD + reorder).
+- Vista nueva en `/instructor/calificar` (`GradingDashboard.vue`) con dropdown de cursos + lista global de entregas pendientes (endpoint `GET /api/grading/pending`). Sidebar de instructor incluye item "Calificar".
+- Editor de leccion en `CourseWizard` rediseñado: lista drag-and-drop de bloques con boton `+ Añadir bloque` (text/video/pdf/quiz/project/open_text). Cada bloque renderiza el editor adecuado (RichText, FileUploader, AssessmentEditor).
+- `LessonView` itera bloques en orden; mantiene fallback legacy para datos sin migrar.
 
 ### Estado actual
 

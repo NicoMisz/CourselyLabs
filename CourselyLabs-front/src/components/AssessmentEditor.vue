@@ -36,22 +36,27 @@
 
         <q-input
           v-model="form.description"
-          label="Descripcion / Instrucciones"
+          :label="type === 'open_text' ? 'Enunciado de la tarea (que tienen que entregar los alumnos)' : 'Descripcion / Instrucciones'"
           outlined
           type="textarea"
-          rows="3"
+          :rows="type === 'open_text' ? 5 : 3"
           dense
           class="q-mb-sm"
         />
 
         <div class="row q-col-gutter-sm">
-          <div class="col-12 col-sm-4">
-            <q-input v-model.number="form.maxAttempts" type="number" label="Intentos maximos" outlined dense min="1" />
+          <div :class="type === 'quiz' ? 'col-12 col-sm-4' : 'col-12 col-sm-6'">
+            <q-input
+              v-model.number="form.maxAttempts"
+              type="number"
+              :label="type === 'quiz' ? 'Intentos maximos' : 'Reentregas maximas'"
+              outlined dense min="1"
+            />
           </div>
-          <div class="col-12 col-sm-4">
+          <div v-if="type === 'quiz'" class="col-12 col-sm-4">
             <q-input v-model.number="form.timeLimitMinutes" type="number" label="Tiempo limite (min)" outlined dense min="0" hint="Vacio = sin limite" />
           </div>
-          <div class="col-12 col-sm-4">
+          <div :class="type === 'quiz' ? 'col-12 col-sm-4' : 'col-12 col-sm-6'">
             <q-input v-model.number="form.passingScore" type="number" label="% para aprobar" outlined dense min="0" max="100" />
           </div>
         </div>
@@ -62,6 +67,18 @@
           label="Aleatorizar orden de opciones"
           class="q-mt-sm"
         />
+
+        <q-banner v-if="type === 'open_text'" rounded class="bg-blue-1 text-blue-9 q-mt-sm" dense>
+          <template #avatar><q-icon name="info" color="info" /></template>
+          Los estudiantes enviaran texto libre (max 20.000 caracteres). Si necesitas adjuntar PDFs, codigo o ejemplos,
+          añadelos como <strong>recursos descargables</strong> de esta leccion.
+        </q-banner>
+
+        <q-banner v-if="type === 'project'" rounded class="bg-blue-1 text-blue-9 q-mt-sm" dense>
+          <template #avatar><q-icon name="info" color="info" /></template>
+          Los estudiantes subiran un archivo (max 50 MB). Si quieres dar enunciado/material de partida,
+          adjuntalo como <strong>recurso descargable</strong> de esta leccion.
+        </q-banner>
 
         <div class="row justify-end q-mt-sm">
           <q-btn
@@ -79,51 +96,83 @@
       <!-- Questions (only for quiz) -->
       <div v-if="type === 'quiz'">
         <div class="row items-center justify-between q-mb-sm">
-          <div class="text-caption text-weight-medium text-grey-7">PREGUNTAS</div>
-          <q-btn outline color="primary" no-caps icon="add" label="Añadir pregunta" size="sm" @click="addQuestion" />
+          <div class="text-caption text-weight-medium text-grey-7">PREGUNTAS ({{ questions.length }})</div>
         </div>
 
-        <div v-if="questions.length === 0" class="empty-hint">
-          Aun no hay preguntas. Añade al menos una.
+        <div v-if="questions.length === 0" class="empty-hint q-mb-md">
+          Aun no hay preguntas. Añade la primera para empezar.
         </div>
 
-        <q-list v-else bordered separator class="q-mb-md">
-          <q-expansion-item
+        <div v-else class="q-mb-md">
+          <q-card
             v-for="(q, qIdx) in questions"
-            :key="q.id"
-            :label="`${qIdx + 1}. ${q.questionText || '(sin texto)'}`"
-            header-class="text-weight-medium"
+            :key="q.id || `new-${qIdx}`"
+            flat bordered
+            :class="['question-card q-mb-sm', { 'is-new': !q.id }]"
           >
-            <q-card flat>
-              <q-card-section>
+            <q-card-section>
+              <div class="row items-center q-mb-sm">
+                <div class="question-num">{{ qIdx + 1 }}</div>
                 <q-input
                   v-model="q.questionText"
-                  label="Texto de la pregunta"
+                  placeholder="Escribe la pregunta..."
                   outlined
                   dense
                   type="textarea"
-                  rows="2"
-                  class="q-mb-sm"
+                  autogrow
+                  class="col q-ml-sm"
                 />
-                <q-input v-model.number="q.points" type="number" label="Puntos" outlined dense min="1" style="max-width: 200px" />
+              </div>
 
-                <div class="text-caption text-weight-medium text-grey-7 q-mt-md q-mb-xs">OPCIONES</div>
-                <div v-for="(opt, oIdx) in q.options" :key="oIdx" class="option-row q-mb-xs">
-                  <q-radio v-model="q.correctIdx" :val="oIdx" />
-                  <q-input v-model="opt.optionText" placeholder="Texto de la opcion" outlined dense class="col" />
-                  <q-input v-model="opt.explanation" placeholder="Explicacion (opcional)" outlined dense class="col" />
-                  <q-btn flat dense round icon="close" color="negative" size="sm" @click="q.options.splice(oIdx, 1)" />
-                </div>
-                <q-btn flat dense no-caps icon="add" label="Añadir opcion" color="primary" size="sm" @click="addOption(q)" />
+              <div class="text-caption text-weight-medium text-grey-7 q-mt-sm q-mb-xs">
+                OPCIONES <span class="text-grey-5">— marca la correcta con el radio button</span>
+              </div>
+              <div v-for="(opt, oIdx) in q.options" :key="oIdx" class="option-row q-mb-xs">
+                <q-radio v-model="q.correctIdx" :val="oIdx" />
+                <q-input
+                  v-model="opt.optionText"
+                  :placeholder="`Opcion ${oIdx + 1}`"
+                  outlined dense
+                  class="col"
+                />
+                <q-btn flat dense round icon="close" color="grey-7" size="sm" @click="q.options.splice(oIdx, 1)">
+                  <q-tooltip>Eliminar opcion</q-tooltip>
+                </q-btn>
+              </div>
+              <q-btn flat dense no-caps icon="add" label="Añadir opcion" color="primary" size="sm" @click="addOption(q)" />
 
-                <div class="row justify-between q-mt-md">
-                  <q-btn flat dense no-caps icon="delete" color="negative" label="Eliminar pregunta" size="sm" @click="removeQuestion(q, qIdx)" />
-                  <q-btn color="primary" unelevated no-caps label="Guardar pregunta" size="sm" :loading="q.saving" @click="saveQuestion(q)" />
+              <!-- Advanced -->
+              <q-expansion-item
+                label="Avanzado: puntos y explicaciones por opcion"
+                dense
+                header-class="text-caption text-grey-7"
+                class="q-mt-md"
+              >
+                <q-input v-model.number="q.points" type="number" label="Puntos" outlined dense min="1" style="max-width: 200px" class="q-mb-sm" />
+                <div class="text-caption text-grey-7 q-mb-xs">Explicacion para mostrar tras enviar (opcional):</div>
+                <div v-for="(opt, oIdx) in q.options" :key="`exp-${oIdx}`" class="row items-center q-gutter-sm q-mb-xs">
+                  <span class="text-caption text-grey-7" style="min-width: 70px">Opcion {{ oIdx + 1 }}</span>
+                  <q-input v-model="opt.explanation" :placeholder="opt.optionText || `Por que esta opcion...`" outlined dense class="col" />
                 </div>
-              </q-card-section>
-            </q-card>
-          </q-expansion-item>
-        </q-list>
+              </q-expansion-item>
+
+              <div class="row justify-between q-mt-md">
+                <q-btn flat dense no-caps icon="delete" color="negative" label="Eliminar pregunta" size="sm" @click="removeQuestion(q, qIdx)" />
+                <q-btn color="primary" unelevated no-caps label="Guardar pregunta" size="sm" :loading="q.saving" @click="saveQuestion(q)" />
+              </div>
+            </q-card-section>
+          </q-card>
+        </div>
+
+        <q-btn
+          color="primary"
+          unelevated
+          no-caps
+          icon="add"
+          label="Añadir pregunta"
+          class="full-width q-mt-md"
+          @click="addQuestion"
+        />
       </div>
 
       <!-- Submissions panel (for project / open_text) -->
@@ -242,8 +291,8 @@
 import { ref, reactive, watch, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import {
-  getAssessmentForEdit,
-  createAssessment,
+  getAssessmentForEditByBlock,
+  createAssessmentForBlock,
   updateAssessment,
   addQuestion as apiAddQuestion,
   updateQuestion as apiUpdateQuestion,
@@ -255,9 +304,13 @@ import {
 import type { Assessment, Submission } from '../types/assessment'
 
 const props = defineProps<{
-  lessonId: string
+  blockId: string
   type: string
   canUsePremiumFeatures: boolean
+}>()
+
+const emit = defineEmits<{
+  (e: 'created', assessment: Assessment): void
 }>()
 
 const $q = useQuasar()
@@ -327,7 +380,7 @@ function formatDate(d?: string | null) {
 async function load() {
   loading.value = true
   try {
-    assessment.value = await getAssessmentForEdit(props.lessonId)
+    assessment.value = await getAssessmentForEditByBlock(props.blockId)
     if (assessment.value) {
       form.description = assessment.value.description || ''
       form.maxAttempts = assessment.value.maxAttempts
@@ -359,13 +412,13 @@ async function load() {
 async function handleCreate() {
   creating.value = true
   try {
-    assessment.value = await createAssessment(props.lessonId, {
-      type: props.type as any,
+    assessment.value = await createAssessmentForBlock(props.blockId, {
       description: '',
       maxAttempts: 3,
       passingScore: 70,
       shuffleOptions: true,
     })
+    emit('created', assessment.value)
     $q.notify({ type: 'positive', message: 'Evaluacion creada', position: 'bottom-right' })
     await load()
   } catch (err: any) {
@@ -500,7 +553,7 @@ async function handleGrade() {
   }
 }
 
-watch(() => props.lessonId, load)
+watch(() => props.blockId, load)
 watch(() => props.type, load)
 onMounted(load)
 </script>
@@ -530,6 +583,29 @@ onMounted(load)
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.question-card {
+  border-radius: 10px;
+  transition: border-color 0.15s ease;
+}
+
+.question-card.is-new {
+  border-color: #0f766e;
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.08);
+}
+
+.question-num {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #0f766e;
+  color: white;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .answer-box {

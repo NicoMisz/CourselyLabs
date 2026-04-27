@@ -2,7 +2,6 @@ package com.courselylabs.courselylab.service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -12,7 +11,7 @@ import com.courselylabs.courselylab.dto.AssessmentDTO;
 import com.courselylabs.courselylab.dto.QuizOptionDTO;
 import com.courselylabs.courselylab.dto.QuizQuestionDTO;
 import com.courselylabs.courselylab.entity.AssessmentEntity;
-import com.courselylabs.courselylab.entity.LessonEntity;
+import com.courselylabs.courselylab.entity.LessonBlockEntity;
 import com.courselylabs.courselylab.entity.QuizOptionEntity;
 import com.courselylabs.courselylab.entity.QuizQuestionEntity;
 import com.courselylabs.courselylab.entity.UserEntity;
@@ -20,7 +19,7 @@ import com.courselylabs.courselylab.exception.BadRequestException;
 import com.courselylabs.courselylab.exception.ResourceNotFoundException;
 import com.courselylabs.courselylab.exception.UnauthorizedException;
 import com.courselylabs.courselylab.repository.AssessmentRepository;
-import com.courselylabs.courselylab.repository.LessonRepository;
+import com.courselylabs.courselylab.repository.LessonBlockRepository;
 import com.courselylabs.courselylab.repository.QuizOptionRepository;
 import com.courselylabs.courselylab.repository.QuizQuestionRepository;
 import com.courselylabs.courselylab.repository.SubscriptionRepository;
@@ -31,59 +30,56 @@ import com.courselylabs.courselylab.repository.UserRepository;
 public class AssessmentService {
 
     private static final int FREE_LIMIT_PER_TYPE = 2;
-    private static final Set<String> VALID_TYPES = Set.of("quiz", "project", "open_text");
 
     private final AssessmentRepository assessmentRepository;
     private final QuizQuestionRepository questionRepository;
     private final QuizOptionRepository optionRepository;
-    private final LessonRepository lessonRepository;
+    private final LessonBlockRepository blockRepository;
     private final UserRepository userRepository;
     private final SubscriptionRepository subscriptionRepository;
 
     public AssessmentService(AssessmentRepository assessmentRepository,
                              QuizQuestionRepository questionRepository,
                              QuizOptionRepository optionRepository,
-                             LessonRepository lessonRepository,
+                             LessonBlockRepository blockRepository,
                              UserRepository userRepository,
                              SubscriptionRepository subscriptionRepository) {
         this.assessmentRepository = assessmentRepository;
         this.questionRepository = questionRepository;
         this.optionRepository = optionRepository;
-        this.lessonRepository = lessonRepository;
+        this.blockRepository = blockRepository;
         this.userRepository = userRepository;
         this.subscriptionRepository = subscriptionRepository;
     }
 
     @Transactional(readOnly = true)
-    public AssessmentDTO findByLessonId(UUID lessonId, boolean includeAnswers) {
-        AssessmentEntity entity = assessmentRepository.findByLessonId(lessonId).orElse(null);
+    public AssessmentDTO findByBlockId(UUID blockId, boolean includeAnswers) {
+        AssessmentEntity entity = assessmentRepository.findByBlockId(blockId).orElse(null);
         if (entity == null) return null;
         return toDTO(entity, includeAnswers);
     }
 
-    public AssessmentDTO createForLesson(UUID lessonId, AssessmentDTO dto, String email) {
-        LessonEntity lesson = lessonRepository.findById(lessonId)
-                .orElseThrow(() -> new ResourceNotFoundException("Lesson", "id", lessonId));
+    public AssessmentDTO createForBlock(UUID blockId, AssessmentDTO dto, String email) {
+        LessonBlockEntity block = blockRepository.findById(blockId)
+                .orElseThrow(() -> new ResourceNotFoundException("Block", "id", blockId));
 
-        if (assessmentRepository.findByLessonId(lessonId).isPresent()) {
-            throw new BadRequestException("Esta leccion ya tiene una evaluacion asociada");
+        if (!LessonBlockService.isAssessmentType(block.getType())) {
+            throw new BadRequestException(
+                    "El bloque debe ser de tipo quiz, project u open_text para tener una evaluacion");
         }
 
-        if (!VALID_TYPES.contains(dto.getType())) {
-            throw new BadRequestException("Tipo de evaluacion invalido");
+        if (assessmentRepository.findByBlockId(blockId).isPresent()) {
+            throw new BadRequestException("Este bloque ya tiene una evaluacion asociada");
         }
 
-        // Lesson type must match assessment type
-        if (!dto.getType().equals(lesson.getType())) {
-            throw new BadRequestException("El tipo de la leccion no coincide con el tipo de la evaluacion");
-        }
-
-        UUID courseId = lesson.getSection().getCourse().getId();
-        assertCanCreate(email, courseId, dto.getType());
+        String type = block.getType();
+        UUID courseId = block.getLesson().getSection().getCourse().getId();
+        assertCanCreate(email, courseId, type);
 
         AssessmentEntity entity = new AssessmentEntity();
-        entity.setLesson(lesson);
-        entity.setType(dto.getType());
+        entity.setBlock(block);
+        entity.setLesson(block.getLesson());
+        entity.setType(type);
         entity.setDescription(dto.getDescription());
         entity.setMaxAttempts(dto.getMaxAttempts() != null ? dto.getMaxAttempts() : 3);
         entity.setTimeLimitMinutes(dto.getTimeLimitMinutes());
@@ -130,7 +126,6 @@ public class AssessmentService {
         question.setPoints(dto.getPoints() != null ? dto.getPoints() : 1);
         question = questionRepository.save(question);
 
-        // Save options
         if (dto.getOptions() != null) {
             for (int i = 0; i < dto.getOptions().size(); i++) {
                 QuizOptionDTO optDto = dto.getOptions().get(i);
@@ -157,7 +152,6 @@ public class AssessmentService {
         question = questionRepository.save(question);
 
         if (dto.getOptions() != null) {
-            // Replace options
             optionRepository.deleteByQuestionId(questionId);
             for (int i = 0; i < dto.getOptions().size(); i++) {
                 QuizOptionDTO optDto = dto.getOptions().get(i);
@@ -198,7 +192,6 @@ public class AssessmentService {
         boolean isPremium = subscriptionRepository.existsByUserIdAndStatus(user.getId(), "active");
         if (isPremium) return;
 
-        // Free user: max 2 assessments per type per course
         long count = assessmentRepository.findByCourseIdAndType(courseId, type).size();
         if (count >= FREE_LIMIT_PER_TYPE) {
             throw new UnauthorizedException(
@@ -212,7 +205,8 @@ public class AssessmentService {
     AssessmentDTO toDTO(AssessmentEntity entity, boolean includeAnswers) {
         AssessmentDTO dto = new AssessmentDTO();
         dto.setId(entity.getId());
-        dto.setLessonId(entity.getLesson().getId());
+        if (entity.getLesson() != null) dto.setLessonId(entity.getLesson().getId());
+        if (entity.getBlock() != null) dto.setBlockId(entity.getBlock().getId());
         dto.setType(entity.getType());
         dto.setDescription(entity.getDescription());
         dto.setMaxAttempts(entity.getMaxAttempts());

@@ -358,53 +358,117 @@
             </div>
 
             <q-input v-model="lessonForm.title" label="Titulo de la leccion" outlined />
-
-            <q-select
-              v-model="lessonForm.type"
-              :options="lessonTypeOptions"
-              label="Tipo de contenido"
-              outlined
-              emit-value map-options
-            />
-
             <q-input v-model="lessonForm.description" label="Descripcion breve (opcional)" outlined type="textarea" rows="2" />
+            <q-toggle v-model="lessonForm.isFree" label="Leccion gratuita (preview publico)" />
 
-            <!-- Content by type -->
-            <div v-if="lessonForm.type === 'text'">
-              <label class="panel-label">Contenido</label>
-              <RichTextEditor v-model="lessonForm.contentText" placeholder="Escribe el contenido de la leccion..." />
+            <div class="panel-actions" style="border-top: none; margin-top: 0; padding-top: 0">
+              <q-btn color="primary" unelevated no-caps label="Guardar leccion" :loading="saving" @click="saveLesson" />
             </div>
 
-            <div v-else-if="lessonForm.type === 'video' || lessonForm.type === 'pdf'">
-              <label class="panel-label">
-                Archivo ({{ lessonForm.type === 'video' ? 'video MP4' : 'PDF' }})
-              </label>
-              <div v-if="lessonForm.contentUrl" class="content-file-preview">
-                <q-icon :name="lessonForm.type === 'video' ? 'play_circle' : 'picture_as_pdf'" size="24px" color="primary" />
-                <span class="text-body2">Archivo subido correctamente</span>
-                <q-btn flat dense icon="open_in_new" size="sm" @click="openFile(lessonForm.contentUrl)" />
+            <q-separator class="q-my-md" />
+
+            <!-- Blocks -->
+            <div class="row items-center justify-between q-mb-sm">
+              <div class="text-subtitle2">
+                <q-icon name="view_agenda" size="18px" /> Contenido de la leccion ({{ blocks.length }})
               </div>
-              <FileUploader
-                ref="contentUploaderRef"
-                :accept="lessonForm.type === 'video' ? 'video/mp4' : 'application/pdf'"
-                :max-size-mb="lessonForm.type === 'video' ? 500 : 50"
-                :label="lessonForm.contentUrl ? 'Reemplazar archivo' : 'Subir archivo'"
-                :hint="lessonForm.type === 'video' ? 'MP4 hasta 500 MB' : 'PDF hasta 50 MB'"
-                :icon="lessonForm.type === 'video' ? 'video_file' : 'picture_as_pdf'"
-                @upload="handleContentUpload"
-              />
             </div>
 
-            <!-- Assessment editor (for type=quiz, project, open_text) -->
-            <AssessmentEditor
-              v-if="isAssessmentType(lessonForm.type) && currentLesson"
-              :key="`assessment-${currentLesson.id}-${lessonForm.type}`"
-              :lesson-id="currentLesson.id"
-              :type="lessonForm.type"
-              :can-use-premium-features="canUsePremiumFeatures"
-            />
+            <p class="text-caption text-grey-7 q-mb-md" style="margin-top: -8px">
+              Compone la leccion añadiendo bloques en el orden que quieras: texto, video, PDF, cuestionarios, proyectos o respuesta abierta.
+            </p>
 
-            <q-toggle v-model="lessonForm.isFree" label="Leccion gratuita (preview publico)" class="q-mt-md" />
+            <div v-if="loadingBlocks" class="text-center q-py-md">
+              <q-spinner-dots color="primary" size="32px" />
+            </div>
+
+            <draggable
+              v-else
+              v-model="blocks"
+              item-key="id"
+              handle=".block-handle"
+              animation="160"
+              ghost-class="block-ghost"
+              @end="handleBlockReorder"
+            >
+              <template #item="{ element: block }">
+                <q-card flat bordered class="block-card q-mb-sm">
+                  <div class="block-header">
+                    <q-icon name="drag_indicator" class="block-handle" />
+                    <q-icon :name="blockIcon(block.type)" :color="blockColor(block.type)" size="20px" class="q-mr-sm" />
+                    <span class="text-weight-medium">{{ blockLabel(block.type) }}</span>
+                    <q-space />
+                    <q-btn flat dense round icon="delete" color="negative" size="sm" @click="confirmDeleteBlock(block)">
+                      <q-tooltip>Eliminar bloque</q-tooltip>
+                    </q-btn>
+                  </div>
+                  <q-card-section class="q-pt-none">
+                    <!-- Text block -->
+                    <div v-if="block.type === 'text'">
+                      <RichTextEditor
+                        v-model="block.textContent"
+                        placeholder="Escribe el contenido..."
+                      />
+                      <div class="row justify-end q-mt-sm">
+                        <q-btn color="primary" unelevated no-caps size="sm" label="Guardar bloque" :loading="block._saving" @click="saveBlock(block)" />
+                      </div>
+                    </div>
+
+                    <!-- Video / PDF block -->
+                    <div v-else-if="block.type === 'video' || block.type === 'pdf'">
+                      <div v-if="block.type === 'video' ? block.videoUrl : block.pdfUrl" class="content-file-preview">
+                        <q-icon :name="block.type === 'video' ? 'play_circle' : 'picture_as_pdf'" size="24px" color="primary" />
+                        <span class="text-body2">Archivo subido correctamente</span>
+                        <q-btn
+                          flat
+                          dense
+                          icon="open_in_new"
+                          size="sm"
+                          @click="openFile(block.type === 'video' ? block.videoUrl! : block.pdfUrl!)"
+                        />
+                      </div>
+                      <FileUploader
+                        :accept="block.type === 'video' ? 'video/mp4' : 'application/pdf'"
+                        :max-size-mb="block.type === 'video' ? 500 : 50"
+                        :label="(block.type === 'video' ? block.videoUrl : block.pdfUrl) ? 'Reemplazar archivo' : 'Subir archivo'"
+                        :hint="block.type === 'video' ? 'MP4 hasta 500 MB' : 'PDF hasta 50 MB'"
+                        :icon="block.type === 'video' ? 'video_file' : 'picture_as_pdf'"
+                        @upload="(file: File, onProgress: (pct: number) => void) => handleBlockFileUpload(block, file, onProgress)"
+                      />
+                    </div>
+
+                    <!-- Assessment block (quiz / project / open_text) -->
+                    <AssessmentEditor
+                      v-else-if="isAssessmentType(block.type)"
+                      :key="`assessment-${block.id}`"
+                      :block-id="block.id"
+                      :type="block.type"
+                      :can-use-premium-features="canUsePremiumFeatures"
+                    />
+                  </q-card-section>
+                </q-card>
+              </template>
+            </draggable>
+
+            <q-btn-dropdown
+              flat
+              no-caps
+              color="primary"
+              icon="add"
+              label="Añadir bloque"
+              class="full-width q-mt-sm"
+              :disable="addingBlock"
+            >
+              <q-list>
+                <q-item v-for="opt in blockTypeOptions" :key="opt.value" clickable v-close-popup @click="addBlock(opt.value)">
+                  <q-item-section avatar><q-icon :name="opt.icon" :color="opt.color" /></q-item-section>
+                  <q-item-section>
+                    <q-item-label>{{ opt.label }}</q-item-label>
+                    <q-item-label caption>{{ opt.hint }}</q-item-label>
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-btn-dropdown>
 
             <q-separator class="q-my-md" />
 
@@ -446,10 +510,6 @@
                 button-label="Elegir archivo"
                 @upload="handleResourceUpload"
               />
-            </div>
-
-            <div class="panel-actions">
-              <q-btn color="primary" unelevated no-caps label="Guardar leccion" :loading="saving" @click="saveLesson" />
             </div>
           </div>
 
@@ -543,6 +603,7 @@ import type { LessonResource } from '../../api/resources'
 import RichTextEditor from '../../components/RichTextEditor.vue'
 import FileUploader from '../../components/FileUploader.vue'
 import AssessmentEditor from '../../components/AssessmentEditor.vue'
+import draggable from 'vuedraggable'
 import { useAuthStore } from '../../stores/auth'
 
 function isAssessmentType(type: string): boolean {
@@ -552,6 +613,12 @@ import { formatFileSize as fmtBytes } from '../../api/resources'
 import { searchCourses } from '@/api/courseSearch'
 import { getCoursePrerequisites, syncCoursePrerequisites } from '@/api/prerequisite'
 import { checkIsPremium } from '@/api/payments'
+import {
+  listBlocks, createBlock, updateBlock, deleteBlock as deleteBlockApi, reorderBlocks,
+} from '@/api/lessonBlock'
+import type { LessonBlock, BlockType } from '@/types/lesson'
+
+type EditableBlock = LessonBlock & { _saving?: boolean }
 
 type Selected =
   | { type: 'info' }
@@ -584,13 +651,13 @@ const levelOptions = [
   { label: 'Intermedio', value: 'intermediate' },
   { label: 'Avanzado', value: 'advanced' },
 ]
-const lessonTypeOptions = [
-  { label: 'Texto', value: 'text' },
-  { label: 'Video', value: 'video' },
-  { label: 'PDF', value: 'pdf' },
-  { label: 'Quiz', value: 'quiz' },
-  { label: 'Proyecto', value: 'project' },
-  { label: 'Respuesta abierta', value: 'open_text' },
+const blockTypeOptions: { value: BlockType; label: string; icon: string; color: string; hint: string }[] = [
+  { value: 'text', label: 'Texto', icon: 'article', color: 'primary', hint: 'Bloque de texto enriquecido' },
+  { value: 'video', label: 'Video', icon: 'play_circle', color: 'primary', hint: 'Subir un MP4' },
+  { value: 'pdf', label: 'PDF', icon: 'picture_as_pdf', color: 'red-7', hint: 'Subir un PDF' },
+  { value: 'quiz', label: 'Cuestionario', icon: 'quiz', color: 'primary', hint: 'Preguntas de respuesta multiple' },
+  { value: 'project', label: 'Proyecto', icon: 'upload_file', color: 'accent', hint: 'Entrega de archivo a calificar' },
+  { value: 'open_text', label: 'Respuesta abierta', icon: 'edit_note', color: 'deep-purple', hint: 'Respuesta de texto a calificar' },
 ]
 
 // Forms
@@ -598,9 +665,14 @@ const info = reactive({ title: '', slug: '', shortDescription: '', categoryId: n
 const details = reactive({ description: '', thumbnailUrl: '', isPremium: false })
 const sectionForm = reactive({ title: '', description: '' })
 const lessonForm = reactive({
-  title: '', type: 'text', description: '', contentText: '', contentUrl: '', isFree: false,
+  title: '', description: '', isFree: false,
 })
 const lessonResources = ref<LessonResource[]>([])
+
+// Blocks
+const blocks = ref<EditableBlock[]>([])
+const loadingBlocks = ref(false)
+const addingBlock = ref(false)
 
 // Prerequisites
 const prerequisiteIds = ref<string[]>([])
@@ -710,7 +782,6 @@ const storageColor = computed(() => {
 
 // Uploader refs
 const thumbnailUploaderRef = ref<InstanceType<typeof FileUploader> | null>(null)
-const contentUploaderRef = ref<InstanceType<typeof FileUploader> | null>(null)
 const resourceUploaderRef = ref<InstanceType<typeof FileUploader> | null>(null)
 
 // Section dialog
@@ -840,16 +911,14 @@ watch(selected, async (s) => {
   }
   if (s?.type === 'lesson' && currentLesson.value) {
     lessonForm.title = currentLesson.value.title || ''
-    lessonForm.type = currentLesson.value.type || 'text'
     lessonForm.description = currentLesson.value.description || ''
-    lessonForm.contentText = currentLesson.value.contentText || ''
-    lessonForm.contentUrl = currentLesson.value.contentUrl || ''
     lessonForm.isFree = currentLesson.value.isFree || false
     try {
       lessonResources.value = await listResources(currentLesson.value.id)
     } catch {
       lessonResources.value = []
     }
+    await loadBlocks(currentLesson.value.id)
   }
 })
 
@@ -917,10 +986,7 @@ async function saveLesson() {
   try {
     const payload = {
       title: lessonForm.title,
-      type: lessonForm.type,
       description: lessonForm.description || undefined,
-      contentText: lessonForm.type === 'text' ? lessonForm.contentText : undefined,
-      contentUrl: ['video', 'pdf'].includes(lessonForm.type) ? lessonForm.contentUrl : undefined,
       isFree: lessonForm.isFree,
     }
     const updated = await updateLesson(currentLesson.value.id, payload)
@@ -930,6 +996,107 @@ async function saveLesson() {
     $q.notify({ type: 'negative', message: 'Error al guardar leccion', position: 'bottom-right' })
   } finally {
     saving.value = false
+  }
+}
+
+// --- Blocks ---
+
+async function loadBlocks(lessonId: string) {
+  loadingBlocks.value = true
+  try {
+    const list = await listBlocks(lessonId)
+    blocks.value = list.map(b => ({ ...b }))
+  } catch {
+    blocks.value = []
+  } finally {
+    loadingBlocks.value = false
+  }
+}
+
+function blockIcon(type: string) {
+  const opt = blockTypeOptions.find(o => o.value === type)
+  return opt?.icon || 'view_agenda'
+}
+function blockColor(type: string) {
+  const opt = blockTypeOptions.find(o => o.value === type)
+  return opt?.color || 'grey-7'
+}
+function blockLabel(type: string) {
+  const opt = blockTypeOptions.find(o => o.value === type)
+  return opt?.label || 'Bloque'
+}
+
+async function addBlock(type: BlockType) {
+  if (!currentLesson.value) return
+  addingBlock.value = true
+  try {
+    const created = await createBlock(currentLesson.value.id, {
+      type,
+      position: blocks.value.length,
+    })
+    blocks.value.push({ ...created })
+  } catch (err: any) {
+    $q.notify({
+      type: 'negative',
+      message: err?.response?.data?.message || 'Error al añadir bloque',
+      position: 'bottom-right',
+    })
+  } finally {
+    addingBlock.value = false
+  }
+}
+
+async function saveBlock(block: EditableBlock) {
+  block._saving = true
+  try {
+    const updated = await updateBlock(block.id, {
+      textContent: block.textContent,
+      videoUrl: block.videoUrl,
+      pdfUrl: block.pdfUrl,
+      position: block.position,
+    })
+    Object.assign(block, updated)
+    $q.notify({ type: 'positive', message: 'Bloque guardado', position: 'bottom-right' })
+  } catch {
+    $q.notify({ type: 'negative', message: 'Error al guardar bloque', position: 'bottom-right' })
+  } finally {
+    block._saving = false
+  }
+}
+
+function confirmDeleteBlock(block: EditableBlock) {
+  deleteTitle.value = 'Eliminar bloque'
+  deleteMessage.value = `¿Eliminar este bloque (${blockLabel(block.type)})? Si tiene una evaluacion asociada, tambien se eliminara.`
+  deleteFn = async () => {
+    await deleteBlockApi(block.id)
+    blocks.value = blocks.value.filter(b => b.id !== block.id)
+  }
+  deleteDialog.value = true
+}
+
+async function handleBlockReorder() {
+  if (!currentLesson.value) return
+  blocks.value.forEach((b, i) => { b.position = i })
+  try {
+    await reorderBlocks(currentLesson.value.id, blocks.value.map(b => b.id))
+  } catch {
+    $q.notify({ type: 'negative', message: 'Error al reordenar', position: 'bottom-right' })
+  }
+}
+
+async function handleBlockFileUpload(block: EditableBlock, file: File, onProgress: (pct: number) => void) {
+  if (!currentLesson.value) return
+  try {
+    const url = await uploadLessonContent(currentLesson.value.id, file, onProgress)
+    if (block.type === 'video') block.videoUrl = url
+    else if (block.type === 'pdf') block.pdfUrl = url
+    await saveBlock(block)
+  } catch (err: any) {
+    $q.notify({
+      type: 'negative',
+      message: err?.response?.data?.message || 'Error al subir archivo',
+      position: 'bottom-right',
+    })
   }
 }
 
@@ -1014,20 +1181,6 @@ async function handleThumbnailUpload(file: File, onProgress: (pct: number) => vo
   } catch (err: any) {
     const msg = err?.response?.data?.message || 'Error al subir'
     thumbnailUploaderRef.value?.finish(msg)
-  }
-}
-
-async function handleContentUpload(file: File, onProgress: (pct: number) => void) {
-  if (!currentLesson.value) return
-  try {
-    const url = await uploadLessonContent(currentLesson.value.id, file, onProgress)
-    lessonForm.contentUrl = url
-    contentUploaderRef.value?.finish()
-    $q.notify({ type: 'positive', message: 'Archivo subido', position: 'bottom-right' })
-    await saveLesson()
-  } catch (err: any) {
-    const msg = err?.response?.data?.message || 'Error al subir'
-    contentUploaderRef.value?.finish(msg)
   }
 }
 
@@ -1239,5 +1392,35 @@ onMounted(loadData)
   border: 1px solid #99f6e4;
   border-radius: 8px;
   margin-bottom: 8px;
+}
+
+.block-card {
+  border-radius: 10px;
+  background: #fff;
+}
+
+.block-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+}
+
+.block-handle {
+  cursor: grab;
+  color: #94a3b8;
+}
+
+.block-handle:active {
+  cursor: grabbing;
+}
+
+.block-ghost {
+  opacity: 0.4;
+  background: #ecfeff;
 }
 </style>

@@ -91,6 +91,11 @@ const routes: RouteRecordRaw[] = [
         meta: { title: 'Mis cursos — Instructor' },
       },
       {
+        path: 'calificar',
+        component: () => import('@/views/instructor/GradingDashboard.vue'),
+        meta: { title: 'Calificar — Instructor' },
+      },
+      {
         path: 'cursos/nuevo',
         redirect: '/instructor/cursos',
       },

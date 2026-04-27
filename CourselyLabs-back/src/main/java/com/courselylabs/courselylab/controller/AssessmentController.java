@@ -29,34 +29,30 @@ public class AssessmentController {
         this.assessmentService = assessmentService;
     }
 
-    /**
-     * Public detail of an assessment for a lesson — never includes correct answers.
-     */
-    @GetMapping("/lessons/{lessonId}/assessment")
-    @PreAuthorize("@courseSecurityService.canAccessLesson(#lessonId, authentication)")
-    public ResponseEntity<AssessmentDTO> findByLesson(@PathVariable UUID lessonId) {
-        AssessmentDTO dto = assessmentService.findByLessonId(lessonId, false);
+    /** Public detail of an assessment for a block — never includes correct answers. */
+    @GetMapping("/blocks/{blockId}/assessment")
+    @PreAuthorize("@courseSecurityService.canAccessBlock(#blockId, authentication)")
+    public ResponseEntity<AssessmentDTO> findByBlock(@PathVariable UUID blockId) {
+        AssessmentDTO dto = assessmentService.findByBlockId(blockId, false);
         return dto == null ? ResponseEntity.noContent().build() : ResponseEntity.ok(dto);
     }
 
-    /**
-     * Detail with answers — only for instructors/admins editing the assessment.
-     */
-    @GetMapping("/lessons/{lessonId}/assessment/edit")
-    @PreAuthorize("@courseSecurityService.canEditAssessmentByLesson(#lessonId, authentication)")
-    public ResponseEntity<AssessmentDTO> findByLessonForEdit(@PathVariable UUID lessonId) {
-        AssessmentDTO dto = assessmentService.findByLessonId(lessonId, true);
+    /** Detail with answers — only for instructors/admins editing the assessment. */
+    @GetMapping("/blocks/{blockId}/assessment/edit")
+    @PreAuthorize("@courseSecurityService.canEditBlock(#blockId, authentication)")
+    public ResponseEntity<AssessmentDTO> findByBlockForEdit(@PathVariable UUID blockId) {
+        AssessmentDTO dto = assessmentService.findByBlockId(blockId, true);
         return dto == null ? ResponseEntity.noContent().build() : ResponseEntity.ok(dto);
     }
 
-    @PostMapping("/lessons/{lessonId}/assessment")
-    @PreAuthorize("@courseSecurityService.canEditAssessmentByLesson(#lessonId, authentication)")
+    @PostMapping("/blocks/{blockId}/assessment")
+    @PreAuthorize("@courseSecurityService.canEditBlock(#blockId, authentication)")
     public ResponseEntity<AssessmentDTO> create(
-            @PathVariable UUID lessonId,
+            @PathVariable UUID blockId,
             @RequestBody AssessmentDTO dto,
             Authentication auth) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(assessmentService.createForLesson(lessonId, dto, auth.getName()));
+                .body(assessmentService.createForBlock(blockId, dto, auth.getName()));
     }
 
     @PutMapping("/assessments/{id}")
@@ -85,8 +81,6 @@ public class AssessmentController {
     public ResponseEntity<QuizQuestionDTO> updateQuestion(
             @PathVariable UUID questionId,
             @RequestBody QuizQuestionDTO dto) {
-        // Permission check is done indirectly: only existing questions of editable assessments matter.
-        // For simplicity, we check at service level.
         return ResponseEntity.ok(assessmentService.updateQuestion(questionId, dto));
     }
 

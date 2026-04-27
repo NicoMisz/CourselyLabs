@@ -162,7 +162,7 @@ CREATE TABLE lessons (
     section_id UUID NOT NULL REFERENCES sections(id) ON DELETE CASCADE,
     title VARCHAR(255) NOT NULL,
     description TEXT,
-    type VARCHAR(20) NOT NULL DEFAULT 'text' CHECK (type IN ('video', 'text', 'pdf', 'audio', 'quiz', 'project', 'open_text')),
+    type VARCHAR(20),  -- legacy/optional: blocks are the source of truth now
     content_url VARCHAR(500),
     content_text TEXT,
     duration INTEGER DEFAULT 0,
@@ -283,12 +283,31 @@ CREATE TABLE course_prerequisites (
 CREATE INDEX idx_course_prerequisites_course_id ON course_prerequisites(course_id);
 
 -- ============================================
+-- LESSON BLOCKS (multi-content per lesson)
+-- ============================================
+
+CREATE TABLE lesson_blocks (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    lesson_id       UUID NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
+    type            VARCHAR(20) NOT NULL CHECK (type IN ('text', 'video', 'pdf', 'quiz', 'project', 'open_text')),
+    position        INTEGER NOT NULL DEFAULT 0,
+    text_content    TEXT,
+    video_url       VARCHAR(500),
+    pdf_url         VARCHAR(500),
+    created_at      TIMESTAMP NOT NULL DEFAULT now(),
+    updated_at      TIMESTAMP NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_lesson_blocks_lesson_id ON lesson_blocks(lesson_id);
+
+-- ============================================
 -- ASSESSMENTS (quiz, project, open_text)
 -- ============================================
 
 CREATE TABLE assessments (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    lesson_id           UUID NOT NULL UNIQUE REFERENCES lessons(id) ON DELETE CASCADE,
+    lesson_id           UUID REFERENCES lessons(id) ON DELETE CASCADE,
+    block_id            UUID UNIQUE REFERENCES lesson_blocks(id) ON DELETE CASCADE,
     type                VARCHAR(20) NOT NULL CHECK (type IN ('quiz', 'project', 'open_text')),
     description         TEXT,
     max_attempts        INTEGER NOT NULL DEFAULT 3,

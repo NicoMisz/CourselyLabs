@@ -20,6 +20,7 @@ export interface QuizQuestion {
 export interface Assessment {
   id: string
   lessonId: string
+  blockId?: string
   type: AssessmentType
   description?: string
   maxAttempts: number

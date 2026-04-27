@@ -7,9 +7,16 @@ import org.springframework.stereotype.Component;
 
 import com.courselylabs.courselylab.dto.LessonDTO;
 import com.courselylabs.courselylab.entity.LessonEntity;
+import com.courselylabs.courselylab.service.LessonBlockService;
 
 @Component
 public class LessonMapper {
+
+    private final LessonBlockService blockService;
+
+    public LessonMapper(LessonBlockService blockService) {
+        this.blockService = blockService;
+    }
 
     public LessonDTO toDTO(LessonEntity entity) {
         LessonDTO dto = new LessonDTO();
@@ -25,6 +32,7 @@ public class LessonMapper {
         dto.setSectionId(entity.getSection().getId());
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
+        dto.setBlocks(blockService.findByLessonId(entity.getId()));
         return dto;
     }
 

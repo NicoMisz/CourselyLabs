@@ -23,6 +23,11 @@
           <q-item-section avatar><q-icon name="dashboard" /></q-item-section>
           <q-item-section>Mis cursos</q-item-section>
         </q-item>
+
+        <q-item clickable to="/instructor/calificar" active-class="text-primary" exact>
+          <q-item-section avatar><q-icon name="assignment_turned_in" /></q-item-section>
+          <q-item-section>Calificar</q-item-section>
+        </q-item>
       </q-list>
     </q-drawer>
 
