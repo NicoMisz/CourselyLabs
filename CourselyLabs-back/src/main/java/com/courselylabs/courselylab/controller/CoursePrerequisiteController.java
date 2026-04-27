@@ -103,6 +103,9 @@ public class CoursePrerequisiteController {
             @PathVariable UUID id,
             @Valid @RequestBody SyncCoursePrerequisitesRequestDTO request,
             @AuthenticationPrincipal UserDetailsImpl currentUser) {
+        if (currentUser == null) {
+                throw new UnauthorizedException("Authentication required");
+        }
         prerequisiteService.syncPrerequisites(id, request.getPrerequisites(), currentUser.getUsername());
         return ResponseEntity.noContent().build();
     }
