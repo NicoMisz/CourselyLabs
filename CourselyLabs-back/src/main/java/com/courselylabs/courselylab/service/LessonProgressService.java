@@ -38,6 +38,32 @@ public class LessonProgressService {
         this.userRepository = userRepository;
     }
 
+    /**
+     * Force-marks a lesson as completed for a given user. Used by the assessment system
+     * after passing a quiz / instructor grading a project or open-text submission.
+     */
+    public void markCompleted(UUID userId, UUID lessonId) {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+        LessonEntity lesson = lessonRepository.findById(lessonId)
+                .orElseThrow(() -> new ResourceNotFoundException("Lesson", "id", lessonId));
+
+        LessonProgressEntity progress = progressRepository
+                .findByUserIdAndLessonId(userId, lessonId)
+                .orElseGet(() -> {
+                    LessonProgressEntity p = new LessonProgressEntity();
+                    p.setUser(user);
+                    p.setLesson(lesson);
+                    return p;
+                });
+
+        if (!Boolean.TRUE.equals(progress.getIsCompleted())) {
+            progress.setIsCompleted(true);
+            progress.setCompletedAt(LocalDateTime.now());
+            progressRepository.save(progress);
+        }
+    }
+
     public LessonProgressDTO toggleComplete(String email, UUID lessonId) {
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));

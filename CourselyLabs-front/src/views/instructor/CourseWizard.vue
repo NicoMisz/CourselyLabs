@@ -395,6 +395,15 @@
               />
             </div>
 
+            <!-- Assessment editor (for type=quiz, project, open_text) -->
+            <AssessmentEditor
+              v-if="isAssessmentType(lessonForm.type) && currentLesson"
+              :key="`assessment-${currentLesson.id}-${lessonForm.type}`"
+              :lesson-id="currentLesson.id"
+              :type="lessonForm.type"
+              :can-use-premium-features="canUsePremiumFeatures"
+            />
+
             <q-toggle v-model="lessonForm.isFree" label="Leccion gratuita (preview publico)" class="q-mt-md" />
 
             <q-separator class="q-my-md" />
@@ -533,7 +542,12 @@ import {
 import type { LessonResource } from '../../api/resources'
 import RichTextEditor from '../../components/RichTextEditor.vue'
 import FileUploader from '../../components/FileUploader.vue'
+import AssessmentEditor from '../../components/AssessmentEditor.vue'
 import { useAuthStore } from '../../stores/auth'
+
+function isAssessmentType(type: string): boolean {
+  return type === 'quiz' || type === 'project' || type === 'open_text'
+}
 import { formatFileSize as fmtBytes } from '../../api/resources'
 import { searchCourses } from '@/api/courseSearch'
 import { getCoursePrerequisites, syncCoursePrerequisites } from '@/api/prerequisite'
@@ -574,6 +588,9 @@ const lessonTypeOptions = [
   { label: 'Texto', value: 'text' },
   { label: 'Video', value: 'video' },
   { label: 'PDF', value: 'pdf' },
+  { label: 'Quiz', value: 'quiz' },
+  { label: 'Proyecto', value: 'project' },
+  { label: 'Respuesta abierta', value: 'open_text' },
 ]
 
 // Forms

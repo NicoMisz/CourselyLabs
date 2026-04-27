@@ -460,58 +460,148 @@ Interfaz completa para el sistema de reviews (backend ya implementado en `Review
 
 ---
 
-## 10. `feature/assessments` 🆕 PENDIENTE
+## 10. `feature/assessments` ✅ COMPLETADO
 
 **Prioridad:** Media
-**Dependencias:** `feature/course-sections-lessons`, `feature/student-progress`
+**Dependencias:** `feature/course-sections-lessons`, `feature/student-progress`, `feature/downloadable-resources` (reutiliza `FileStorageService`)
 
-### Descripción
-Sistema de evaluación con cuestionarios autocorregidos y entregas de proyectos. Límite de intentos y tiempo. Panel de corrección para instructores.
+### Estado actual
+
+| Elemento | Estado |
+|---|---|
+| Flyway V10 — assessments + quiz_questions + quiz_options + assessment_attempts + quiz_answers + submissions | Hecho |
+| Extension `lesson.type` con `quiz/project/open_text` | Hecho — CHECK constraint actualizado |
+| Entidades JPA (6) | Hecho |
+| Repositorios (6) | Hecho |
+| `AssessmentService` — CRUD + limites Premium (free max 2/tipo/curso, premium ilimitado, admin ilimitado) | Hecho |
+| `AttemptService` — start, submit-quiz con autocorreccion, aleatorizacion de opciones por seed del attemptId | Hecho |
+| `SubmissionService` — submit project/open_text + grading manual + storage MinIO (50 MB max, NO cuenta contra storage del curso) | Hecho |
+| `LessonProgressService.markCompleted()` — marca leccion completada al aprobar | Hecho |
+| `CourseSecurityService` — canEditAssessment, canAccessAssessment, canAccessAttempt, canGradeSubmission | Hecho |
+| Controllers — AssessmentController, AttemptController, SubmissionController | Hecho |
+| Validacion de tiempo limite + auto-expiracion al enviar tarde | Hecho |
+| `init_db/01_schema.sql` actualizado | Hecho |
+| Frontend types + API client (`api/assessment.ts`) | Hecho |
+| `AssessmentLessonView.vue` — intro + delegacion a sub-vistas + resultados pasados | Hecho |
+| `QuizRunner.vue` — timer, nav panel, marcar para revisar, dialog de envio, auto-envio por timeout | Hecho |
+| `ProjectSubmitView.vue` — FileUploader reutilizado | Hecho |
+| `OpenTextSubmitView.vue` — textarea con contador 20k caracteres | Hecho |
+| `AssessmentResultsView.vue` — corregido por pregunta, explicaciones, gradient pass/fail | Hecho |
+| Integracion en `LessonView` con `isAssessmentType` (boton "Marcar como completada" oculto, chip "Completada" si aprobado) | Hecho |
+| `AssessmentEditor.vue` integrado en CourseWizard — config + preguntas + opciones + entregas pendientes + dialog de calificacion | Hecho |
+| Tipos `quiz/project/open_text` en lessonTypeOptions del editor | Hecho |
+
+### Descripcion
+Sistema de evaluacion con **3 tipos** (alineado con CLAUDE.md):
+- **Quiz** — cuestionarios de respuesta multiple autocorregidos
+- **Project** — entrega de archivo corregida manualmente por el instructor
+- **Open text** — respuesta escrita larga corregida manualmente por el instructor
+
+Cada evaluacion es una **leccion de tipo especial** dentro de una seccion, integrada en la navegacion normal del curso.
+
+### Decisiones clave
+
+1. **Los assessments son lecciones**, no una jerarquia paralela. Extender `lesson.type` con `'quiz' | 'project' | 'open_text'` y añadir `lesson.assessmentId` (nullable). Ventajas: el estudiante navega el curso con el sidebar habitual, `lesson_progress` ya funciona, el editor de lecciones en `CourseWizard` añade evaluaciones igual que añade un video.
+2. **Aprobar = completar leccion**. Si la leccion es tipo evaluacion, `isCompleted = true` se setea automaticamente al aprobar (quiz autocorregido, project/open_text tras calificacion del instructor). El toggle manual queda deshabilitado para estos tipos.
+3. **Archivos reutilizan MinIO**. Las entregas de `project` usan `FileStorageService` + `storage_key` + URLs presignadas, igual que `lesson_resources`. **Las entregas no cuentan contra el `storage_bytes` del curso** (son del alumno, no del creador).
+4. **Limite de 50 MB por entrega de alumno** (configurable, aplica a todos los usuarios). Tipos permitidos: PDF, ZIP, docx, xlsx, imagenes.
+5. **Crear evaluaciones es funcion Premium** para creadores (coherente con prerequisitos). Plan free: **maximo 2 de cada tipo por curso** (2 quizzes + 2 projects + 2 open_text = hasta 6 evaluaciones). Plan premium: sin limite.
+6. **Aleatorizacion de opciones** activa por defecto (configurable por quiz). Ayuda a reducir trampas sin complicar la UX.
+7. **Sin cooldown entre intentos** — si suspendes puedes reintentar inmediatamente hasta agotar `maxAttempts`.
+8. **Sin deteccion de cambio de pestaña** (MVP de honor). Queda como posible mejora futura.
 
 ### Tareas
 
 #### Backend — Entidades nuevas
-- [ ] `AssessmentEntity`: id, courseId, sectionId (nullable), title, description, type (`quiz/project`), maxAttempts, timeLimitMinutes (nullable), passingScore, isPublished, position, createdAt
+
+- [ ] `AssessmentEntity`: id, lessonId (unique — 1 assessment por leccion), type (`quiz/project/open_text`), description, maxAttempts, timeLimitMinutes (nullable), passingScore, shuffleOptions (default true, solo aplica a quiz), createdAt
 - [ ] `QuizQuestionEntity`: id, assessmentId, questionText, position, points
-- [ ] `QuizOptionEntity`: id, questionId, optionText, isCorrect, position
-- [ ] `AssessmentAttemptEntity`: id, assessmentId, userId, startedAt, submittedAt, score, passed, attemptNumber
+- [ ] `QuizOptionEntity`: id, questionId, optionText, isCorrect, explanation (nullable — feedback educativo por opcion), position
+- [ ] `AssessmentAttemptEntity`: id, assessmentId, userId, startedAt, submittedAt (nullable), score (nullable), passed (nullable), attemptNumber, status (`in_progress/submitted/graded`)
 - [ ] `QuizAnswerEntity`: id, attemptId, questionId, selectedOptionId
-- [ ] `ProjectSubmissionEntity`: id, attemptId, fileUrl, fileName, fileSize, instructorFeedback, gradedAt, gradedBy
-- [ ] Migraciones Flyway para todas las tablas
+- [ ] `SubmissionEntity`: id, attemptId, type (`project/open_text`), storageKey (nullable — para project), fileName, fileSize, answerText (nullable — para open_text), instructorFeedback, gradedAt, gradedBy
+- [ ] Migracion Flyway V10 con todas las tablas + extender `lessons.type` con los nuevos valores + añadir `lessons.assessment_id` FK
 
 #### Backend — Endpoints
-- [ ] `GET /api/courses/{courseId}/assessments` — listar evaluaciones del curso
-- [ ] `GET /api/assessments/{id}` — detalle de evaluación (sin `isCorrect` en opciones)
-- [ ] `POST /api/assessments/{id}/start` — iniciar intento (valida límite de intentos); devuelve preguntas con opciones sin marcar la correcta
-- [ ] `POST /api/assessments/{id}/submit` — enviar respuestas (autocorrige quiz) o guardar archivo de proyecto
-- [ ] `GET /api/assessments/{id}/attempts` — historial de intentos del usuario
-- [ ] `GET /api/assessments/{id}/results/{attemptId}` — resultado con respuestas correctas y explicaciones
-- [ ] CRUD de evaluaciones y preguntas (instructor): `POST/PUT/DELETE /api/instructor/assessments`
-- [ ] `GET /api/instructor/assessments/{id}/submissions` — entregas pendientes de corrección
-- [ ] `PATCH /api/instructor/submissions/{id}/grade` — calificar proyecto con puntuación y feedback
 
-#### Backend — Lógica
-- [ ] Autocorrección de quizzes al enviar — calcular puntuación y `passed`
-- [ ] Validar tiempo límite: `startedAt + timeLimitMinutes < now` → rechazar envío tardío
-- [ ] Validar intentos máximos antes de iniciar
-- [ ] Las respuestas correctas (`isCorrect`) nunca se incluyen en `GET /assessments/{id}` — solo en resultados post-envío
+- [ ] `GET /api/lessons/{id}` — ya existe; incluir `assessmentId` si aplica
+- [ ] `GET /api/assessments/{id}` — detalle publico del assessment (quiz: preguntas sin `isCorrect`; project/open_text: instrucciones)
+- [ ] `POST /api/assessments/{id}/start` — iniciar intento (valida maxAttempts, crea `AssessmentAttemptEntity` con `status=in_progress`)
+- [ ] `POST /api/assessments/{id}/submit` — enviar respuestas
+  - Quiz: autocorrige, marca `passed`, setea `lesson_progress.isCompleted=true` si aprueba
+  - Project/open_text: guarda entrega, `status=submitted`, leccion queda sin completar hasta calificar
+- [ ] `GET /api/assessments/{id}/attempts` — historial del usuario para este assessment
+- [ ] `GET /api/assessments/{id}/results/{attemptId}` — resultado con respuestas correctas + feedback del instructor
+- [ ] CRUD de assessments (instructor): `POST /api/lessons/{lessonId}/assessment`, `PUT/DELETE /api/assessments/{id}`
+- [ ] CRUD de preguntas/opciones (instructor): anidados bajo assessment
+- [ ] `GET /api/assessments/{id}/submissions` — entregas pendientes (instructor/admin del curso)
+- [ ] `PATCH /api/submissions/{id}/grade` — calificar (score + feedback); si `score >= passingScore` → `passed=true` + marca leccion completada para el alumno
 
-#### Frontend — Componentes
-- [ ] `AssessmentIntro.vue` — card con: título, descripción, nº preguntas, tiempo límite, intentos restantes, puntuación mínima; botón "Comenzar" con dialog de confirmación
+#### Backend — Logica
+
+- [ ] **Integracion con progreso**: service helper `markAssessmentCompleted(lessonId, userId, passed)` que actualiza `lesson_progress`
+- [ ] **Autocorreccion** de quizzes al submit — calcular score sumando puntos de respuestas correctas
+- [ ] **Aleatorizacion** de opciones al enviar el detalle del quiz (si `shuffleOptions=true`) — hacerlo en backend con semilla por attemptId para que al recargar la pagina no cambie el orden
+- [ ] **Tiempo limite**: `startedAt + timeLimitMinutes < now` → bloquea submit o marca como timeout automatico
+- [ ] **Intentos maximos** validados antes de `start`
+- [ ] `isCorrect` y `explanation` **nunca** se devuelven en `GET /assessments/{id}` — solo en `/results/{attemptId}` tras submit
+- [ ] **Limites Premium**:
+  - Free: max 2 assessments por tipo por curso (quiz, project, open_text)
+  - Premium: sin limite
+  - Admin: sin limite
+  - Validar al crear assessment en el servicio
+- [ ] **Storage de entregas**: key `submissions/{courseId}/{lessonId}/{userId}/{attemptId}-{filename}`, max 50 MB por archivo. **NO cuenta contra `courses.storage_bytes`**
+- [ ] `CourseSecurityService.canGradeSubmission(submissionId, auth)` — solo owner/instructor/admin del curso
+
+#### Backend — Submit for review (integracion con validacion existente)
+
+- [ ] Si un curso tiene lecciones tipo assessment, validar que los assessments tengan al menos 1 pregunta (quiz) o descripcion no vacia (project/open_text) antes de permitir enviar a revision
+
+#### Frontend — Integracion con CourseWizard
+
+- [ ] Extender `lessonTypeOptions` en el editor con `{ label: 'Quiz', value: 'quiz' }`, `{ label: 'Proyecto', value: 'project' }`, `{ label: 'Respuesta abierta', value: 'open_text' }`
+- [ ] Panel de leccion: cuando el tipo es assessment, mostrar sub-editor especifico en el panel central en lugar del RichTextEditor
+- [ ] **Bloqueo Premium en editor**: si el usuario no es Premium y ya tiene 2 assessments del tipo seleccionado en el curso, deshabilitar y mostrar banner "Hazte Premium para crear mas"
+- [ ] Sub-editor de quiz: lista de preguntas con drag & drop, añadir pregunta, añadir opciones, marcar correcta, campo explanation por opcion, configuracion (tiempo, intentos, passingScore, shuffleOptions)
+- [ ] Sub-editor de project: instrucciones en RichTextEditor + configuracion (maxAttempts, passingScore)
+- [ ] Sub-editor de open_text: instrucciones + configuracion
+
+#### Frontend — Vista del estudiante
+
+- [ ] `AssessmentIntro.vue` — se muestra en lugar del contenido normal cuando `lesson.type` es assessment: titulo, descripcion, numero de preguntas, tiempo limite, intentos restantes, boton "Comenzar" con dialog de confirmacion
 - [ ] `QuizView.vue` — layout limpio sin header/sidebar durante el quiz
-- [ ] `QuizNavPanel.vue` — fila de números de pregunta coloreados por estado (sin responder / respondida / actual / marcada para revisar)
-- [ ] `QuizTimer.vue` — barra superior que se reduce + MM:SS; colores: `$primary` → `$warning` (5 min) → `$negative` parpadeante (1 min)
-- [ ] `QuizQuestion.vue` — pregunta + opciones con `q-option-group`; opción seleccionada con fondo `$primary` al 10%
-- [ ] `QuizSubmitSummary.vue` — resumen antes de enviar: respondidas/sin responder/marcadas; dialog de confirmación si hay sin responder
-- [ ] `AssessmentResults.vue` — puntuación con counter-up animado, aprobado/suspenso, lista de preguntas con corrección; confeti CSS si aprueba
-- [ ] `ProjectUpload.vue` — instrucciones markdown + zona drag & drop + barra de progreso de subida + estado de la entrega
-- [ ] `InstructorSubmissionList.vue` — lista de entregas pendientes con nombre, fecha, archivo descargable
-- [ ] `InstructorGrading.vue` — puntuación numérica + textarea feedback + botones "Aprobar" / "Suspender"
+- [ ] `QuizNavPanel.vue` — numeros de pregunta coloreados por estado (sin responder / respondida / actual / marcada)
+- [ ] `QuizTimer.vue` — barra superior que se reduce + MM:SS; colores primary → warning (5 min) → negative parpadeante (1 min)
+- [ ] `QuizQuestion.vue` — `q-option-group`; boton "Marcar para revisar" por pregunta
+- [ ] `QuizSubmitSummary.vue` — resumen antes de enviar + dialog si hay sin responder
+- [ ] `AssessmentResults.vue` — puntuacion con counter-up, aprobado/suspenso, lista de correcciones con explicaciones; confeti CSS reutilizable (mismo que completar curso 100%) si aprueba
+- [ ] `ProjectUploadView.vue` — instrucciones markdown + `FileUploader` (reutilizar componente existente) + estado de la entrega y feedback tras calificacion
+- [ ] `OpenTextView.vue` — instrucciones + textarea grande + caracteres contados + boton enviar + estado
+
+#### Frontend — Vista del instructor (integrada en CourseWizard)
+
+- [ ] Panel de leccion tipo project/open_text: añadir seccion "Entregas pendientes" con lista de submissions (nombre del alumno, fecha, link de descarga / texto de respuesta)
+- [ ] `GradingDialog.vue` — dialog para calificar: puntuacion numerica + textarea feedback + botones "Aprobar" / "Suspender"
+- [ ] Preview de PDF/imagen del archivo entregado (reutilizar patron de `lesson_resources`)
+
+#### Frontend — Integracion con progreso
+
+- [ ] Panel "Marcar como completada" deshabilitado en lecciones tipo assessment (se marca automaticamente al aprobar)
+- [ ] En el sidebar del curso durante navegacion: mostrar icono distinto por tipo de assessment + badge "✓" si aprobado, "⏳" si pendiente de calificacion, "❌" si suspenso con intentos agotados
 
 #### UX/UI
-- [ ] Timeout → auto-envío con dialog "Se ha acabado el tiempo. Tu examen ha sido enviado automáticamente."
-- [ ] Botón "Marcar para revisar" (flag) en cada pregunta para revisión posterior
-- [ ] Preview de PDF/imagen del archivo entregado en el panel del instructor
+
+- [ ] Timeout → auto-envio con dialog "Se ha acabado el tiempo. Tu examen ha sido enviado automaticamente."
+- [ ] Aleatorizacion de opciones activa por defecto, se puede desactivar por quiz
+- [ ] Empty state de entregas pendientes: "No hay entregas por calificar"
+- [ ] Notificar al alumno cuando el instructor califica (requiere `feature/notifications`, dejar pendiente)
+- [ ] Confeti reutilizable entre: aprobar quiz, completar seccion, completar curso al 100%
+
+#### Pendiente para futuras iteraciones
+
+- [ ] Deteccion de cambio de pestaña (anti-trampas)
+- [ ] Certificados automaticos al aprobar todos los assessments del curso (al 100%)
+- [ ] Stats de assessments en admin dashboard: % aprobados por curso, preguntas mas falladas, tiempo medio
 
 ---
 
@@ -1028,10 +1118,10 @@ develop
  ├── feature/payments-stripe          ✅ Completado
  ├── feature/downloadable-resources   ✅ Completado
  ├── feature/course-prerequisites     ✅ Completado
+ ├── feature/assessments              ✅ Completado
  │
  │   --- Proximas ramas ---
  │
- ├── feature/assessments              (tras student-progress)
  ├── feature/forums                   (tras course-detail-page)
  ├── feature/messaging                (independiente)
  ├── feature/notifications            (tras forums + messaging)

@@ -77,6 +77,11 @@
                 :key="lesson.id"
                 :src="lesson.contentUrl"
               />
+              <AssessmentLessonView
+                v-else-if="isAssessmentType(lesson.type)"
+                :key="lesson.id"
+                :lesson-id="lessonId"
+              />
               <div v-else :key="'empty'" class="q-pa-xl text-center text-grey-6">
                 <q-icon name="info" size="48px" class="q-mb-md" />
                 <div class="text-h6">Contenido no disponible</div>
@@ -89,6 +94,7 @@
                 <p v-if="lesson.description" class="text-body2 text-grey-7">{{ lesson.description }}</p>
               </div>
               <q-btn
+                v-if="!isAssessmentType(lesson.type)"
                 :color="isCurrentCompleted ? 'positive' : 'grey-5'"
                 :icon="isCurrentCompleted ? 'check_circle' : 'radio_button_unchecked'"
                 :label="isCurrentCompleted ? 'Completada' : 'Marcar como completada'"
@@ -97,6 +103,14 @@
                 :loading="completingLesson"
                 @click="handleToggleComplete"
               />
+              <q-chip
+                v-else-if="isCurrentCompleted"
+                color="positive"
+                text-color="white"
+                icon="check_circle"
+              >
+                Completada
+              </q-chip>
             </div>
 
             <LessonResources :lesson-id="lessonId" class="q-mt-lg" />
@@ -141,6 +155,11 @@ import CourseNavSidebar from '../components/CourseNavSidebar.vue'
 import LessonNavBar from '../components/LessonNavBar.vue'
 import LessonVideoPlayer from '../components/LessonVideoPlayer.vue'
 import LessonTextViewer from '../components/LessonTextViewer.vue'
+import AssessmentLessonView from '../components/AssessmentLessonView.vue'
+
+function isAssessmentType(type: string): boolean {
+  return type === 'quiz' || type === 'project' || type === 'open_text'
+}
 import LessonPdfViewer from '../components/LessonPdfViewer.vue'
 import LessonResources from '../components/LessonResources.vue'
 
