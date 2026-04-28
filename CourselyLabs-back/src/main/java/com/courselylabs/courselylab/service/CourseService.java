@@ -79,7 +79,9 @@ public class CourseService {
 
     @Transactional(readOnly = true)
     public List<CourseDTO> findAll() {
-        return courseMapper.toDTOList(courseRepository.findAll());
+        // Endpoint público: solo cursos publicados. Los borradores y los pendientes
+        // de revisión nunca deben aparecer en el catálogo o la home.
+        return courseMapper.toDTOList(courseRepository.findByIsPublishedTrue());
     }
 
     @Transactional(readOnly = true)
@@ -93,6 +95,7 @@ public class CourseService {
         CourseEntity entity = courseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Course", "id", id));
         UserEntity currentUser = resolveUserOrNull(email);
+        assertCanViewCourse(entity, currentUser);
         return buildCourseDetail(entity, currentUser);
     }
 
@@ -101,6 +104,7 @@ public class CourseService {
         CourseEntity entity = courseRepository.findBySlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException("Course", "slug", slug));
         UserEntity currentUser = resolveUserOrNull(email);
+        assertCanViewCourse(entity, currentUser);
         return buildCourseDetail(entity, currentUser);
     }
 
@@ -109,6 +113,33 @@ public class CourseService {
             return null;
         }
         return userRepository.findByEmail(email).orElse(null);
+    }
+
+    /**
+     * Un curso no publicado solo es visible para owner, instructor co-asignado o admin.
+     * Para cualquier otro caller (anónimo o usuario sin relación) lanzamos 404 — devolver
+     * 403 filtraría que el curso existe.
+     */
+    private void assertCanViewCourse(CourseEntity entity, UserEntity currentUser) {
+        if (Boolean.TRUE.equals(entity.getIsPublished())) {
+            return;
+        }
+        if (currentUser == null) {
+            throw new ResourceNotFoundException("Course", "id", entity.getId());
+        }
+        if ("admin".equals(currentUser.getRole())) {
+            return;
+        }
+        UserEntity owner = entity.getCreatedBy();
+        if (owner != null && owner.getId().equals(currentUser.getId())) {
+            return;
+        }
+        boolean isInstructor = courseInstructorRepository
+                .existsByCourseIdAndInstructorId(entity.getId(), currentUser.getId());
+        if (isInstructor) {
+            return;
+        }
+        throw new ResourceNotFoundException("Course", "id", entity.getId());
     }
 
     @Transactional(readOnly = true)
