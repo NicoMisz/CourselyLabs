@@ -351,27 +351,38 @@ public class CoursePrerequisiteService {
     // --- Cursos relacionados (cualquier usuario autenticado) ---
     public CourseRelatedResponseDTO findRelatedCourses(UUID courseId, String email) {
         List<RelatedCourseDTO> prerequisites = prerequisiteRepository
-                .findWithPrerequisiteCourseByCourseId(courseId)
+            .findWithPrerequisiteCourseByCourseId(courseId)
+            .stream()
+            .filter(cp -> Boolean.TRUE.equals(cp.getPrerequisiteCourse().getIsPublished()))
+            .map(cp -> new RelatedCourseDTO(
+                cp.getPrerequisiteCourse().getId(),
+                cp.getPrerequisiteCourse().getTitle(),
+                cp.getPrerequisiteCourse().getSlug(),
+                cp.getCompletionThreshold()))
+            .toList();
+
+        List<RelatedCourseDTO> requiredBy = prerequisiteRepository
+            .findWithCourseByPrerequisiteCourseId(courseId)
+            .stream()
+            .filter(cp -> Boolean.TRUE.equals(cp.getCourse().getIsPublished()))
+            .map(cp -> new RelatedCourseDTO(
+                cp.getCourse().getId(),
+                cp.getCourse().getTitle(),
+                cp.getCourse().getSlug(),
+                cp.getCompletionThreshold()))
+            .toList();
+
+        return new CourseRelatedResponseDTO(prerequisites, requiredBy);
+    }
+
+    public List<RelatedCourseDTO> findDraftPrerequisites(UUID courseId, String email) {
+        return prerequisiteRepository.findDraftPrerequisitesByCourseId(courseId)
                 .stream()
-                .filter(cp -> Boolean.TRUE.equals(cp.getPrerequisiteCourse().getIsPublished()))
                 .map(cp -> new RelatedCourseDTO(
                         cp.getPrerequisiteCourse().getId(),
                         cp.getPrerequisiteCourse().getTitle(),
                         cp.getPrerequisiteCourse().getSlug(),
                         cp.getCompletionThreshold()))
                 .toList();
-
-        List<RelatedCourseDTO> requiredBy = prerequisiteRepository
-                .findWithCourseByPrerequisiteCourseId(courseId)
-                .stream()
-                .filter(cp -> Boolean.TRUE.equals(cp.getCourse().getIsPublished()))
-                .map(cp -> new RelatedCourseDTO(
-                        cp.getCourse().getId(),
-                        cp.getCourse().getTitle(),
-                        cp.getCourse().getSlug(),
-                        cp.getCompletionThreshold()))
-                .toList();
-
-        return new CourseRelatedResponseDTO(prerequisites, requiredBy);
     }
 }

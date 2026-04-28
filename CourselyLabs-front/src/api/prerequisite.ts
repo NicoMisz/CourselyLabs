@@ -47,3 +47,8 @@ export async function getCourseRelated(courseId: string): Promise<CourseRelatedR
     const { data } = await api.get<CourseRelatedResponse>(`/api/courses/${courseId}/related`)
     return data
 }
+
+export async function getCoursePrerequisiteDrafts(courseId: string): Promise<CoursePrerequisite[]> {
+    const { data } = await api.get<CoursePrerequisite[]>(`/api/courses/${courseId}/prerequisites/drafts`)
+    return data
+}

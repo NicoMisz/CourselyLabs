@@ -13,7 +13,7 @@
           </q-input>
         </div>
 
-        <div class="col-12 col-md-3">
+        <div class="col-4 col-md-3">
           <q-select
             v-model="categoryId"
             :options="categoryOptions"
@@ -25,7 +25,7 @@
           />
         </div>
 
-        <div class="col-12 col-md-3">
+        <div class="col-4 col-md-3">
           <q-select
             v-model="isFree"
             :options="typeOptions"
@@ -37,26 +37,27 @@
           />
         </div>
 
-        <div class="col-12 col-md-3">
+        <div class="col-4 col-md-3">
+          <q-select
+            v-model="level"
+            :options="levelOptions"
+            emit-value
+            map-options
+            clearable
+            label="Level"
+            filled
+          />
+        </div>
+
+        <div class="col-4 col-md-3">
           <q-select
             v-model="sortBy"
             :options="sortOptions"
             emit-value
             map-options
+            clearable
             label="Ordenar por"
             filled
-          />
-        </div>
-      </div>
-
-      <div class="row q-col-gutter-md items-center q-mb-md">
-        <div class="col-12 col-md-6">
-          <q-input
-            v-model="level"
-            filled
-            clearable
-            label="Buscar nivel"
-            hint="Escribe principiante, intermedio o avanzado"
           />
         </div>
       </div>
@@ -161,6 +162,13 @@ const sortOptions = [
 const typeOptions = [
   { label: 'Gratis', value: true },
   { label: 'Premium', value: false }
+]
+
+// Opciones para el select de nivel
+const levelOptions = [
+  { label: 'Beginner', value: 'beginner' },
+  { label: 'Intermediate', value: 'intermediate' },
+  { label: 'Advanced', value: 'advanced' }
 ]
 
 // Opciones para el select de categorías, cargadas desde la API

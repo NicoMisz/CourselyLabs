@@ -38,4 +38,13 @@ public interface CoursePrerequisiteRepository extends JpaRepository<CoursePrereq
         WHERE cp.prerequisiteCourse.id = :courseId
     """)
     List<CoursePrerequisiteEntity> findWithCourseByPrerequisiteCourseId(@Param("courseId") UUID courseId);
+
+    @Query("""
+    SELECT cp
+    FROM CoursePrerequisiteEntity cp
+    JOIN FETCH cp.prerequisiteCourse
+    WHERE cp.course.id = :courseId
+        AND cp.prerequisiteCourse.isPublished = false
+    """)
+    List<CoursePrerequisiteEntity> findDraftPrerequisitesByCourseId(@Param("courseId") UUID courseId);
 }

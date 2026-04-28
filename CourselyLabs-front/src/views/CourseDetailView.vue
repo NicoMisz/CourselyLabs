@@ -42,9 +42,9 @@
 
       <CourseBreadcrumb :title="course.title" :category-name="course.categoryName" />
 
-      <div class="row q-col-gutter-lg">
+      <div class="row q-col-gutter-lg" :class="{ 'full-width-layout': enrolled }">
         <!-- Columna esquerra -->
-        <div class="col-12 col-md-8">
+        <div :class="enrolled ? 'col-12' : 'col-12 col-md-8'">
           <CourseHero
             :title="course.title"
             :short-description="course.shortDescription"
@@ -419,6 +419,7 @@ watch(enrolled, (isEnrolled) => {
 watch(tab, (newTab) => {
   if (newTab === 'prerequisitos' && course.value?.id) {
     fetchPrerequisiteStatus(course.value.id, true)
+    fetchRelatedAuth(course.value.id)
   }
 })
 
@@ -442,3 +443,14 @@ onBeforeUnmount(() => {
 })
 
 </script>
+
+<style scoped>
+.full-width-layout {
+  width: 100%;
+}
+
+.full-width-layout > div:first-child {
+  flex: 0 0 100%;
+  max-width: 100%;
+}
+</style>
