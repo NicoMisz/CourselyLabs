@@ -190,7 +190,7 @@
         </q-card-section>
 
         <q-card-section class="q-gutter-sm">
-          <div class="text-caption text-grey-7">Duracion:</div>
+          <div class="text-caption text-grey-7">Duración:</div>
           <div class="row q-gutter-xs">
             <q-btn
               v-for="preset in presets"

@@ -8,7 +8,7 @@
     <!-- No assessment configured -->
     <div v-else-if="!assessment" class="empty">
       <q-icon name="assignment" size="48px" color="grey-4" />
-      <div class="text-h6 text-grey-6 q-mt-sm">Esta evaluacion aun no esta configurada</div>
+      <div class="text-h6 text-grey-6 q-mt-sm">Esta evaluación aún no está configurada</div>
     </div>
 
     <!-- Intro screen -->
@@ -175,7 +175,7 @@ function titleForType(type: string) {
     case 'quiz': return 'Cuestionario'
     case 'project': return 'Entrega de proyecto'
     case 'open_text': return 'Respuesta abierta'
-    default: return 'Evaluacion'
+    default: return 'Evaluación'
   }
 }
 

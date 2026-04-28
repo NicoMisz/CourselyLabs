@@ -84,7 +84,7 @@
           </div>
         </div>
 
-        <!-- Fase 1: cargar mas conservador; fase 2: q-infinite-scroll -->
+        <!-- Fase 1: cargar más conservador; fase 2: q-infinite-scroll -->
         <div class="row justify-center q-mt-lg" v-if="hasNext">
           <q-btn
             outline

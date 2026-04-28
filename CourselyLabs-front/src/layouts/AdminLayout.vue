@@ -4,7 +4,7 @@
       <q-toolbar>
         <q-btn flat dense round icon="menu" @click="drawerOpen = !drawerOpen" class="lt-lg" />
         <q-toolbar-title class="text-body1 text-weight-medium">
-          Administracion
+          Administración
         </q-toolbar-title>
       </q-toolbar>
     </q-header>

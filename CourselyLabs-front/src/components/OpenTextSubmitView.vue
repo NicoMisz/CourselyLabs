@@ -15,7 +15,7 @@
         type="textarea"
         outlined
         rows="14"
-        placeholder="Escribe aqui tu respuesta..."
+        placeholder="Escribe aquí tu respuesta..."
         counter
         maxlength="20000"
       />

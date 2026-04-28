@@ -6,6 +6,64 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es/1.1.0/).
 
 ---
 
+## [Sin versión] - 2026-04-28 — i18n + sweep ortográfico castellano
+
+### Agregado
+
+- **Dependencia**: `vue-i18n@^9.14.5` instalada y registrada en [main.ts](src/main.ts) como plugin global.
+- **src/i18n/index.ts**: Configuración del plugin (`legacy: false`, locale por defecto `es`).
+- **src/i18n/locales/es.json**: Diccionario completo con ~250 claves organizadas por dominio (`common`, `nav`, `auth`, `home`, `courses`, `course`, `lesson`, `assessment.*`, `instructor.wizard`, `instructor.grading`, `admin`, `premium`, `review`, `notFound`, `footer`). Incluye pluralización (Vue I18n format) en `lecciones`, `intentos`, `valoraciones`, etc.
+
+### Migrado a `t()` (vue-i18n)
+
+- **src/layouts/InstructorLayout.vue**: Sidebar instructor.
+- **src/views/instructor/GradingDashboard.vue**: Vista completa de calificación.
+- **src/components/AssessmentEditor.vue**: Configuración de evaluación, preguntas, opciones, banners y diálogos.
+
+> El resto del frontend usa strings inline pero con ortografía corregida. Migración progresiva a `t()` queda pendiente como trabajo posterior; la infraestructura está lista.
+
+### Sweep ortográfico (frontend + backend)
+
+Reemplazos automatizados con `sed` aplicando corrección de tildes en strings UI y mensajes de excepción. Cubre ~150 palabras castellanas comunes:
+
+- **Sustantivos `-ción/-sión`**: `evaluación`, `configuración`, `información`, `descripción`, `revisión`, `verificación`, `inscripción`, `corrección`, `administración`, `publicación`, `suscripción`, `decisión`, `calificación`, `creación`, `edición`, `validación`, `explicación`, `sección`, `acción`, `valoración`, `actualización`, `función`, `opción`, `lección`, `versión`, `puntuación`, `duración`, `presentación`, `comunicación`, `motivación`, `documentación`, `televisión`, `visión`, `misión`, `selección`…
+- **Adjetivos**: `público/pública`, `máximo/máxima/máximos/máximas`, `mínimo/mínima`, `automático/automática`, `temático/temática`, `académico/académica`, `típico/típica`, `histórico/histórica`, `científico`, `rápido`, `último`, `físico`, `lógico`, `cómodo`, `próximo`…
+- **Verbos en futuro/condicional**: `será/serán`, `estará/estarán`, `podrá/podrán/podrás`, `tendrá/tendrán`, `deberá/deberás`, `verá/verás/verán`, `iremos/irá/irán/irás`, `mantendrás`, `harán/haré/haría`, `comenzará/comenzaras`, `necesitarás`, `encontrará`…
+- **Adverbios**: `también`, `después`, `aún`, `aquí`, `así`, `además`, `automáticamente`, `rápidamente`, `atrás`…
+- **Geo y comunes**: `España`, `América`, `México`, `país/países`, `través`, `catálogo`, `útil`, `fácil`, `difícil`, `índice`, `límite`, `título`, `página`, `categoría`, `botón`, `envío`, `línea`, `época`, `ámbito`, `éxito`, `examen/exámenes`, `ningún`, `algún`, `común`…
+- **Demostrativos protegidos**: revertí `está` → `esta` cuando va seguido de sustantivo (`esta lección`, `esta evaluación`, `esta sección`, `esta opción`, etc.) en frontend y backend.
+- **Puntuación**: `Sí` con tilde como afirmación, signos `¿…?` añadidos en preguntas, `«…»` en lugar de `"..."` para citas en español.
+
+### Corregido (errores TS preexistentes destapados por `npm run build`)
+
+- **src/components/CourseNavSidebar.vue**, **src/components/CourseSectionList.vue**: `lesson.type` ahora es opcional → fallback `(lesson.type || 'text')`.
+- **src/components/FileUploader.vue**: uso de `target.files?.[0]` con guard explícito en lugar de indexado con narrowing.
+- **src/components/QuizRunner.vue**: `q-card v-if="currentQuestion"` para guardar contra `undefined`; `isMarked` con guard antes de `markedSet.has()`.
+- **src/components/RichTextEditor.vue**: `setContent(val, false)` → `setContent(val, { emitUpdate: false })` (signatura correcta de TipTap v3).
+- **src/views/ProfileView.vue**: eliminada la rama `case 'instructor'` del switch (no existe en `User['role']`).
+
+### URLs y identificadores preservados
+
+- **src/router/routes.ts**: path `/cursos/:slug/leccion/:lessonId` se mantiene SIN tilde (las URLs no llevan acentos).
+- Imports de paquetes (p. ej. `@tiptap/extension-placeholder`) revertidos a su forma original tras quedar tocados por el sweep.
+
+---
+
+## [Sin version] - 2026-04-28 — Limpieza UX del editor de bloques + deep-link a calificación
+
+### Cambiado
+
+- **src/components/AssessmentEditor.vue**: Eliminada la sección "Entregas pendientes" embebida — ahora vive solo en `/instructor/calificar`. El editor de bloques queda enfocado únicamente en autoría. Se sustituye por un banner informativo con enlace a Calificar.
+- **src/components/AssessmentEditor.vue**: Nuevo botón **"Eliminar evaluación"** + diálogo de confirmación. Permite des-configurar un bloque assessment-type sin borrar el bloque entero (útil para deshacer creaciones por error).
+- **src/views/instructor/CourseWizard.vue**: Dropdown "Añadir bloque" reorganizado con dos secciones (`Contenido` / `Evaluaciones`) separadas por `q-separator` y headers. Reduce confusión entre `Texto` (contenido pasivo) y `Pregunta abierta` (evaluación). "Respuesta abierta" → "Pregunta abierta"; hints reescritos para diferenciarlos.
+- **src/views/instructor/GradingDashboard.vue**: Añadido botón `open_in_new` por entrega que navega a `/instructor/cursos/:id/editar?lesson=...&block=...` (deep-link). Badge "Respuesta abierta" → "Pregunta abierta".
+
+### Agregado
+
+- **src/views/instructor/CourseWizard.vue**: `applyDeepLinkFromQuery()` lee `?lesson=...&block=...` al cargar — selecciona la lección correspondiente y resalta el bloque (scroll smooth + animación CSS `.block-highlight` durante 2.2 s). Cada `block-card` recibe `id="block-:id"` para soportar el scroll.
+
+---
+
 ## [Sin version] - 2026-04-27 — Refactor multi-bloque + dashboard de calificacion
 
 ### Agregado

@@ -1,6 +1,6 @@
 <template>
   <q-page class="q-pa-lg">
-    <h1 class="text-h5 q-mb-lg">Panel de administracion</h1>
+    <h1 class="text-h5 q-mb-lg">Panel de administración</h1>
 
     <div v-if="loading" class="row q-gutter-md">
       <div v-for="i in 4" :key="i" class="col-12 col-sm-6 col-md-3">

@@ -1,17 +1,15 @@
 <template>
   <q-page class="grading-page">
     <div class="grading-header">
-      <h1 class="page-title">Calificar entregas</h1>
-      <p class="page-sub">
-        Aqui puedes ver todas las entregas pendientes de calificar de tus cursos.
-      </p>
+      <h1 class="page-title">{{ t('instructor.grading.pageTitle') }}</h1>
+      <p class="page-sub">{{ t('instructor.grading.pageSub') }}</p>
     </div>
 
     <div class="filters-row">
       <q-select
         v-model="courseFilter"
         :options="courseOptions"
-        label="Filtrar por curso"
+        :label="t('instructor.grading.filterByCourse')"
         outlined
         emit-value
         map-options
@@ -20,7 +18,7 @@
         style="min-width: 280px"
       />
       <q-space />
-      <q-btn flat dense no-caps icon="refresh" label="Actualizar" @click="load" />
+      <q-btn flat dense no-caps icon="refresh" :label="t('common.refresh')" @click="load" />
     </div>
 
     <div v-if="loading" class="text-center q-py-xl">
@@ -33,8 +31,8 @@
 
     <div v-else-if="filteredSubmissions.length === 0" class="empty-state">
       <q-icon name="check_circle" size="48px" color="positive" />
-      <div class="text-h6 q-mt-sm">Todo al dia</div>
-      <p class="text-grey-7">No hay entregas pendientes de calificar.</p>
+      <div class="text-h6 q-mt-sm">{{ t('instructor.grading.allUpToDate') }}</div>
+      <p class="text-grey-7">{{ t('instructor.grading.noPending') }}</p>
     </div>
 
     <q-list v-else bordered separator class="grading-list">
@@ -59,7 +57,7 @@
               text-color="white"
               class="q-ml-sm"
             >
-              {{ s.assessmentType === 'project' ? 'Proyecto' : 'Respuesta abierta' }}
+              {{ s.assessmentType === 'project' ? t('assessment.type.project') : t('assessment.type.openText') }}
             </q-badge>
           </q-item-label>
           <q-item-label caption>
@@ -71,6 +69,18 @@
           </q-item-label>
         </q-item-section>
         <q-item-section side>
+          <q-btn
+            flat
+            dense
+            round
+            icon="open_in_new"
+            color="grey-7"
+            @click.stop="goToBlock(s)"
+          >
+            <q-tooltip>{{ t('instructor.grading.viewBlock') }}</q-tooltip>
+          </q-btn>
+        </q-item-section>
+        <q-item-section side>
           <q-icon name="chevron_right" />
         </q-item-section>
       </q-item>
@@ -80,7 +90,7 @@
     <q-dialog v-model="gradingDialog" persistent>
       <q-card style="min-width: 520px; max-width: 90vw">
         <q-card-section>
-          <div class="text-h6">Calificar entrega</div>
+          <div class="text-h6">{{ t('instructor.grading.gradeDialog') }}</div>
           <div class="text-caption text-grey-7 q-mt-xs">
             {{ current?.studentName }} · {{ current?.courseTitle }}
           </div>
@@ -93,7 +103,7 @@
               outline
               color="primary"
               icon="download"
-              :label="current.fileName || 'Descargar archivo'"
+              :label="current.fileName || t('instructor.grading.downloadFile')"
               no-caps
               @click="download"
             />
@@ -105,14 +115,14 @@
           <q-input
             v-model.number="form.score"
             type="number"
-            label="Puntuacion (0-100)"
+            :label="t('instructor.grading.score')"
             outlined
             min="0"
             max="100"
           />
           <q-input
             v-model="form.feedback"
-            label="Feedback para el estudiante"
+            :label="t('instructor.grading.feedback')"
             outlined
             type="textarea"
             rows="4"
@@ -121,11 +131,11 @@
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn flat label="Cancelar" v-close-popup />
+          <q-btn flat :label="t('common.cancel')" v-close-popup />
           <q-btn
             color="primary"
             unelevated
-            label="Calificar"
+            :label="t('instructor.grading.grade')"
             :loading="grading"
             :disable="form.score == null"
             @click="handleGrade"
@@ -139,10 +149,14 @@
 <script setup lang="ts">
 import { ref, computed, reactive, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
+import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { listPendingSubmissions, type PendingSubmission } from '@/api/grading'
 import { gradeSubmission, getSubmissionDownloadUrl } from '@/api/assessment'
 
 const $q = useQuasar()
+const router = useRouter()
+const { t } = useI18n()
 
 const submissions = ref<PendingSubmission[]>([])
 const loading = ref(true)
@@ -179,10 +193,17 @@ async function load() {
   try {
     submissions.value = await listPendingSubmissions()
   } catch (err: any) {
-    error.value = err?.response?.data?.message || 'No se pudieron cargar las entregas'
+    error.value = err?.response?.data?.message || t('instructor.grading.errorLoad')
   } finally {
     loading.value = false
   }
+}
+
+function goToBlock(s: PendingSubmission) {
+  router.push({
+    path: `/instructor/cursos/${s.courseId}/editar`,
+    query: { lesson: s.lessonId, ...(s.blockId ? { block: s.blockId } : {}) },
+  })
 }
 
 function openGrading(s: PendingSubmission) {
@@ -198,7 +219,7 @@ async function download() {
     const url = await getSubmissionDownloadUrl(current.value.id)
     window.open(url, '_blank')
   } catch {
-    $q.notify({ type: 'negative', message: 'Error al descargar', position: 'bottom-right' })
+    $q.notify({ type: 'negative', message: t('instructor.grading.downloadError'), position: 'bottom-right' })
   }
 }
 
@@ -208,10 +229,10 @@ async function handleGrade() {
   try {
     await gradeSubmission(current.value.id, form.score, form.feedback)
     gradingDialog.value = false
-    $q.notify({ type: 'positive', message: 'Entrega calificada', position: 'bottom-right' })
+    $q.notify({ type: 'positive', message: t('instructor.grading.graded'), position: 'bottom-right' })
     await load()
   } catch {
-    $q.notify({ type: 'negative', message: 'Error al calificar', position: 'bottom-right' })
+    $q.notify({ type: 'negative', message: t('instructor.grading.gradeError'), position: 'bottom-right' })
   } finally {
     grading.value = false
   }

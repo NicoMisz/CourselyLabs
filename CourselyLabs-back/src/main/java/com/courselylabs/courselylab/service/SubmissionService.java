@@ -73,7 +73,7 @@ public class SubmissionService {
 
         AssessmentEntity assessment = attempt.getAssessment();
         if (!"project".equals(assessment.getType())) {
-            throw new BadRequestException("Esta evaluacion no es de tipo proyecto");
+            throw new BadRequestException("Esta evaluación no es de tipo proyecto");
         }
         if (file == null || file.isEmpty()) {
             throw new BadRequestException("Archivo vacio");
@@ -130,7 +130,7 @@ public class SubmissionService {
 
         AssessmentEntity assessment = attempt.getAssessment();
         if (!"open_text".equals(assessment.getType())) {
-            throw new BadRequestException("Esta evaluacion no es de tipo respuesta abierta");
+            throw new BadRequestException("Esta evaluación no es de tipo respuesta abierta");
         }
         if (answerText == null || answerText.isBlank()) {
             throw new BadRequestException("La respuesta no puede estar vacia");
@@ -178,7 +178,7 @@ public class SubmissionService {
         AssessmentEntity assessment = attempt.getAssessment();
 
         if (score < 0 || score > 100) {
-            throw new BadRequestException("La puntuacion debe estar entre 0 y 100");
+            throw new BadRequestException("La puntuación debe estar entre 0 y 100");
         }
 
         boolean passed = score >= assessment.getPassingScore();

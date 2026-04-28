@@ -5,7 +5,7 @@
         <q-icon name="upload_file" color="accent" /> Entrega de proyecto
       </div>
       <p class="text-body2 text-grey-7">
-        Sube el archivo de tu entrega. Una vez enviado, se quedara pendiente de revision por el instructor.
+        Sube el archivo de tu entrega. Una vez enviado, se quedara pendiente de revisión por el instructor.
       </p>
     </q-card-section>
 

@@ -4,9 +4,9 @@
 
     <div class="q-gutter-y-sm">
       <div><strong>Nivel:</strong> {{ level || 'Sin nivel' }}</div>
-      <div><strong>Duracion:</strong> {{ durationText || 'Proximamente' }}</div>
+      <div><strong>Duración:</strong> {{ durationText || 'Proximamente' }}</div>
       <div><strong>Estudiantes:</strong> {{ studentsCount || 0 }}</div>
-      <div><strong>Valoracion:</strong> {{ averageRating?.toFixed(1) || 'N/A' }}</div>
+      <div><strong>Valoración:</strong> {{ averageRating?.toFixed(1) || 'N/A' }}</div>
     </div>
 
     <PrerequisiteBlockBanner
@@ -64,7 +64,7 @@ const authStore = useAuthStore();
 const isGuest = computed(() => !authStore.isLoggedIn);
 
 const buttonLabel = computed(() => {
-  if (isGuest.value) return 'Inicia sesion para inscribirte';
+  if (isGuest.value) return 'Inicia sesión para inscribirte';
   if (props.enrolled) return 'Continuar curso';
   if (props.isFree) return 'Inscribirme gratis';
   return 'Hazte Premium';

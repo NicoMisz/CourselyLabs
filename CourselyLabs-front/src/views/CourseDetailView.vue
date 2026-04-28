@@ -14,7 +14,7 @@
     <template v-else-if="notFound">
       <q-card flat bordered class="q-pa-lg text-center">
         <div class="text-h5 q-mb-sm">Curso no encontrado</div>
-        <p class="text-grey-7">El curso que buscas no existe o ya no esta disponible.</p>
+        <p class="text-grey-7">El curso que buscas no existe o ya no está disponible.</p>
         <q-btn color="primary" label="Explorar cursos" to="/cursos" />
       </q-card>
     </template>
@@ -65,7 +65,7 @@
             active-color="primary"
             indicator-color="primary"
           >
-            <q-tab name="descripcion" label="Descripcion" />
+            <q-tab name="descripción" label="Descripción" />
             <q-tab name="prerequisitos" label="Relacionados" />
             <q-tab name="contenido" label="Contenido" />
             <q-tab name="instructores" label="Instructores" />
@@ -75,9 +75,9 @@
           <q-separator />
 
           <q-tab-panels v-model="tab" animated>
-            <q-tab-panel name="descripcion">
+            <q-tab-panel name="descripción">
               <div v-if="course.description" class="rich-content" v-html="course.description" />
-              <p v-else class="text-grey-7">Sin descripcion completa por ahora.</p>
+              <p v-else class="text-grey-7">Sin descripción completa por ahora.</p>
             </q-tab-panel>
 
             <q-tab-panel name="prerequisitos">
@@ -98,7 +98,7 @@
                 :enrolled="enrolled"
               />
               <q-banner v-else class="bg-grey-2 text-grey-8" rounded>
-                Este curso aun no tiene contenido publicado.
+                Este curso aún no tiene contenido publicado.
               </q-banner>
             </q-tab-panel>
 
@@ -196,7 +196,7 @@ const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
 
-const tab = ref('descripcion');
+const tab = ref('descripción');
 const loading = ref(true);
 const notFound = ref(false);
 const errorMessage = ref('');
@@ -281,7 +281,7 @@ async function handleEnroll() {
   } catch (error: unknown) {
     const message = (error as { response?: { data?: { message?: string } } })
       ?.response?.data?.message;
-    enrollError.value = message || 'No se pudo completar la inscripcion. Intenta nuevamente.';
+    enrollError.value = message || 'No se pudo completar la inscripción. Intenta nuevamente.';
   } finally {
     enrollLoading.value = false;
   }
@@ -329,7 +329,7 @@ async function fetchPrerequisites(courseId?: string) {
 		}
 	}
 
-	// Blockers para banner y bloqueo de boton
+	// Blockers para banner y bloqueo de botón
 	try {
 		if (authStore.isLoggedIn) {
 			prerequisiteBlockers.value = await getCoursePrerequisiteBlockers(courseId)

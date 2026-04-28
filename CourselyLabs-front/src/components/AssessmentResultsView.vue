@@ -14,7 +14,7 @@
         {{ result.score }}<span class="text-h5">%</span>
       </div>
       <div class="text-caption">
-        Puntuacion minima para aprobar: {{ result.passingScore }}%
+        Puntuación mínima para aprobar: {{ result.passingScore }}%
       </div>
     </q-card-section>
 
@@ -54,7 +54,7 @@
     <!-- Project / open_text: pending grading -->
     <q-card-section v-else-if="result.score == null" class="text-center text-grey-7">
       <q-icon name="hourglass_top" size="36px" color="warning" />
-      <div class="text-body1 q-mt-sm">Pendiente de calificacion por el instructor.</div>
+      <div class="text-body1 q-mt-sm">Pendiente de calificación por el instructor.</div>
     </q-card-section>
 
     <q-card-actions align="center" class="q-pa-md">

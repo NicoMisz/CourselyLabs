@@ -7,7 +7,7 @@
         <div class="text-h6">Verificando tu cuenta...</div>
       </template>
 
-      <!-- Exito -->
+      <!-- Éxito -->
       <template v-else-if="success">
         <div class="success-icon q-mx-auto q-mb-md">
           <q-icon name="check" size="48px" color="white" />
@@ -62,7 +62,7 @@ onMounted(async () => {
   const token = route.query.token as string
   if (!token) {
     loading.value = false
-    errorMsg.value = 'Enlace de verificacion invalido.'
+    errorMsg.value = 'Enlace de verificación invalido.'
     return
   }
 
@@ -75,7 +75,7 @@ onMounted(async () => {
     }
   } catch (err: unknown) {
     const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-    errorMsg.value = msg || 'El enlace de verificacion es invalido o ha expirado.'
+    errorMsg.value = msg || 'El enlace de verificación es invalido o ha expirado.'
     showResend.value = true
   } finally {
     loading.value = false
@@ -85,14 +85,14 @@ onMounted(async () => {
 async function resendEmail() {
   const email = authStore.user?.email
   if (!email) {
-    $q.notify({ type: 'negative', message: 'Inicia sesion para reenviar el email', position: 'bottom-right' })
+    $q.notify({ type: 'negative', message: 'Inicia sesión para reenviar el email', position: 'bottom-right' })
     return
   }
 
   resending.value = true
   try {
     await api.post(`/api/auth/resend-verification?email=${encodeURIComponent(email)}`)
-    $q.notify({ type: 'positive', message: 'Email de verificacion reenviado', position: 'bottom-right' })
+    $q.notify({ type: 'positive', message: 'Email de verificación reenviado', position: 'bottom-right' })
     showResend.value = false
   } catch {
     $q.notify({ type: 'negative', message: 'No se pudo reenviar el email', position: 'bottom-right' })

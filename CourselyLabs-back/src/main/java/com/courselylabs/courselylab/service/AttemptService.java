@@ -107,7 +107,7 @@ public class AttemptService {
         AssessmentEntity assessment = attempt.getAssessment();
 
         if (!"quiz".equals(assessment.getType())) {
-            throw new BadRequestException("Esta evaluacion no es de tipo quiz");
+            throw new BadRequestException("Esta evaluación no es de tipo quiz");
         }
         if (!"in_progress".equals(attempt.getStatus())) {
             throw new BadRequestException("Este intento ya fue enviado");

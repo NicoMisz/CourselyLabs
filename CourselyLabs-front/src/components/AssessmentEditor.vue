@@ -15,14 +15,14 @@
     <!-- Not yet created -->
     <div v-else-if="!assessment" class="empty-create">
       <p class="text-body2 text-grey-7 q-mb-sm">
-        Esta leccion aun no tiene una evaluacion configurada.
+        {{ t('assessment.editor.notConfiguredYet') }}
       </p>
       <q-btn
         color="primary"
         unelevated
         no-caps
         icon="add"
-        label="Configurar evaluacion"
+        :label="t('assessment.editor.createCta')"
         :loading="creating"
         @click="handleCreate"
       />
@@ -32,11 +32,13 @@
     <template v-else>
       <!-- Settings -->
       <q-card flat bordered class="q-pa-md q-mb-md">
-        <div class="text-caption text-weight-medium text-grey-7 q-mb-sm">CONFIGURACION</div>
+        <div class="text-caption text-weight-medium text-grey-7 q-mb-sm">
+          {{ t('assessment.editor.title').toUpperCase() }}
+        </div>
 
         <q-input
           v-model="form.description"
-          :label="type === 'open_text' ? 'Enunciado de la tarea (que tienen que entregar los alumnos)' : 'Descripcion / Instrucciones'"
+          :label="type === 'open_text' ? t('assessment.editor.descriptionTask') : t('assessment.editor.description')"
           outlined
           type="textarea"
           :rows="type === 'open_text' ? 5 : 3"
@@ -49,35 +51,39 @@
             <q-input
               v-model.number="form.maxAttempts"
               type="number"
-              :label="type === 'quiz' ? 'Intentos maximos' : 'Reentregas maximas'"
+              :label="type === 'quiz' ? t('assessment.editor.maxAttempts') : t('assessment.editor.maxResubmissions')"
               outlined dense min="1"
             />
           </div>
           <div v-if="type === 'quiz'" class="col-12 col-sm-4">
-            <q-input v-model.number="form.timeLimitMinutes" type="number" label="Tiempo limite (min)" outlined dense min="0" hint="Vacio = sin limite" />
+            <q-input
+              v-model.number="form.timeLimitMinutes"
+              type="number"
+              :label="t('assessment.editor.timeLimit')"
+              outlined dense min="0"
+              :hint="t('assessment.editor.timeLimitHint')"
+            />
           </div>
           <div :class="type === 'quiz' ? 'col-12 col-sm-4' : 'col-12 col-sm-6'">
-            <q-input v-model.number="form.passingScore" type="number" label="% para aprobar" outlined dense min="0" max="100" />
+            <q-input v-model.number="form.passingScore" type="number" :label="t('assessment.editor.passingScore')" outlined dense min="0" max="100" />
           </div>
         </div>
 
         <q-toggle
           v-if="type === 'quiz'"
           v-model="form.shuffleOptions"
-          label="Aleatorizar orden de opciones"
+          :label="t('assessment.editor.shuffleOptions')"
           class="q-mt-sm"
         />
 
         <q-banner v-if="type === 'open_text'" rounded class="bg-blue-1 text-blue-9 q-mt-sm" dense>
           <template #avatar><q-icon name="info" color="info" /></template>
-          Los estudiantes enviaran texto libre (max 20.000 caracteres). Si necesitas adjuntar PDFs, codigo o ejemplos,
-          añadelos como <strong>recursos descargables</strong> de esta leccion.
+          {{ t('assessment.editor.infoOpenText') }}
         </q-banner>
 
         <q-banner v-if="type === 'project'" rounded class="bg-blue-1 text-blue-9 q-mt-sm" dense>
           <template #avatar><q-icon name="info" color="info" /></template>
-          Los estudiantes subiran un archivo (max 50 MB). Si quieres dar enunciado/material de partida,
-          adjuntalo como <strong>recurso descargable</strong> de esta leccion.
+          {{ t('assessment.editor.infoProject') }}
         </q-banner>
 
         <div class="row justify-end q-mt-sm">
@@ -85,7 +91,7 @@
             color="primary"
             unelevated
             no-caps
-            label="Guardar configuracion"
+            :label="t('assessment.editor.saveConfig')"
             size="sm"
             :loading="savingConfig"
             @click="saveConfig"
@@ -96,11 +102,13 @@
       <!-- Questions (only for quiz) -->
       <div v-if="type === 'quiz'">
         <div class="row items-center justify-between q-mb-sm">
-          <div class="text-caption text-weight-medium text-grey-7">PREGUNTAS ({{ questions.length }})</div>
+          <div class="text-caption text-weight-medium text-grey-7">
+            {{ t('assessment.editor.questionsCount', { count: questions.length }) }}
+          </div>
         </div>
 
         <div v-if="questions.length === 0" class="empty-hint q-mb-md">
-          Aun no hay preguntas. Añade la primera para empezar.
+          {{ t('assessment.editor.questionsEmpty') }}
         </div>
 
         <div v-else class="q-mb-md">
@@ -115,7 +123,7 @@
                 <div class="question-num">{{ qIdx + 1 }}</div>
                 <q-input
                   v-model="q.questionText"
-                  placeholder="Escribe la pregunta..."
+                  :placeholder="t('assessment.editor.questionPlaceholder')"
                   outlined
                   dense
                   type="textarea"
@@ -125,40 +133,40 @@
               </div>
 
               <div class="text-caption text-weight-medium text-grey-7 q-mt-sm q-mb-xs">
-                OPCIONES <span class="text-grey-5">— marca la correcta con el radio button</span>
+                {{ t('assessment.editor.options') }} <span class="text-grey-5">{{ t('assessment.editor.optionsHint') }}</span>
               </div>
               <div v-for="(opt, oIdx) in q.options" :key="oIdx" class="option-row q-mb-xs">
                 <q-radio v-model="q.correctIdx" :val="oIdx" />
                 <q-input
                   v-model="opt.optionText"
-                  :placeholder="`Opcion ${oIdx + 1}`"
+                  :placeholder="t('assessment.editor.optionPlaceholder', { n: oIdx + 1 })"
                   outlined dense
                   class="col"
                 />
                 <q-btn flat dense round icon="close" color="grey-7" size="sm" @click="q.options.splice(oIdx, 1)">
-                  <q-tooltip>Eliminar opcion</q-tooltip>
+                  <q-tooltip>{{ t('assessment.editor.removeOption') }}</q-tooltip>
                 </q-btn>
               </div>
-              <q-btn flat dense no-caps icon="add" label="Añadir opcion" color="primary" size="sm" @click="addOption(q)" />
+              <q-btn flat dense no-caps icon="add" :label="t('assessment.editor.addOption')" color="primary" size="sm" @click="addOption(q)" />
 
               <!-- Advanced -->
               <q-expansion-item
-                label="Avanzado: puntos y explicaciones por opcion"
+                :label="t('assessment.editor.advanced')"
                 dense
                 header-class="text-caption text-grey-7"
                 class="q-mt-md"
               >
-                <q-input v-model.number="q.points" type="number" label="Puntos" outlined dense min="1" style="max-width: 200px" class="q-mb-sm" />
-                <div class="text-caption text-grey-7 q-mb-xs">Explicacion para mostrar tras enviar (opcional):</div>
+                <q-input v-model.number="q.points" type="number" :label="t('assessment.editor.points')" outlined dense min="1" style="max-width: 200px" class="q-mb-sm" />
+                <div class="text-caption text-grey-7 q-mb-xs">{{ t('assessment.editor.explanationLabel') }}</div>
                 <div v-for="(opt, oIdx) in q.options" :key="`exp-${oIdx}`" class="row items-center q-gutter-sm q-mb-xs">
-                  <span class="text-caption text-grey-7" style="min-width: 70px">Opcion {{ oIdx + 1 }}</span>
-                  <q-input v-model="opt.explanation" :placeholder="opt.optionText || `Por que esta opcion...`" outlined dense class="col" />
+                  <span class="text-caption text-grey-7" style="min-width: 70px">{{ t('assessment.editor.optionPlaceholder', { n: oIdx + 1 }) }}</span>
+                  <q-input v-model="opt.explanation" :placeholder="opt.optionText || t('assessment.editor.optionPlaceholder', { n: oIdx + 1 })" outlined dense class="col" />
                 </div>
               </q-expansion-item>
 
               <div class="row justify-between q-mt-md">
-                <q-btn flat dense no-caps icon="delete" color="negative" label="Eliminar pregunta" size="sm" @click="removeQuestion(q, qIdx)" />
-                <q-btn color="primary" unelevated no-caps label="Guardar pregunta" size="sm" :loading="q.saving" @click="saveQuestion(q)" />
+                <q-btn flat dense no-caps icon="delete" color="negative" :label="t('assessment.editor.removeQuestion')" size="sm" @click="removeQuestion(q, qIdx)" />
+                <q-btn color="primary" unelevated no-caps :label="t('assessment.editor.saveQuestion')" size="sm" :loading="q.saving" @click="saveQuestion(q)" />
               </div>
             </q-card-section>
           </q-card>
@@ -169,43 +177,36 @@
           unelevated
           no-caps
           icon="add"
-          label="Añadir pregunta"
+          :label="t('assessment.editor.addQuestion')"
           class="full-width q-mt-md"
           @click="addQuestion"
         />
       </div>
 
-      <!-- Submissions panel (for project / open_text) -->
-      <div v-if="type === 'project' || type === 'open_text'">
-        <div class="row items-center justify-between q-mb-sm">
-          <div class="text-caption text-weight-medium text-grey-7">ENTREGAS PENDIENTES</div>
-          <q-btn flat dense no-caps icon="refresh" size="sm" @click="loadPending" />
-        </div>
+      <!-- Pending submissions live in Calificar; the editor stays focused on authoring. -->
+      <q-banner
+        v-if="type === 'project' || type === 'open_text'"
+        rounded
+        class="bg-blue-1 text-blue-9 q-mt-sm"
+        dense
+      >
+        <template #avatar><q-icon name="info" color="info" /></template>
+        {{ t('assessment.editor.gradingHint') }}
+        <router-link to="/instructor/calificar" class="text-weight-medium">{{ t('nav.grading') }}</router-link>.
+      </q-banner>
 
-        <div v-if="pendingSubmissions.length === 0" class="empty-hint">
-          No hay entregas pendientes de calificar.
-        </div>
-
-        <q-list v-else bordered separator class="q-mb-md">
-          <q-item
-            v-for="s in pendingSubmissions"
-            :key="s.id"
-            clickable
-            @click="openGrading(s)"
-          >
-            <q-item-section avatar>
-              <q-icon :name="s.type === 'project' ? 'upload_file' : 'edit_note'" color="primary" />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label>{{ s.studentName || 'Estudiante' }}</q-item-label>
-              <q-item-label caption>
-                {{ formatDate(s.createdAt) }}
-                <span v-if="s.fileName"> · {{ s.fileName }}</span>
-              </q-item-label>
-            </q-item-section>
-            <q-item-section side><q-icon name="chevron_right" /></q-item-section>
-          </q-item>
-        </q-list>
+      <!-- Danger zone -->
+      <div class="row justify-end q-mt-md">
+        <q-btn
+          flat
+          dense
+          no-caps
+          icon="delete"
+          color="negative"
+          size="sm"
+          :label="t('assessment.editor.deleteAssessment')"
+          @click="confirmDeleteAssessment"
+        />
       </div>
     </template>
 
@@ -219,68 +220,24 @@
       <template #avatar>
         <q-icon name="workspace_premium" color="amber-8" />
       </template>
-      Plan gratuito: limite de 2 evaluaciones de cada tipo por curso.
+      {{ t('assessment.editor.freeLimitBanner') }}
       <template #action>
-        <q-btn flat dense color="amber-8" label="Hazte Premium" no-caps to="/premium" />
+        <q-btn flat dense color="amber-8" :label="t('nav.premium')" no-caps to="/premium" />
       </template>
     </q-banner>
 
-    <!-- Grading dialog -->
-    <q-dialog v-model="gradingDialog" persistent>
-      <q-card style="min-width: 500px; max-width: 90vw">
+    <!-- Confirm delete assessment -->
+    <q-dialog v-model="deleteAssessmentDialog">
+      <q-card style="min-width: 380px">
         <q-card-section>
-          <div class="text-h6">Calificar entrega</div>
-          <div class="text-body2 text-grey-7 q-mt-xs">
-            {{ currentSubmission?.studentName }}
-          </div>
+          <div class="text-h6">{{ t('assessment.editor.deleteConfirmTitle') }}</div>
         </q-card-section>
-
         <q-card-section>
-          <!-- Project: download link -->
-          <div v-if="currentSubmission?.type === 'project'" class="q-mb-md">
-            <q-btn
-              outline
-              color="primary"
-              icon="download"
-              :label="currentSubmission.fileName || 'Descargar archivo'"
-              no-caps
-              @click="downloadSubmission"
-            />
-          </div>
-
-          <!-- Open text: show answer -->
-          <div v-else-if="currentSubmission?.answerText" class="answer-box q-mb-md">
-            {{ currentSubmission.answerText }}
-          </div>
-
-          <q-input
-            v-model.number="gradeForm.score"
-            type="number"
-            label="Puntuacion (0-100)"
-            outlined
-            min="0"
-            max="100"
-          />
-          <q-input
-            v-model="gradeForm.feedback"
-            label="Feedback para el estudiante"
-            outlined
-            type="textarea"
-            rows="4"
-            class="q-mt-sm"
-          />
+          {{ t('assessment.editor.deleteConfirmBody') }}
         </q-card-section>
-
         <q-card-actions align="right">
-          <q-btn flat label="Cancelar" v-close-popup />
-          <q-btn
-            color="primary"
-            unelevated
-            label="Calificar"
-            :loading="gradingLoading"
-            :disable="gradeForm.score == null"
-            @click="handleGrade"
-          />
+          <q-btn flat :label="t('common.cancel')" v-close-popup />
+          <q-btn color="negative" unelevated :label="t('common.delete')" :loading="deletingAssessment" @click="handleDeleteAssessment" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -290,18 +247,17 @@
 <script setup lang="ts">
 import { ref, reactive, watch, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
+import { useI18n } from 'vue-i18n'
 import {
   getAssessmentForEditByBlock,
   createAssessmentForBlock,
   updateAssessment,
+  deleteAssessment,
   addQuestion as apiAddQuestion,
   updateQuestion as apiUpdateQuestion,
   deleteQuestion as apiDeleteQuestion,
-  getPendingSubmissions,
-  getSubmissionDownloadUrl,
-  gradeSubmission,
 } from '../api/assessment'
-import type { Assessment, Submission } from '../types/assessment'
+import type { Assessment } from '../types/assessment'
 
 const props = defineProps<{
   blockId: string
@@ -314,6 +270,7 @@ const emit = defineEmits<{
 }>()
 
 const $q = useQuasar()
+const { t } = useI18n()
 
 const loading = ref(true)
 const creating = ref(false)
@@ -339,14 +296,11 @@ interface QuestionEdit {
 
 const questions = ref<QuestionEdit[]>([])
 
-const pendingSubmissions = ref<Submission[]>([])
-const gradingDialog = ref(false)
-const currentSubmission = ref<Submission | null>(null)
-const gradeForm = reactive({ score: 0, feedback: '' })
-const gradingLoading = ref(false)
+const deleteAssessmentDialog = ref(false)
+const deletingAssessment = ref(false)
 
-function iconForType(t: string) {
-  switch (t) {
+function iconForType(typeStr: string) {
+  switch (typeStr) {
     case 'quiz': return 'quiz'
     case 'project': return 'upload_file'
     case 'open_text': return 'edit_note'
@@ -354,8 +308,8 @@ function iconForType(t: string) {
   }
 }
 
-function colorForType(t: string) {
-  switch (t) {
+function colorForType(typeStr: string) {
+  switch (typeStr) {
     case 'quiz': return 'primary'
     case 'project': return 'accent'
     case 'open_text': return 'deep-purple'
@@ -363,18 +317,13 @@ function colorForType(t: string) {
   }
 }
 
-function titleForType(t: string) {
-  switch (t) {
-    case 'quiz': return 'Cuestionario'
-    case 'project': return 'Entrega de proyecto'
-    case 'open_text': return 'Respuesta abierta'
-    default: return 'Evaluacion'
+function titleForType(typeStr: string) {
+  switch (typeStr) {
+    case 'quiz': return t('assessment.type.quiz')
+    case 'project': return t('assessment.type.project')
+    case 'open_text': return t('assessment.type.openText')
+    default: return t('assessment.editor.title')
   }
-}
-
-function formatDate(d?: string | null) {
-  if (!d) return ''
-  return new Date(d).toLocaleString('es')
 }
 
 async function load() {
@@ -400,9 +349,6 @@ async function load() {
         correctIdx: (q.options || []).findIndex(o => o.isCorrect),
         saving: false,
       }))
-      if (props.type !== 'quiz') {
-        await loadPending()
-      }
     }
   } finally {
     loading.value = false
@@ -419,12 +365,12 @@ async function handleCreate() {
       shuffleOptions: true,
     })
     emit('created', assessment.value)
-    $q.notify({ type: 'positive', message: 'Evaluacion creada', position: 'bottom-right' })
+    $q.notify({ type: 'positive', message: t('assessment.editor.createdOk'), position: 'bottom-right' })
     await load()
   } catch (err: any) {
     $q.notify({
       type: 'negative',
-      message: err?.response?.data?.message || 'Error al crear',
+      message: err?.response?.data?.message || t('assessment.editor.createError'),
       position: 'bottom-right',
     })
   } finally {
@@ -443,9 +389,9 @@ async function saveConfig() {
       passingScore: form.passingScore,
       shuffleOptions: form.shuffleOptions,
     })
-    $q.notify({ type: 'positive', message: 'Configuracion guardada', position: 'bottom-right' })
+    $q.notify({ type: 'positive', message: t('assessment.editor.configSaved'), position: 'bottom-right' })
   } catch {
-    $q.notify({ type: 'negative', message: 'Error al guardar', position: 'bottom-right' })
+    $q.notify({ type: 'negative', message: t('assessment.editor.configSaveError'), position: 'bottom-right' })
   } finally {
     savingConfig.value = false
   }
@@ -492,9 +438,9 @@ async function saveQuestion(q: QuestionEdit) {
     } else {
       await apiUpdateQuestion(q.id, payload)
     }
-    $q.notify({ type: 'positive', message: 'Pregunta guardada', position: 'bottom-right' })
+    $q.notify({ type: 'positive', message: t('assessment.editor.questionSaved'), position: 'bottom-right' })
   } catch {
-    $q.notify({ type: 'negative', message: 'Error al guardar pregunta', position: 'bottom-right' })
+    $q.notify({ type: 'negative', message: t('assessment.editor.questionSaveError'), position: 'bottom-right' })
   } finally {
     q.saving = false
   }
@@ -505,51 +451,30 @@ async function removeQuestion(q: QuestionEdit, idx: number) {
     try {
       await apiDeleteQuestion(q.id)
     } catch {
-      $q.notify({ type: 'negative', message: 'Error al eliminar', position: 'bottom-right' })
+      $q.notify({ type: 'negative', message: t('assessment.editor.errorRemove'), position: 'bottom-right' })
       return
     }
   }
   questions.value.splice(idx, 1)
 }
 
-async function loadPending() {
+function confirmDeleteAssessment() {
+  deleteAssessmentDialog.value = true
+}
+
+async function handleDeleteAssessment() {
   if (!assessment.value) return
+  deletingAssessment.value = true
   try {
-    pendingSubmissions.value = await getPendingSubmissions(assessment.value.id)
+    await deleteAssessment(assessment.value.id)
+    assessment.value = null
+    questions.value = []
+    deleteAssessmentDialog.value = false
+    $q.notify({ type: 'positive', message: t('assessment.editor.deletedOk'), position: 'bottom-right' })
   } catch {
-    pendingSubmissions.value = []
-  }
-}
-
-function openGrading(s: Submission) {
-  currentSubmission.value = s
-  gradeForm.score = 70
-  gradeForm.feedback = ''
-  gradingDialog.value = true
-}
-
-async function downloadSubmission() {
-  if (!currentSubmission.value) return
-  try {
-    const url = await getSubmissionDownloadUrl(currentSubmission.value.id)
-    window.open(url, '_blank')
-  } catch {
-    $q.notify({ type: 'negative', message: 'Error al descargar', position: 'bottom-right' })
-  }
-}
-
-async function handleGrade() {
-  if (!currentSubmission.value) return
-  gradingLoading.value = true
-  try {
-    await gradeSubmission(currentSubmission.value.id, gradeForm.score, gradeForm.feedback)
-    gradingDialog.value = false
-    $q.notify({ type: 'positive', message: 'Entrega calificada', position: 'bottom-right' })
-    await loadPending()
-  } catch {
-    $q.notify({ type: 'negative', message: 'Error al calificar', position: 'bottom-right' })
+    $q.notify({ type: 'negative', message: t('assessment.editor.deleteError'), position: 'bottom-right' })
   } finally {
-    gradingLoading.value = false
+    deletingAssessment.value = false
   }
 }
 

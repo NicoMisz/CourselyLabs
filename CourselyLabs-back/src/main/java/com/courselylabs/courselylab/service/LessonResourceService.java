@@ -215,7 +215,7 @@ public class LessonResourceService {
         if (current + newBytes > limit) {
             long limitMb = limit / (1024 * 1024);
             throw new BadRequestException(
-                "Superas el limite de almacenamiento del curso (" + limitMb + " MB). "
+                "Superas el límite de almacenamiento del curso (" + limitMb + " MB). "
                 + "Hazte Premium para ampliar a 1 GB por curso.");
         }
     }

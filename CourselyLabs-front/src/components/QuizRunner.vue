@@ -28,7 +28,7 @@
     </div>
 
     <!-- Current question -->
-    <q-card flat bordered class="question-card">
+    <q-card v-if="currentQuestion" flat bordered class="question-card">
       <q-card-section>
         <div class="text-caption text-grey-7 q-mb-xs">
           {{ currentQuestion.points }} punto{{ currentQuestion.points === 1 ? '' : 's' }}
@@ -136,7 +136,7 @@ const optionList = computed(() =>
   (currentQuestion.value?.options || []).map(o => ({ label: o.optionText, value: o.id }))
 )
 
-const isMarked = computed(() => markedSet.has(currentQuestion.value?.id))
+const isMarked = computed(() => !!currentQuestion.value?.id && markedSet.has(currentQuestion.value.id))
 
 function navColor(i: number) {
   const q = questions.value[i]
@@ -232,7 +232,7 @@ onBeforeUnmount(() => {
 async function autoSubmit() {
   $q.notify({
     type: 'warning',
-    message: 'Tiempo agotado. Enviando automaticamente...',
+    message: 'Tiempo agotado. Enviando automáticamente...',
     position: 'top',
     timeout: 3000,
   })

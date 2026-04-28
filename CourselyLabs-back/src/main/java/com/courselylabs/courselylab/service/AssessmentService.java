@@ -65,11 +65,11 @@ public class AssessmentService {
 
         if (!LessonBlockService.isAssessmentType(block.getType())) {
             throw new BadRequestException(
-                    "El bloque debe ser de tipo quiz, project u open_text para tener una evaluacion");
+                    "El bloque debe ser de tipo quiz, project u open_text para tener una evaluación");
         }
 
         if (assessmentRepository.findByBlockId(blockId).isPresent()) {
-            throw new BadRequestException("Este bloque ya tiene una evaluacion asociada");
+            throw new BadRequestException("Este bloque ya tiene una evaluación asociada");
         }
 
         String type = block.getType();
@@ -195,8 +195,8 @@ public class AssessmentService {
         long count = assessmentRepository.findByCourseIdAndType(courseId, type).size();
         if (count >= FREE_LIMIT_PER_TYPE) {
             throw new UnauthorizedException(
-                "Plan gratuito: limite de " + FREE_LIMIT_PER_TYPE + " evaluaciones de tipo '" + type + "' por curso. "
-                + "Hazte Premium para crear sin limite.");
+                "Plan gratuito: límite de " + FREE_LIMIT_PER_TYPE + " evaluaciones de tipo '" + type + "' por curso. "
+                + "Hazte Premium para crear sin límite.");
         }
     }
 

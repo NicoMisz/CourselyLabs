@@ -1,6 +1,6 @@
 <template>
   <q-page class="q-pa-lg">
-    <h1 class="text-h5 q-mb-lg">Cursos pendientes de revision</h1>
+    <h1 class="text-h5 q-mb-lg">Cursos pendientes de revisión</h1>
 
     <div v-if="loading">
       <q-skeleton v-for="i in 3" :key="i" type="rect" height="100px" class="q-mb-md" />
@@ -26,7 +26,7 @@
           <div class="col">
             <div class="text-h6">{{ course.title }}</div>
             <div class="text-caption text-grey-7 q-mb-xs">/cursos/{{ course.slug }}</div>
-            <div class="text-body2 q-mb-sm">{{ course.shortDescription || 'Sin descripcion corta' }}</div>
+            <div class="text-body2 q-mb-sm">{{ course.shortDescription || 'Sin descripción corta' }}</div>
             <div class="row q-gutter-xs">
               <q-chip size="sm" dense>{{ course.level || 'Sin nivel' }}</q-chip>
               <q-chip size="sm" dense :color="course.isFree ? 'positive' : 'grey'" text-color="white">
@@ -63,7 +63,7 @@
             rows="3"
             :rules="[v => !!v || 'El motivo es obligatorio']"
           />
-          <p class="text-caption text-grey-6 q-mt-xs">El instructor vera este motivo y podra editar y reenviar el curso.</p>
+          <p class="text-caption text-grey-6 q-mt-xs">El instructor verá este motivo y podrá editar y reenviar el curso.</p>
         </q-card-section>
         <q-card-actions align="right">
           <q-btn flat label="Cancelar" v-close-popup />

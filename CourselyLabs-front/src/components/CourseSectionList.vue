@@ -21,7 +21,7 @@
           dense
         >
           <q-item-section avatar>
-            <LessonTypeIcon :type="lesson.type" :color="lesson.id === activeLessonId ? 'white' : 'grey-7'" />
+            <LessonTypeIcon :type="(lesson.type || 'text') as any" :color="lesson.id === activeLessonId ? 'white' : 'grey-7'" />
           </q-item-section>
 
           <q-item-section>
@@ -56,12 +56,12 @@ const props = defineProps<{
 
 function sectionCaption(section: Section): string {
   const count = section.lessons.length
-  return `${count} leccion${count !== 1 ? 'es' : ''}`
+  return `${count} lección${count !== 1 ? 'es' : ''}`
 }
 
 function lessonRoute(lesson: Lesson): string {
   if (!props.enrolled && !lesson.isFree) return ''
-  return `/cursos/${props.courseSlug}/leccion/${lesson.id}`
+  return `/cursos/${props.courseSlug}/lección/${lesson.id}`
 }
 
 function formatDuration(seconds: number): string {

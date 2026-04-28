@@ -63,7 +63,7 @@ public class StripeService {
                 .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
 
         if (subscriptionRepository.existsByUserIdAndStatus(user.getId(), "active")) {
-            throw new BadRequestException("Ya tienes una suscripcion activa");
+            throw new BadRequestException("Ya tienes una suscripción activa");
         }
 
         String priceId = "annual".equals(plan) ? annualPriceId : monthlyPriceId;
@@ -125,7 +125,7 @@ public class StripeService {
                 .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
 
         SubscriptionEntity sub = subscriptionRepository.findByUserIdAndStatus(user.getId(), "active")
-                .orElseThrow(() -> new BadRequestException("No tienes una suscripcion activa"));
+                .orElseThrow(() -> new BadRequestException("No tienes una suscripción activa"));
 
         // Cancel at period end via Stripe
         Subscription stripeSub = Subscription.retrieve(sub.getStripeSubscriptionId());
@@ -191,7 +191,7 @@ public class StripeService {
         Session session = Session.retrieve(sessionId);
 
         if (!"paid".equals(session.getPaymentStatus()) && !"complete".equals(session.getStatus())) {
-            throw new BadRequestException("El pago no esta completado");
+            throw new BadRequestException("El pago no está completado");
         }
 
         String plan = session.getMetadata() != null && session.getMetadata().get("plan") != null
@@ -205,7 +205,7 @@ public class StripeService {
                         s.getId().toString(), s.getPlan(), s.getStatus(),
                         s.getCurrentPeriodStart(), s.getCurrentPeriodEnd(),
                         s.getCancelledAt(), s.getCreatedAt()))
-                .orElseThrow(() -> new BadRequestException("No se pudo activar la suscripcion"));
+                .orElseThrow(() -> new BadRequestException("No se pudo activar la suscripción"));
     }
 
     private void activateSubscription(UserEntity user, Session session, String plan) {
@@ -237,7 +237,7 @@ public class StripeService {
         payment.setUser(user);
         payment.setStripeSessionId(session.getId());
         payment.setType("subscription");
-        payment.setDescription("Suscripcion Premium " + ("annual".equals(plan) ? "Anual" : "Mensual"));
+        payment.setDescription("Suscripción Premium " + ("annual".equals(plan) ? "Anual" : "Mensual"));
         payment.setAmount(amount);
         payment.setCurrency(currency);
         payment.setStatus("completed");
@@ -258,7 +258,7 @@ public class StripeService {
         if (deserializer.getObject().isPresent()) {
             session = (Session) deserializer.getObject().get();
         } else {
-            // SDK/API version mismatch — fetch session from Stripe API using raw JSON id
+            // SDK/API versión mismatch — fetch session from Stripe API using raw JSON id
             try {
                 String rawJson = deserializer.getRawJson();
                 var mapper = new com.fasterxml.jackson.databind.ObjectMapper();
@@ -340,7 +340,7 @@ public class StripeService {
         payment.setUser(user);
         payment.setStripeSessionId(session.getId());
         payment.setType("subscription");
-        payment.setDescription("Suscripcion Premium " + ("annual".equals(plan) ? "Anual" : "Mensual"));
+        payment.setDescription("Suscripción Premium " + ("annual".equals(plan) ? "Anual" : "Mensual"));
         payment.setAmount(amount);
         payment.setCurrency(currency);
         payment.setStatus("completed");

@@ -177,7 +177,7 @@ public class AdminService {
                 .orElseThrow(() -> new ResourceNotFoundException("Course", "id", courseId));
 
         if (!"pending_review".equals(course.getStatus())) {
-            throw new BadRequestException("El curso no esta pendiente de revision");
+            throw new BadRequestException("El curso no está pendiente de revision");
         }
 
         course.setStatus("published");
@@ -195,7 +195,7 @@ public class AdminService {
                 .orElseThrow(() -> new ResourceNotFoundException("Course", "id", courseId));
 
         if (!"pending_review".equals(course.getStatus())) {
-            throw new BadRequestException("El curso no esta pendiente de revision");
+            throw new BadRequestException("El curso no está pendiente de revision");
         }
 
         // Accumulate rejection reasons

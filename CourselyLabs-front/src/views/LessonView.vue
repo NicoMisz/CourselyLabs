@@ -50,9 +50,9 @@
             inline-actions
             style="max-width: 960px; margin-left: auto; margin-right: auto; width: 100%"
           >
-            Continuar desde {{ formatTime(lessonProgress?.lastPositionSeconds || 0) }}?
+            ¿Continuar desde {{ formatTime(lessonProgress?.lastPositionSeconds || 0) }}?
             <template #action>
-              <q-btn flat color="primary" label="Si" @click="resumeVideo" />
+              <q-btn flat color="primary" label="Sí" @click="resumeVideo" />
               <q-btn flat color="grey-7" label="Empezar de nuevo" @click="showResumeBanner = false" />
             </template>
           </q-banner>
@@ -84,7 +84,7 @@
                   :block-id="block.id"
                 />
                 <div v-else class="text-grey-6 text-body2 q-pa-md">
-                  Bloque sin contenido todavia.
+                  Bloque sin contenido todavía.
                 </div>
               </div>
             </div>
@@ -154,12 +154,12 @@
         <div class="completion-icon q-mx-auto q-mb-md">
           <q-icon name="emoji_events" size="48px" color="white" />
         </div>
-        <div class="text-h5 q-mb-sm">Has completado el curso!</div>
+        <div class="text-h5 q-mb-sm">¡Has completado el curso!</div>
         <div class="text-body2 text-grey-7 q-mb-lg">
           Felicidades por completar {{ courseTitle }}.
         </div>
         <q-card-actions align="center" class="q-gutter-sm">
-          <q-btn flat color="primary" label="Explorar mas cursos" to="/cursos" />
+          <q-btn flat color="primary" label="Explorar más cursos" to="/cursos" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -263,7 +263,7 @@ function formatTime(seconds: number): string {
 
 function goToNext() {
   if (nextLesson.value) {
-    router.push(`/cursos/${slug.value}/leccion/${nextLesson.value.id}`)
+    router.push(`/cursos/${slug.value}/lección/${nextLesson.value.id}`)
   }
 }
 
@@ -347,7 +347,7 @@ async function loadData() {
       startPositionTracking()
     }
   } catch {
-    error.value = 'No se pudo cargar la leccion.'
+    error.value = 'No se pudo cargar la lección.'
   } finally {
     loading.value = false
   }
@@ -370,7 +370,7 @@ async function loadLesson() {
       startPositionTracking()
     }
   } catch {
-    error.value = 'No se pudo cargar la leccion.'
+    error.value = 'No se pudo cargar la lección.'
   }
 }
 
