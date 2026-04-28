@@ -4,6 +4,7 @@ import type { Course } from '@/types/course'
 export type SortBy = 'recent' | 'popular' | 'rating' | 'price_asc' | 'price_desc'
 export type ViewMode = 'grid' | 'list'
 
+// Parámetros de búsqueda para la función searchCourses
 export interface CourseSearchParams {
     keyword?: string
     categoryId?: number | null
@@ -15,6 +16,7 @@ export interface CourseSearchParams {
     size?: number
 }
 
+// Respuesta paginada genérica para la función searchCourses
 export interface PageResponse<T> {
     content: T[]
     totalElements: number
@@ -26,17 +28,18 @@ export interface PageResponse<T> {
     empty: boolean
 }
 
+// Función para buscar cursos con filtros avanzados, usada en CoursesView.vue
 export async function searchCourses(params: CourseSearchParams): Promise<PageResponse<Course>> {
     const { data } = await api.get<PageResponse<Course>>('/api/courses/search/advanced', {
         params: {
-            keyword: params.keyword || undefined,
-            categoryId: params.categoryId ?? undefined,
-            level: params.level || undefined,
-            isFree: params.isFree ?? undefined,
-            minRating: params.minRating ?? undefined,
-            sortBy: params.sortBy ?? 'recent',
-            page: params.page ?? 0,
-            size: params.size ?? 12
+        keyword: params.keyword || undefined,
+        categoryId: params.categoryId ?? undefined,
+        level: params.level || undefined,
+        isFree: params.isFree ?? undefined,
+        minRating: params.minRating ?? undefined,
+        sortBy: params.sortBy ?? 'recent',
+        page: params.page ?? 0,
+        size: params.size ?? 12
         }
     })
 

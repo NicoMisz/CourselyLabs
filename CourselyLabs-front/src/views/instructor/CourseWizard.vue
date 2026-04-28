@@ -522,7 +522,7 @@ import { useQuasar } from 'quasar'
 import {
   updateCourse, getCourseForEdit, submitForReview,
 } from '../../api/instructor'
-import { getCategories } from '../../api/course'
+import { getCategories, getMyCourses } from '../../api/course'
 import { getCourseSections } from '../../api/lesson'
 import { createSection, updateSection, deleteSection } from '../../api/sectionEditor'
 import { createLesson, updateLesson, deleteLesson } from '../../api/lessonEditor'
@@ -590,8 +590,9 @@ const prerequisiteIds = ref<string[]>([])
 const prerequisiteThresholds = reactive<Record<string, number>>({})
 const prerequisiteTitleById = reactive<Record<string, string>>({})
 const allPrereqCourses = ref<{ label: string; value: string }[]>([])
-const prerequisiteOptions = ref<{ label: string; value: string }[]>([])
+const prerequisiteOptions = ref<Array<{ label: string; value: string }>>([])
 const loadingPrereqOptions = ref(false)
+const selectedPrerequisiteIds = ref<string[]>([])
 
 function setThreshold(id: string, value: number) {
   prerequisiteThresholds[id] = value
@@ -648,7 +649,7 @@ async function savePrerequisites() {
   saving.value = true
   try {
     await syncCoursePrerequisites(courseId.value, {
-      prerequisites: prerequisiteIds.value.map(id => ({
+      prerequisites: prerequisiteIds.value.map((id) => ({
         prerequisiteCourseId: id,
         completionThreshold: prerequisiteThresholds[id] ?? 80,
       })),
@@ -801,6 +802,7 @@ async function loadData() {
     // Prerequisitos (opcional, falla silenciosamente)
     await Promise.all([
       loadAllCoursesForPicker().catch(err => console.error('[loadData] loadAllCoursesForPicker failed:', err)),
+      loadOwnCoursePrerequisiteOptions().catch(err => console.error('[loadData] loadOwnCoursePrerequisiteOptions failed:', err)),
       loadExistingPrerequisites().catch(err => console.error('[loadData] loadExistingPrerequisites failed:', err)),
     ])
   } catch (err: any) {
@@ -1067,6 +1069,28 @@ async function doSubmitReview() {
     submitting.value = false
   }
 }
+
+// Carga los cursos propios para mostrar como opciones de prerrequisito (solo los del instructor logueado, no todos los cursos públicos)
+async function loadOwnCoursePrerequisiteOptions() {
+  loadingPrereqOptions.value = true
+  try {
+    const mine = await getMyCourses()
+
+    allPrereqCourses.value = (mine || [])
+      .filter((c: any) => c?.id)
+      .filter((c: any) => c.id !== courseId.value)
+      .map((c: any) => ({ label: c.title, value: c.id }))
+
+    for (const opt of allPrereqCourses.value) {
+      prerequisiteTitleById[opt.value] = opt.label
+    }
+
+    prerequisiteOptions.value = allPrereqCourses.value
+  } finally {
+    loadingPrereqOptions.value = false
+  }
+}
+
 
 onMounted(loadData)
 </script>

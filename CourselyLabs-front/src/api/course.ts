@@ -1,19 +1,23 @@
-import api from './axios';
-import type { CourseDetail, InstructorSummary } from '@/types/course';
+import api from './axios'
+import type { CourseDetail, InstructorSummary } from '@/types/course'
 
+// Trae el detalle completo de un curso por su slug, 
+// incluyendo secciones, instructores, etc.
 export async function getCourseBySlug(slug: string): Promise<CourseDetail> {
-  const { data } = await api.get(`/api/courses/slug/${slug}`);
-  return data;
+  const { data } = await api.get(`/api/courses/slug/${slug}`)
+  return data
 }
 
+// Trae los instructores de un curso por su id, para mostrar en la sección de instructores del CourseDetailView
 export async function getCourseInstructors(courseId: string): Promise<InstructorSummary[]> {
-  const { data } = await api.get(`/api/courses/${courseId}/instructors`);
-  return data;
+  const { data } = await api.get(`/api/courses/${courseId}/instructors`)
+  return data
 }
 
+// Trae las categorías disponibles para el filtro en CoursesView
 export async function getCategories() {
-  const { data } = await api.get('/api/categories');
-  return data;
+  const { data } = await api.get('/api/categories')
+  return data
 }
 
 // Para el selector de cursos propios en prerequisitos, se necesitan solo id y title, 

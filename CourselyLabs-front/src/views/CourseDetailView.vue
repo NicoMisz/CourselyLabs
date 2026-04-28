@@ -134,25 +134,22 @@
         <!-- Columna dreta -->
         <div class="col-12 col-md-4">
           <CourseSidebar
-              class="q-mt-md"
-              :course-id="course.id"
-              :course-slug="course.slug"
-              :level="course.level"
-              :duration-text="course.durationText"
-              :students-count="course.studentsCount"
-              :average-rating="course.averageRating"
-              :is-free="course.isFree"
-              :price="course.price"
-              :enrolled="enrolled"
-              :loading="enrollLoading"
-              :prerequisite-blockers="prerequisiteBlockers" 
-              @enroll="handleEnroll"
-              @continue="handleContinueCourse"
-              @open-related-tab="tab = 'prerequisitos'"
+            class="q-mt-md"
+            :course-id="course.id"
+            :course-slug="course.slug"
+            :level="course.level"
+            :duration-text="course.durationText"
+            :students-count="course.studentsCount"
+            :average-rating="course.averageRating"
+            :is-free="course.isFree"
+            :price="course.price"
+            :enrolled="enrolled"
+            :loading="enrollLoading"
+            :prerequisite-blockers="prerequisiteBlockers"
+            @enroll="handleEnroll"
+            @continue="handleContinueCourse"
+            @open-related-tab="tab = 'prerequisitos'"
           />
-
-          <!-- Banner de bloqueo si no cumple prerequisitos
-              :prerequisite-blockers="prerequisiteBlockers"  -->
         </div>
 
       </div>
@@ -208,14 +205,14 @@ const enrollError = ref('');
 
 const courseCompletedLessons = ref(0);
 
+// Variables y lógica para prerequisitos y cursos relacionados (reemplaza "Relacionados" por "Prerequisitos" y muestra progreso y bloqueo)
 const prerequisites = ref<CoursePrerequisite[]>([])
 const prerequisiteBlockers = ref<BlockedPrerequisite[]>([])
 const prerequisiteStatuses = ref<CoursePrerequisiteStatus[]>([])
 const prerequisiteStatusInitialLoading = ref(false)
 const prerequisiteStatusRefreshing = ref(false)
-let prerequisitesPollTimer: ReturnType<typeof setInterval> | null = null
-
 const requiredBy = ref<RelatedCourseItem[]>([]) // Nuevo: cursos que requieren este curso como prerequisito
+let prerequisitesPollTimer: ReturnType<typeof setInterval> | null = null
 
 function setOgMeta(name: string, content: string) {
   const selector = `meta[property="${name}"]`
@@ -302,49 +299,39 @@ async function fetchCourseProgress(courseId?: string) {
 }
 
 async function fetchPrerequisites(courseId?: string) {
-	if (!courseId) {
-		prerequisites.value = []
-		prerequisiteBlockers.value = []
-		return
-	}
-
-	if (course.value?.isFree) {
-		prerequisites.value = []
-		prerequisiteBlockers.value = []
-		return
-	}
+  if (!courseId) {
+    prerequisites.value = []
+    prerequisiteBlockers.value = []
+    return
+  }
 
 	// 1) Prioridad: lo que ya venga en el detalle del curso
 	prerequisites.value = Array.isArray(course.value?.prerequisites)
-		? course.value!.prerequisites
-		: []
+    ? course.value.prerequisites
+    : []
 
 	// 2) Fallback: si viene vacio, pedir endpoint dedicado
 	if (!prerequisites.value.length) {
-		try {
-			prerequisites.value = await getCoursePrerequisites(courseId)
-		} catch (err) {
-			console.warn('[prerequisites] error loading list:', err)
-			prerequisites.value = []
-		}
-	}
+    try {
+      prerequisites.value = await getCoursePrerequisites(courseId)
+    } catch {
+      prerequisites.value = []
+    }
+  }
 
 	// Blockers para banner y bloqueo de boton
-	try {
-		if (authStore.isLoggedIn) {
-			prerequisiteBlockers.value = await getCoursePrerequisiteBlockers(courseId)
-		} else {
-			prerequisiteBlockers.value = []
-		}
-	} catch (err) {
-		console.warn('[prerequisites] error loading blockers:', err)
-		prerequisiteBlockers.value = []
-	}
+  try {
+    prerequisiteBlockers.value = authStore.isLoggedIn
+      ? await getCoursePrerequisiteBlockers(courseId)
+      : []
+  } catch {
+    prerequisiteBlockers.value = []
+  }
 }
 
 // Nuevo: cargar estado de prerequisitos para mostrar progreso y bloqueo
 async function fetchPrerequisiteStatus(courseId?: string, silent = false) {
-  if (!courseId || course.value?.isFree) {
+  if (!courseId) {
     prerequisiteStatuses.value = []
     return
   }
@@ -373,7 +360,7 @@ async function fetchPrerequisiteStatus(courseId?: string, silent = false) {
 // Nuevo: cargar cursos relacionados (reemplaza "Relacionados" por "Prerequisitos" y 
 // muestra progreso y bloqueo)
 async function fetchRelatedAuth(courseId?: string) {
-  if (!courseId ) {
+  if (!courseId) {
     requiredBy.value = []
     return
   }
@@ -397,10 +384,10 @@ function startPrerequisitesPolling() {
 }
 
 function stopPrerequisitesPolling() {
-    if (prerequisitesPollTimer) {
-        clearInterval(prerequisitesPollTimer)
-        prerequisitesPollTimer = null
-    }
+  if (prerequisitesPollTimer) {
+    clearInterval(prerequisitesPollTimer)
+    prerequisitesPollTimer = null
+  }
 }
 
 function handleContinueCourse() {
@@ -416,7 +403,10 @@ onMounted(fetchCourse);
 watch(
   () => course.value?.id,
   (id) => {
-    if (id) fetchCourseProgress(id)
+    if (!id) return
+    fetchPrerequisites(id)
+    fetchPrerequisiteStatus(id)
+    fetchRelatedAuth(id)
   },
   { immediate: true }
 );
@@ -428,57 +418,29 @@ watch(enrolled, (isEnrolled) => {
   }
 });
 
-watch(
-    () => course.value?.id,
-    (id) => {
-        if (!id) return
-        fetchPrerequisites(id)
-        fetchPrerequisiteStatus(id)
-    },
-    { immediate: true }
-)
-
-// Nuevo: cargar cursos relacionados (reemplaza "Relacionados" por "Prerequisitos" y muestra progreso y bloqueo)
-watch(
-  () => course.value?.id,
-  (id) => {
-    if (!id) return
-    fetchRelatedAuth(id)
-  },
-  { immediate: true }
-)
-
 watch(tab, (newTab) => {
-    if (newTab === 'prerequisitos' && course.value?.id) {
-        fetchPrerequisiteStatus(course.value.id)
-    }
+  if (newTab === 'prerequisitos' && course.value?.id) {
+    fetchPrerequisiteStatus(course.value.id, true)
+  }
 })
-
-watch(
-    () => authStore.isLoggedIn,
-    () => {
-        if (course.value?.id) {
-            fetchPrerequisites(course.value.id)
-            fetchPrerequisiteStatus(course.value.id)
-        }
-    }
-)
 
 // Nuevo: recargar cursos relacionados (reemplaza "Relacionados" por "Prerequisitos" y muestra progreso y bloqueo) si cambia el estado de login
 watch(
   () => authStore.isLoggedIn,
   () => {
     if (!course.value?.id) return
+    fetchPrerequisites(course.value.id)
+    fetchPrerequisiteStatus(course.value.id, true)
     fetchRelatedAuth(course.value.id)
   }
 )
 
 onMounted(() => {
-    startPrerequisitesPolling()
+  startPrerequisitesPolling()
 })
 
 onBeforeUnmount(() => {
-    stopPrerequisitesPolling()
+  stopPrerequisitesPolling()
 })
 
 </script>
