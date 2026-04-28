@@ -5,19 +5,57 @@
 
       <!-- Bloque nuevo para los filtros, insertado sin romper la estructura existente -->
       <div class="row q-col-gutter-md items-center q-mb-md">
-        <div class="col-12 col-md-8">
-          <q-input v-model="keyword" filled clearable label="Buscar cursos">
+        <div class="col-12 col-md-3">
+          <q-input v-model="keyword" filled clearable label="Buscar cursos por título">
             <template #prepend>
               <q-icon name="search" />
             </template>
           </q-input>
         </div>
-        <div class="col-12 col-md-4">
+
+        <div class="col-4 col-md-3">
+          <q-select
+            v-model="categoryId"
+            :options="categoryOptions"
+            emit-value
+            map-options
+            clearable
+            label="Categoría"
+            filled
+          />
+        </div>
+
+        <div class="col-4 col-md-3">
+          <q-select
+            v-model="isFree"
+            :options="typeOptions"
+            emit-value
+            map-options
+            clearable
+            label="Tipo"
+            filled
+          />
+        </div>
+
+        <div class="col-4 col-md-3">
+          <q-select
+            v-model="level"
+            :options="levelOptions"
+            emit-value
+            map-options
+            clearable
+            label="Level"
+            filled
+          />
+        </div>
+
+        <div class="col-4 col-md-3">
           <q-select
             v-model="sortBy"
             :options="sortOptions"
             emit-value
             map-options
+            clearable
             label="Ordenar por"
             filled
           />
@@ -30,12 +68,10 @@
 
       <div v-if="hasActiveFilters" class="q-mb-md row q-gutter-sm">
         <q-chip v-if="keyword" removable @remove="removeFilterChip('keyword')">{{ keyword }}</q-chip>
+        <q-chip v-if="categoryId !== null" removable @remove="removeFilterChip('categoryId')">Categoría</q-chip>
         <q-chip v-if="level" removable @remove="removeFilterChip('level')">{{ level }}</q-chip>
         <q-chip v-if="isFree !== null" removable @remove="removeFilterChip('isFree')">
           {{ isFree ? 'Gratis' : 'Premium' }}
-        </q-chip>
-        <q-chip v-if="minRating" removable @remove="removeFilterChip('minRating')">
-          {{ minRating }}★ y mas
         </q-chip>
         <q-btn flat color="primary" label="Limpiar filtros" @click="clearAllFilters" />
       </div>
@@ -64,7 +100,7 @@
         </template>
         {{ error }}
         <template #action>
-          <q-btn flat color="negative" label="Reintentar" @click="fetchPage (true)" />
+          <q-btn flat color="negative" label="Reintentar" @click="fetchPage(true)" />
         </template>
       </q-banner>
 
@@ -73,9 +109,6 @@
           <q-icon name="search" size="64px" color="grey-5" />
           <div class="text-h6 text-grey-7 q-mt-md">No hay cursos disponibles</div>
           <p class="text-grey-6">Vuelve pronto, estamos preparando nuevo contenido.</p>
-<!--           <div class="text-h6 text-grey-7 q-mt-md">No se encontraron cursos</div>
-          <p class="text-grey-6">Prueba otra busqueda o limpia filtros.</p>
-          <q-btn color="primary" outline label="Limpiar filtros" @click="clearAllFilters" /> -->
         </div>
 
         <div v-else class="row q-col-gutter-md">
@@ -84,29 +117,19 @@
           </div>
         </div>
 
-        <!-- Fase 1: cargar mas conservador; fase 2: q-infinite-scroll -->
         <div class="row justify-center q-mt-lg" v-if="hasNext">
-          <q-btn
-            outline
-            color="primary"
-            :loading="loadingMore"
-            label="Cargar mas"
-            @click="fetchPage(false)"
-          />
+          <q-btn outline color="primary" :loading="loadingMore" label="Cargar mas" @click="fetchPage(false)" />
         </div>
-
       </template>
     </div>
   </q-page>
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import CourseCard from '@/components/CourseCard.vue'
-//import { useCourses } from '@/composables/useCourses'
 import { useCourseSearch } from '@/composables/useCourseSearch'
-
-//const { courses, loading, error, fetchCourses } = useCourses()
+import { getCategories } from '@/api/course'
 
 const {
   courses,
@@ -116,9 +139,9 @@ const {
   totalElements,
   hasNext,
   keyword,
+  categoryId,
   level,
   isFree,
-  minRating,
   sortBy,
   hasActiveFilters,
   fetchPage,
@@ -126,6 +149,7 @@ const {
   removeFilterChip
 } = useCourseSearch()
 
+// Opciones para el select de ordenamiento, nivel, tipo y rating
 const sortOptions = [
   { label: 'Mas recientes', value: 'recent' },
   { label: 'Mas populares', value: 'popular' },
@@ -134,9 +158,45 @@ const sortOptions = [
   { label: 'Precio: mayor a menor', value: 'price_desc' }
 ]
 
-onMounted(() => {
+// Opciones para el select de tipo (gratis/premium)
+const typeOptions = [
+  { label: 'Gratis', value: true },
+  { label: 'Premium', value: false }
+]
+
+// Opciones para el select de nivel
+const levelOptions = [
+  { label: 'Beginner', value: 'beginner' },
+  { label: 'Intermediate', value: 'intermediate' },
+  { label: 'Advanced', value: 'advanced' }
+]
+
+// Opciones para el select de categorías, cargadas desde la API
+const categoryOptions = ref<Array<{ label: string; value: number }>>([])
+
+// Función para cargar categorías desde la API y mapearlas al formato requerido por q-select
+async function loadCategories() {
+  try {
+    const categories = await getCategories()
+    categoryOptions.value = Array.isArray(categories)
+      ? categories.map((category: { id: number; name: string }) => ({
+          label: category.name,
+          value: category.id,
+        }))
+      : []
+  } catch {
+    categoryOptions.value = []
+  }
+}
+
+// Watchers para recargar la página cada vez que cambie un filtro
+watch([keyword, categoryId, level, isFree, sortBy], () => {
   fetchPage(true)
 })
 
-//onMounted(fetchCourses)
+// Cargar categorías y la primera página al montar el componente
+onMounted(async () => {
+  await loadCategories()
+  fetchPage(true)
+})
 </script>

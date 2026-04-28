@@ -20,6 +20,7 @@ import com.courselylabs.courselylab.dto.CoursePrerequisiteDTO;
 import com.courselylabs.courselylab.dto.CoursePrerequisiteStatusDTO;
 import com.courselylabs.courselylab.dto.CourseRelatedResponseDTO;
 import com.courselylabs.courselylab.dto.CreateCoursePrerequisiteRequestDTO;
+import com.courselylabs.courselylab.dto.RelatedCourseDTO;
 import com.courselylabs.courselylab.dto.SyncCoursePrerequisitesRequestDTO;
 import com.courselylabs.courselylab.exception.UnauthorizedException;
 import com.courselylabs.courselylab.security.UserDetailsImpl;
@@ -103,6 +104,9 @@ public class CoursePrerequisiteController {
             @PathVariable UUID id,
             @Valid @RequestBody SyncCoursePrerequisitesRequestDTO request,
             @AuthenticationPrincipal UserDetailsImpl currentUser) {
+        if (currentUser == null) {
+                throw new UnauthorizedException("Authentication required");
+        }
         prerequisiteService.syncPrerequisites(id, request.getPrerequisites(), currentUser.getUsername());
         return ResponseEntity.noContent().build();
     }
@@ -120,5 +124,15 @@ public class CoursePrerequisiteController {
         }
         
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/prerequisites/drafts")
+    public ResponseEntity<List<RelatedCourseDTO>> findDraftPrerequisites(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UserDetailsImpl currentUser) {
+        if (currentUser == null) {
+            throw new UnauthorizedException("Authentication required");
+        }
+        return ResponseEntity.ok(prerequisiteService.findDraftPrerequisites(id, currentUser.getUsername()));
     }
 }

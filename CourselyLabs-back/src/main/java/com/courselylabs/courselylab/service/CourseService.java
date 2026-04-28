@@ -323,13 +323,22 @@ public class CourseService {
 
         // Prerequisitos: visibles para cualquier usuario (y publico si no hay auth).
         // Solo la creacion/edicion de prerequisitos esta restringida a premium/admin.
-        String emailForLookup = currentUser != null ? currentUser.getEmail() : "";
+        /* String emailForLookup = currentUser != null ? currentUser.getEmail() : "";
         try {
             dto.setPrerequisites(coursePrerequisiteService.findByCourseId(entity.getId(), emailForLookup));
         } catch (Exception e) {
             dto.setPrerequisites(List.of());
+        } */
+        if (currentUser != null) {
+            try {
+                dto.setPrerequisites(coursePrerequisiteService.findByCourseId(entity.getId(), currentUser.getEmail()));
+            } catch (Exception e) {
+                dto.setPrerequisites(List.of());
+            }
+        } else {
+            // Usuario anonimo: opcion privada (sin mostrar)
+            dto.setPrerequisites(List.of());
         }
-
         return dto;
     }
 
