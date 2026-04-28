@@ -8,6 +8,23 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es/1.1.0/).
 
 ---
 
+## [Sin versión] - 2026-04-28 — Fix: cursos no publicados no deben ser accesibles públicamente
+
+### Corregido
+
+- **`GET /api/courses/all`** devolvía cursos en cualquier estado (`draft`, `pending_review`, `rejected`, `published`). La home (`HomeView.vue` "Cursos destacados") y el composable `useCourses` los pintaban, y al intentar inscribirse el backend rechazaba con "No puedes inscribirte en un curso no publicado". Ahora el endpoint solo devuelve cursos con `is_published = true`.
+  - [`CourseService.findAll()`](CourselyLabs-back/src/main/java/com/courselylabs/courselylab/service/CourseService.java) usa ahora `findByIsPublishedTrue()`.
+- **`GET /api/courses/{id}` y `GET /api/courses/slug/{slug}`** devolvían el detalle de cualquier curso a cualquier caller, incluso anónimo, aunque estuviera en `draft`. Si alguien compartía el link de un curso sin publicar, era accesible. Ahora se aplica un filtro: si el curso no está publicado, solo lo ven el `owner` (creador), instructores co-asignados (`course_instructors`) y `admin`. Para cualquier otro caller se devuelve **404** (no 403, para no filtrar la existencia del recurso).
+  - Helper privado nuevo: [`CourseService.assertCanViewCourse(entity, currentUser)`](CourselyLabs-back/src/main/java/com/courselylabs/courselylab/service/CourseService.java).
+  - Aplicado en `findById(id, email)` y `findBySlug(slug, email)`.
+
+### Sin cambios
+
+- Los listados específicos del instructor (`GET /api/courses/instructor/{userId}`) y la cola admin (`GET /api/courses/pending-review`) **no se han tocado** — siguen mostrando todos los estados, que es lo correcto en esos contextos.
+- El editor del curso (`GET /api/courses/{id}/edit`) tampoco se ha tocado — su `@PreAuthorize` ya restringe al owner/instructor/admin.
+
+---
+
 ## [Sin versión] - 2026-04-28 — Reorganización completa de la documentación
 
 ### Cambiado
