@@ -353,6 +353,7 @@ public class CoursePrerequisiteService {
         List<RelatedCourseDTO> prerequisites = prerequisiteRepository
                 .findWithPrerequisiteCourseByCourseId(courseId)
                 .stream()
+                .filter(cp -> Boolean.TRUE.equals(cp.getPrerequisiteCourse().getIsPublished()))
                 .map(cp -> new RelatedCourseDTO(
                         cp.getPrerequisiteCourse().getId(),
                         cp.getPrerequisiteCourse().getTitle(),
@@ -363,6 +364,7 @@ public class CoursePrerequisiteService {
         List<RelatedCourseDTO> requiredBy = prerequisiteRepository
                 .findWithCourseByPrerequisiteCourseId(courseId)
                 .stream()
+                .filter(cp -> Boolean.TRUE.equals(cp.getCourse().getIsPublished()))
                 .map(cp -> new RelatedCourseDTO(
                         cp.getCourse().getId(),
                         cp.getCourse().getTitle(),

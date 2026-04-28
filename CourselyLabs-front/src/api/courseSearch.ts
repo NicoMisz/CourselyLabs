@@ -10,7 +10,6 @@ export interface CourseSearchParams {
     categoryId?: number | null
     level?: string | null
     isFree?: boolean | null
-    minRating?: number | null
     sortBy?: SortBy
     page?: number
     size?: number
@@ -36,7 +35,6 @@ export async function searchCourses(params: CourseSearchParams): Promise<PageRes
         categoryId: params.categoryId ?? undefined,
         level: params.level || undefined,
         isFree: params.isFree ?? undefined,
-        minRating: params.minRating ?? undefined,
         sortBy: params.sortBy ?? 'recent',
         page: params.page ?? 0,
         size: params.size ?? 12

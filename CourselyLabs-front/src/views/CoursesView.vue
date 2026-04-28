@@ -5,7 +5,7 @@
 
       <!-- Bloque nuevo para los filtros, insertado sin romper la estructura existente -->
       <div class="row q-col-gutter-md items-center q-mb-md">
-        <div class="col-12 col-md-6">
+        <div class="col-12 col-md-3">
           <q-input v-model="keyword" filled clearable label="Buscar cursos por título">
             <template #prepend>
               <q-icon name="search" />
@@ -27,6 +27,18 @@
 
         <div class="col-12 col-md-3">
           <q-select
+            v-model="isFree"
+            :options="typeOptions"
+            emit-value
+            map-options
+            clearable
+            label="Tipo"
+            filled
+          />
+        </div>
+
+        <div class="col-12 col-md-3">
+          <q-select
             v-model="sortBy"
             :options="sortOptions"
             emit-value
@@ -35,43 +47,16 @@
             filled
           />
         </div>
-        
       </div>
 
       <div class="row q-col-gutter-md items-center q-mb-md">
-        <div class="col-12 col-sm-4">
-          <q-select
+        <div class="col-12 col-md-6">
+          <q-input
             v-model="level"
-            :options="levelOptions"
-            emit-value
-            map-options
+            filled
             clearable
-            label="Nivel"
-            outlined
-          />
-        </div>
-
-        <div class="col-12 col-sm-4">
-          <q-select
-            v-model="isFree"
-            :options="typeOptions"
-            emit-value
-            map-options
-            clearable
-            label="Tipo"
-            outlined
-          />
-        </div>
-
-        <div class="col-12 col-sm-4">
-          <q-select
-            v-model="minRating"
-            :options="ratingOptions"
-            emit-value
-            map-options
-            clearable
-            label="Rating mínimo"
-            outlined
+            label="Buscar nivel"
+            hint="Escribe principiante, intermedio o avanzado"
           />
         </div>
       </div>
@@ -86,9 +71,6 @@
         <q-chip v-if="level" removable @remove="removeFilterChip('level')">{{ level }}</q-chip>
         <q-chip v-if="isFree !== null" removable @remove="removeFilterChip('isFree')">
           {{ isFree ? 'Gratis' : 'Premium' }}
-        </q-chip>
-        <q-chip v-if="minRating" removable @remove="removeFilterChip('minRating')">
-          {{ minRating }}★ y mas
         </q-chip>
         <q-btn flat color="primary" label="Limpiar filtros" @click="clearAllFilters" />
       </div>
@@ -117,7 +99,7 @@
         </template>
         {{ error }}
         <template #action>
-          <q-btn flat color="negative" label="Reintentar" @click="fetchPage (true)" />
+          <q-btn flat color="negative" label="Reintentar" @click="fetchPage(true)" />
         </template>
       </q-banner>
 
@@ -134,17 +116,9 @@
           </div>
         </div>
 
-        <!-- Fase 1: cargar mas conservador; fase 2: q-infinite-scroll -->
         <div class="row justify-center q-mt-lg" v-if="hasNext">
-          <q-btn
-            outline
-            color="primary"
-            :loading="loadingMore"
-            label="Cargar mas"
-            @click="fetchPage(false)"
-          />
+          <q-btn outline color="primary" :loading="loadingMore" label="Cargar mas" @click="fetchPage(false)" />
         </div>
-
       </template>
     </div>
   </q-page>
@@ -167,7 +141,6 @@ const {
   categoryId,
   level,
   isFree,
-  minRating,
   sortBy,
   hasActiveFilters,
   fetchPage,
@@ -184,26 +157,10 @@ const sortOptions = [
   { label: 'Precio: mayor a menor', value: 'price_desc' }
 ]
 
-// Opciones para el nivel
-const levelOptions = [
-  { label: 'Principiante', value: 'PRINCIPIANTE' },
-  { label: 'Intermedio', value: 'INTERMEDIO' },
-  { label: 'Avanzado', value: 'AVANZADO' }
-]
-
 // Opciones para el select de tipo (gratis/premium)
 const typeOptions = [
   { label: 'Gratis', value: true },
   { label: 'Premium', value: false }
-]
-
-// Opciones para el select de rating mínimo
-const ratingOptions = [
-  { label: '1 estrella y mas', value: 1 },
-  { label: '2 estrella y mas', value: 2 },
-  { label: '3 estrella y mas', value: 3 },
-  { label: '4 estrella y mas', value: 4 },
-  { label: '5 estrelals', value: 5 }
 ]
 
 // Opciones para el select de categorías, cargadas desde la API
@@ -225,12 +182,10 @@ async function loadCategories() {
 }
 
 // Watchers para recargar la página cada vez que cambie un filtro
-watch(
-  [keyword, categoryId, level, isFree, minRating, sortBy],
-  () => {
-    fetchPage(true)
-  }
-)
+watch([keyword, categoryId, level, isFree, sortBy], () => {
+  fetchPage(true)
+})
+
 // Cargar categorías y la primera página al montar el componente
 onMounted(async () => {
   await loadCategories()

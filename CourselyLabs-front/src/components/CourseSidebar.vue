@@ -67,7 +67,7 @@ const authStore = useAuthStore()
 
 // Variables para controlar el estado del botón de acción principal
 const isGuest = computed(() => !authStore.isLoggedIn)
-const isUserPremium = computed(() => authStore.user?.role === 'premium')
+const isPremiumOrAdmin = computed(() => authStore.user?.role === 'premium' || authStore.user?.role === 'admin')
 const hasBlockedPrerequisites = computed(() => (props.prerequisiteBlockers?.length ?? 0) > 0)
 
 const buttonDisabled = computed(() => hasBlockedPrerequisites.value)
@@ -77,25 +77,25 @@ const buttonLabel = computed(() => {
   if (isGuest.value) return 'Inicia sesion para inscribirte'
   if (props.enrolled) return 'Continuar curso'
   if (props.isFree) return 'Inscribirme gratis'
-  if (!isUserPremium.value) return 'Hazte Premium'
+  if (!isPremiumOrAdmin.value) return 'Hazte Premium'
   return 'Inscribirme'
-});
+})
 
 // El color del botón es principal si el usuario ya está inscrito o si el curso es gratuito, 
 // de lo contrario es ámbar si el usuario no es premium, o principal si lo es (para cursos premium)
 const buttonColor = computed(() => {
   if (props.enrolled) return 'primary'
   if (props.isFree) return 'positive'
-  return isUserPremium.value ? 'primary' : 'amber-8'
-});
+  return isPremiumOrAdmin.value ? 'primary' : 'amber-8'
+})
 
 // El icono del botón cambia según el estado del usuario y del curso:
 const buttonIcon = computed(() => {
   if (isGuest.value) return 'login'
   if (props.enrolled) return 'play_circle'
   if (props.isFree) return 'check_circle'
-  return isUserPremium.value ? 'workspace_premium' : 'workspace_premium'
-});
+  return 'workspace_premium'
+})
 
 // Maneja el click en el botón de acción principal, redirigiendo o emitiendo eventos según corresponda
 function handleClick() {
@@ -123,7 +123,7 @@ function handleClick() {
   }
 
   // Si el curso es premium y el usuario no es premium, lo redirige a la página de premium
-  if (!isUserPremium.value) {
+  if (!isPremiumOrAdmin.value) {
     router.push('/premium')
     return
   }
@@ -140,6 +140,7 @@ function handleClick() {
   border: 1px solid rgba(0, 0, 0, 0.08);
   background: white;
 }
+
 @media (max-width: 767px) {
   .course-sidebar {
     position: static;

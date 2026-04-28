@@ -43,7 +43,6 @@
       <CourseBreadcrumb :title="course.title" :category-name="course.categoryName" />
 
       <div class="row q-col-gutter-lg">
-
         <!-- Columna esquerra -->
         <div class="col-12 col-md-8">
           <CourseHero
@@ -132,7 +131,7 @@
         </div>
 
         <!-- Columna dreta -->
-        <div class="col-12 col-md-4">
+        <div v-if="!enrolled" class="col-12 col-md-4">
           <CourseSidebar
             class="q-mt-md"
             :course-id="course.id"
@@ -151,7 +150,6 @@
             @open-related-tab="tab = 'prerequisitos'"
           />
         </div>
-
       </div>
     </template>
 
