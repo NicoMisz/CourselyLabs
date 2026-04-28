@@ -328,8 +328,17 @@ public class CourseService {
             dto.setPrerequisites(coursePrerequisiteService.findByCourseId(entity.getId(), emailForLookup));
         } catch (Exception e) {
             dto.setPrerequisites(List.of());
+        } */
+        if (currentUser != null) {
+            try {
+                dto.setPrerequisites(coursePrerequisiteService.findByCourseId(entity.getId(), currentUser.getEmail()));
+            } catch (Exception e) {
+                dto.setPrerequisites(List.of());
+            }
+        } else {
+            // Usuario anonimo: opcion privada (sin mostrar)
+            dto.setPrerequisites(List.of());
         }
-
         return dto;
     }
 

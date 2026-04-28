@@ -597,6 +597,22 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
+
+    <!-- Dialog por si estas seguro que quieres subir el curso independientemente de que el curso linkado este en borradores-->
+    <q-dialog v-model="showDraftPrerequisiteWarning" persistent>
+      <q-card style="min-width: 520px">
+        <q-card-section>
+          <div class="text-h6">Atencion</div>
+          <p class="text-body2 q-mt-sm">
+            Tienes linkado este curso que aun esta en borradores, seguro que quieres publicar?
+          </p>
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn flat label="Cancelar" v-close-popup />
+          <q-btn color="primary" label="Si, publicar" unelevated @click="confirmPublishWithoutDraftPrerequisites" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
@@ -607,7 +623,7 @@ import { useQuasar } from 'quasar'
 import {
   updateCourse, getCourseForEdit, submitForReview,
 } from '../../api/instructor'
-import { getCategories } from '../../api/course'
+import { getCategories, getMyCourses } from '../../api/course'
 import { getCourseSections } from '../../api/lesson'
 import { createSection, updateSection, deleteSection } from '../../api/sectionEditor'
 import { createLesson, updateLesson, deleteLesson } from '../../api/lessonEditor'
@@ -627,7 +643,7 @@ function isAssessmentType(type: string): boolean {
 }
 import { formatFileSize as fmtBytes } from '../../api/resources'
 import { searchCourses } from '@/api/courseSearch'
-import { getCoursePrerequisites, syncCoursePrerequisites } from '@/api/prerequisite'
+import { getCoursePrerequisites, syncCoursePrerequisites, getCoursePrerequisiteDrafts } from '@/api/prerequisite'
 import { checkIsPremium } from '@/api/payments'
 import {
   listBlocks, createBlock, updateBlock, deleteBlock as deleteBlockApi, reorderBlocks,
@@ -702,8 +718,11 @@ const prerequisiteIds = ref<string[]>([])
 const prerequisiteThresholds = reactive<Record<string, number>>({})
 const prerequisiteTitleById = reactive<Record<string, string>>({})
 const allPrereqCourses = ref<{ label: string; value: string }[]>([])
-const prerequisiteOptions = ref<{ label: string; value: string }[]>([])
+const prerequisiteOptions = ref<Array<{ label: string; value: string; isPublished: boolean }>>([])
+const draftPrerequisiteDrafts = ref<string[]>([])
+const showDraftPrerequisiteWarning = ref(false)
 const loadingPrereqOptions = ref(false)
+const selectedPrerequisiteIds = ref<string[]>([])
 
 function setThreshold(id: string, value: number) {
   prerequisiteThresholds[id] = value
@@ -760,7 +779,7 @@ async function savePrerequisites() {
   saving.value = true
   try {
     await syncCoursePrerequisites(courseId.value, {
-      prerequisites: prerequisiteIds.value.map(id => ({
+      prerequisites: prerequisiteIds.value.map((id) => ({
         prerequisiteCourseId: id,
         completionThreshold: prerequisiteThresholds[id] ?? 80,
       })),
@@ -912,6 +931,7 @@ async function loadData() {
     // Prerequisitos (opcional, falla silenciosamente)
     await Promise.all([
       loadAllCoursesForPicker().catch(err => console.error('[loadData] loadAllCoursesForPicker failed:', err)),
+      loadOwnCoursePrerequisiteOptions().catch(err => console.error('[loadData] loadOwnCoursePrerequisiteOptions failed:', err)),
       loadExistingPrerequisites().catch(err => console.error('[loadData] loadExistingPrerequisites failed:', err)),
     ])
 
@@ -1278,6 +1298,12 @@ function openSubmitDialog() {
 async function doSubmitReview() {
   submitting.value = true
   try {
+    const hasDrafts = await checkDraftPrerequisitesBeforeSubmit()
+    if (hasDrafts) {
+      submitting.value = false
+      return
+    }
+
     await submitForReview(courseId.value)
     course.value.status = 'pending_review'
     submitDialog.value = false
@@ -1288,6 +1314,55 @@ async function doSubmitReview() {
     submitting.value = false
   }
 }
+
+// Carga los cursos propios para mostrar como opciones de prerrequisito (solo los del instructor logueado, no todos los cursos públicos)
+async function loadOwnCoursePrerequisiteOptions() {
+  loadingPrereqOptions.value = true
+  try {
+    const mine = await getMyCourses()
+
+    allPrereqCourses.value = (mine || [])
+      .filter((c: any) => c?.id)
+      .filter((c: any) => c.id !== courseId.value)
+      .map((c: any) => ({
+        label: `${c.title}${c.isPublished === false ? ' (borrador)' : ''}`,
+        value: c.id,
+        isPublished: c.isPublished !== false,
+      }))
+
+    for (const opt of allPrereqCourses.value) {
+      prerequisiteTitleById[opt.value] = opt.label
+    }
+
+    prerequisiteOptions.value = allPrereqCourses.value
+  } finally {
+    loadingPrereqOptions.value = false
+  }
+}
+
+async function checkDraftPrerequisitesBeforeSubmit() {
+  if (!courseId.value) return false
+
+  const drafts = await getCoursePrerequisiteDrafts(courseId.value).catch(() => [])
+  draftPrerequisiteDrafts.value = (drafts || []).map((p: any) => p.prerequisiteCourseId)
+
+  const hasDraftPrerequisites = prerequisiteIds.value.some(id => draftPrerequisiteDrafts.value.includes(id))
+  if (hasDraftPrerequisites) {
+    showDraftPrerequisiteWarning.value = true
+    return true
+  }
+
+  return false
+}
+
+async function confirmPublishWithoutDraftPrerequisites() {
+  const draftSet = new Set(draftPrerequisiteDrafts.value)
+  prerequisiteIds.value = prerequisiteIds.value.filter(id => !draftSet.has(id))
+  await savePrerequisites()
+  showDraftPrerequisiteWarning.value = false
+  await doSubmitReview()
+}
+
 
 onMounted(loadData)
 </script>

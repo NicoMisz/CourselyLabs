@@ -305,18 +305,19 @@ public class CoursePrerequisiteService {
         CourseEntity course = requireCourse(courseId);
 
         // Regla clave: un curso gratis no mantiene prerequisitos.
-        if (Boolean.TRUE.equals(course.getIsFree())) {
+/*         if (Boolean.TRUE.equals(course.getIsFree())) {
             for (CoursePrerequisiteEntity current : prerequisiteRepository.findByCourseId(courseId)) {
                 prerequisiteRepository.delete(current);
             }
             return;
-        }
+        } */
 
+        //No distinguir por tipo de curso, aplicar prerequisitos a cualquiera
         List<CreateCoursePrerequisiteRequestDTO> desired = incoming == null ? List.of() : incoming;
 
         Set<UUID> desiredIds = desired.stream()
-                .map(CreateCoursePrerequisiteRequestDTO::getPrerequisiteCourseId)
-                .collect(java.util.stream.Collectors.toSet());
+            .map(CreateCoursePrerequisiteRequestDTO::getPrerequisiteCourseId)
+            .collect(java.util.stream.Collectors.toSet());
 
         List<CoursePrerequisiteEntity> current = prerequisiteRepository.findByCourseId(courseId);
 
@@ -349,10 +350,34 @@ public class CoursePrerequisiteService {
     }
 
     // --- Cursos relacionados (cualquier usuario autenticado) ---
-    @Transactional(readOnly = true)
     public CourseRelatedResponseDTO findRelatedCourses(UUID courseId, String email) {
         List<RelatedCourseDTO> prerequisites = prerequisiteRepository
-                .findWithPrerequisiteCourseByCourseId(courseId)
+            .findWithPrerequisiteCourseByCourseId(courseId)
+            .stream()
+            .filter(cp -> Boolean.TRUE.equals(cp.getPrerequisiteCourse().getIsPublished()))
+            .map(cp -> new RelatedCourseDTO(
+                cp.getPrerequisiteCourse().getId(),
+                cp.getPrerequisiteCourse().getTitle(),
+                cp.getPrerequisiteCourse().getSlug(),
+                cp.getCompletionThreshold()))
+            .toList();
+
+        List<RelatedCourseDTO> requiredBy = prerequisiteRepository
+            .findWithCourseByPrerequisiteCourseId(courseId)
+            .stream()
+            .filter(cp -> Boolean.TRUE.equals(cp.getCourse().getIsPublished()))
+            .map(cp -> new RelatedCourseDTO(
+                cp.getCourse().getId(),
+                cp.getCourse().getTitle(),
+                cp.getCourse().getSlug(),
+                cp.getCompletionThreshold()))
+            .toList();
+
+        return new CourseRelatedResponseDTO(prerequisites, requiredBy);
+    }
+
+    public List<RelatedCourseDTO> findDraftPrerequisites(UUID courseId, String email) {
+        return prerequisiteRepository.findDraftPrerequisitesByCourseId(courseId)
                 .stream()
                 .map(cp -> new RelatedCourseDTO(
                         cp.getPrerequisiteCourse().getId(),
@@ -360,18 +385,5 @@ public class CoursePrerequisiteService {
                         cp.getPrerequisiteCourse().getSlug(),
                         cp.getCompletionThreshold()))
                 .toList();
-
-        List<RelatedCourseDTO> requiredBy = prerequisiteRepository
-                .findWithCourseByPrerequisiteCourseId(courseId)
-                .stream()
-                .filter(cp -> Boolean.TRUE.equals(cp.getCourse().getIsPublished()))
-                .map(cp -> new RelatedCourseDTO(
-                        cp.getCourse().getId(),
-                        cp.getCourse().getTitle(),
-                        cp.getCourse().getSlug(),
-                        cp.getCompletionThreshold()))
-                .toList();
-
-        return new CourseRelatedResponseDTO(prerequisites, requiredBy);
     }
 }

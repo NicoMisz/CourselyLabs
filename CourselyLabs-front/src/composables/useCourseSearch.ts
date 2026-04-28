@@ -4,7 +4,7 @@ import { searchCourses, type SortBy, type ViewMode } from '@/api/courseSearch'
 import type { Course } from '@/types/course'
 import { isAxiosError } from 'axios'
 
-type Level = 'PRINCIPIANTE' | 'INTERMEDIO' | 'AVANZADO'
+type Level = string // Puedes reemplazar esto con un enum o tipo específico si tienes niveles predefinidos
 
 const SEARCH_HISTORY_KEY = 'course-search-history'
 const VIEW_MODE_KEY = 'course-search-view-mode'
@@ -28,9 +28,8 @@ export function useCourseSearch() {
 
     const keyword = ref<string>((route.query.q as string) || '')
     const categoryId = ref<number | null>(route.query.cat ? Number(route.query.cat) : null)
-    const level = ref<Level | null>((route.query.lvl as Level) || null)
+    const level = ref<Level | null>((route.query.lvl as string) || null)
     const isFree = ref<boolean | null>(route.query.free === undefined ? null : route.query.free === 'true')
-    const minRating = ref<number | null>(route.query.min ? Number(route.query.min) : null)
     const sortBy = ref<SortBy>((route.query.sort as SortBy) || 'recent')
     const viewMode = ref<ViewMode>((localStorage.getItem(VIEW_MODE_KEY) as ViewMode) || (route.query.view as ViewMode) || 'grid')
 
@@ -42,18 +41,14 @@ export function useCourseSearch() {
     const searchHistory = ref<string[]>(JSON.parse(localStorage.getItem(SEARCH_HISTORY_KEY) || '[]'))
 
     const hasActiveFilters = computed(() =>
-        !!keyword.value ||
-        categoryId.value !== null ||
-        level.value !== null ||
-        isFree.value !== null ||
-        minRating.value !== null
+        !!keyword.value || categoryId.value !== null || level.value !== null || isFree.value !== null
     )
 
     async function fetchPage(reset = false) {
         if (reset) {
-            page.value = 0
-            hasNext.value = true
-            courses.value = []
+        page.value = 0
+        hasNext.value = true
+        courses.value = []
         }
 
         if (!hasNext.value) return
@@ -64,37 +59,34 @@ export function useCourseSearch() {
         error.value = ''
 
         try {
-            const response = await searchCourses({
-                keyword: keyword.value || undefined,
-                categoryId: categoryId.value,
-                level: level.value,
-                isFree: isFree.value,
-                minRating: minRating.value,
-                sortBy: sortBy.value,
-                page: page.value,
-                size: size.value
-            })
+        const response = await searchCourses({
+            keyword: keyword.value || undefined,
+            categoryId: categoryId.value,
+            level: level.value || undefined,
+            isFree: isFree.value,
+            sortBy: sortBy.value,
+            page: page.value,
+            size: size.value
+        })
 
-            if (reset) courses.value = response.content
-            else courses.value.push(...response.content)
+        if (reset) courses.value = response.content
+        else courses.value.push(...response.content)
 
-            totalElements.value = response.totalElements
-            hasNext.value = !response.last
+        totalElements.value = response.totalElements
+        hasNext.value = !response.last
 
-            if (!response.last) {
-                page.value += 1
-            }
+        if (!response.last) page.value += 1
 
-            persistSearchHistory()
+        persistSearchHistory()
         } catch (err: unknown) {
-            if (isAxiosError<{ message?: string }>(err)) {
-                error.value = err.response?.data?.message || 'Error al cargar los cursos.'
-            } else {
-                error.value = 'Error al cargar los cursos.'
-            }
+        if (isAxiosError<{ message?: string }>(err)) {
+            error.value = err.response?.data?.message || 'Error al cargar los cursos.'
+        } else {
+            error.value = 'Error al cargar los cursos.'
+        }
         } finally {
-            loading.value = false
-            loadingMore.value = false
+        loading.value = false
+        loadingMore.value = false
         }
     }
 
@@ -109,16 +101,15 @@ export function useCourseSearch() {
 
     function syncUrl() {
         router.replace({
-            query: {
-                ...route.query,
-                q: keyword.value || undefined,
-                cat: categoryId.value ?? undefined,
-                lvl: level.value ?? undefined,
-                free: isFree.value === null ? undefined : String(isFree.value),
-                min: minRating.value ?? undefined,
-                sort: sortBy.value,
-                view: viewMode.value
-            }
+        query: {
+            ...route.query,
+            q: keyword.value || undefined,
+            cat: categoryId.value ?? undefined,
+            lvl: level.value ?? undefined,
+            free: isFree.value === null ? undefined : String(isFree.value),
+            sort: sortBy.value,
+            view: viewMode.value
+        }
         })
     }
 
@@ -127,15 +118,13 @@ export function useCourseSearch() {
         categoryId.value = null
         level.value = null
         isFree.value = null
-        minRating.value = null
     }
 
-    function removeFilterChip(key: 'keyword' | 'categoryId' | 'level' | 'isFree' | 'minRating') {
+    function removeFilterChip(key: 'keyword' | 'categoryId' | 'level' | 'isFree') {
         if (key === 'keyword') keyword.value = ''
         if (key === 'categoryId') categoryId.value = null
         if (key === 'level') level.value = null
         if (key === 'isFree') isFree.value = null
-        if (key === 'minRating') minRating.value = null
     }
 
     function setViewMode(mode: ViewMode) {
@@ -149,8 +138,7 @@ export function useCourseSearch() {
     }, 300)
 
     watch(keyword, () => debouncedKeywordSearch())
-
-    watch([categoryId, level, isFree, minRating, sortBy], () => {
+    watch([categoryId, level, isFree, sortBy], () => {
         syncUrl()
         fetchPage(true)
     })
@@ -166,7 +154,6 @@ export function useCourseSearch() {
         categoryId,
         level,
         isFree,
-        minRating,
         sortBy,
         viewMode,
         searchHistory,
