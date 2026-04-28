@@ -148,7 +148,7 @@ public class CourseService {
             int maxCourses = "premium".equals(role) ? MAX_COURSES_PREMIUM : MAX_COURSES_USER;
             if (currentCount >= maxCourses) {
                 throw new BadRequestException(
-                    "Has alcanzado el limite de cursos para tu plan (" + maxCourses + " cursos). Actualiza a premium para crear mas.");
+                    "Has alcanzado el límite de cursos para tu plan (" + maxCourses + " cursos). Actualiza a premium para crear mas.");
             }
         }
 
@@ -251,25 +251,25 @@ public class CourseService {
 
         // Validate requirements
         if (entity.getTitle() == null || entity.getTitle().length() < 3) {
-            throw new BadRequestException("El curso necesita un titulo (minimo 3 caracteres)");
+            throw new BadRequestException("El curso necesita un título (mínimo 3 caracteres)");
         }
         String descText = entity.getDescription() == null
                 ? ""
                 : entity.getDescription().replaceAll("<[^>]*>", "").trim();
         if (descText.length() < 20) {
-            throw new BadRequestException("La descripcion debe tener al menos 20 caracteres");
+            throw new BadRequestException("La descripción debe tener al menos 20 caracteres");
         }
         if (entity.getCategory() == null) {
-            throw new BadRequestException("Selecciona una categoria para el curso");
+            throw new BadRequestException("Selecciona una categoría para el curso");
         }
 
         var sections = sectionRepository.findByCourseIdOrderByPositionAsc(id);
         if (sections.isEmpty()) {
-            throw new BadRequestException("El curso necesita al menos una seccion");
+            throw new BadRequestException("El curso necesita al menos una sección");
         }
         boolean anyLesson = sections.stream().anyMatch(s -> s.getLessons() != null && !s.getLessons().isEmpty());
         if (!anyLesson) {
-            throw new BadRequestException("El curso necesita al menos una leccion");
+            throw new BadRequestException("El curso necesita al menos una lección");
         }
 
         entity.setStatus("pending_review");
@@ -321,9 +321,9 @@ public class CourseService {
         dto.setSections(sectionMapper.toDTOList(
                 sectionRepository.findByCourseIdOrderByPositionAsc(entity.getId())));
 
-        // Prerequisitos: visibles para cualquier usuario (y publico si no hay auth).
-        // Solo la creacion/edicion de prerequisitos esta restringida a premium/admin.
-        /* String emailForLookup = currentUser != null ? currentUser.getEmail() : "";
+        // Prerequisitos: visibles para cualquier usuario (y público si no hay auth).
+        // Solo la creación/edición de prerequisitos está restringida a premium/admin.
+        String emailForLookup = currentUser != null ? currentUser.getEmail() : "";
         try {
             dto.setPrerequisites(coursePrerequisiteService.findByCourseId(entity.getId(), emailForLookup));
         } catch (Exception e) {

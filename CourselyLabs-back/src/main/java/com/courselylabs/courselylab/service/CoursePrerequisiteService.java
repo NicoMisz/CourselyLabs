@@ -127,7 +127,7 @@ public class CoursePrerequisiteService {
                 .toList();
     }
 
-    // --- Validacion al inscribirse ---
+    // --- Validación al inscribirse ---
 
     public void assertCanEnroll(String email, UUID courseId) {
         // Cualquier usuario autenticado puede inscribirse si cumple los prerequisitos.
@@ -196,9 +196,10 @@ public class CoursePrerequisiteService {
             throw new UnauthorizedException("Only the course instructor or an admin can manage prerequisites");
         }
 
+        // Crear cursos con prerequisitos requiere suscripción Premium activa.
         boolean hasPremium = subscriptionRepository.existsByUserIdAndStatus(user.getId(), "active");
         if (!hasPremium) {
-            throw new UnauthorizedException("Crear prerequisitos entre cursos es una funcion Premium. Hazte Premium para usarla.");
+            throw new UnauthorizedException("Crear prerequisitos entre cursos es una función Premium. Hazte Premium para usarla.");
         }
     }
 

@@ -82,7 +82,7 @@ public class AuthService {
         try {
             emailService.sendVerificationEmail(user);
         } catch (Exception e) {
-            // No bloquear el registro si falla el envio de email
+            // No bloquear el registro si falla el envío de email
         }
 
         UserDetailsImpl userDetails = new UserDetailsImpl(user);

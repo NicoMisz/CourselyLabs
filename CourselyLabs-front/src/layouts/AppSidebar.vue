@@ -26,7 +26,7 @@
 
       <q-separator v-if="headerHidden" class="q-mb-sm" />
 
-      <!-- Navegacion principal -->
+      <!-- Navegación principal -->
       <SidebarItem
         v-for="link in navLinks"
         :key="link.link"
@@ -79,18 +79,18 @@
           <q-item-section avatar>
             <q-icon name="logout" />
             <q-tooltip v-if="mini" anchor="center right" self="center left" :offset="[10, 0]">
-              Cerrar sesion
+              Cerrar sesión
             </q-tooltip>
           </q-item-section>
           <q-item-section>
-            <q-item-label>Cerrar sesion</q-item-label>
+            <q-item-label>Cerrar sesión</q-item-label>
           </q-item-section>
         </q-item>
       </template>
 
       <!-- No autenticado -->
       <template v-else>
-        <SidebarItem title="Iniciar sesion" icon="login" link="/login" :mini="mini" />
+        <SidebarItem title="Iniciar sesión" icon="login" link="/login" :mini="mini" />
         <SidebarItem title="Registrarse" icon="person_add" link="/register" :mini="mini" />
       </template>
     </q-list>
@@ -146,7 +146,7 @@ const authLinks = computed(() => {
     { title: 'Cursos creados', icon: 'edit_note', link: '/instructor/cursos' },
   ]
   if (authStore.user?.role === 'admin') {
-    links.push({ title: 'Administracion', icon: 'admin_panel_settings', link: '/admin' })
+    links.push({ title: 'Administración', icon: 'admin_panel_settings', link: '/admin' })
   }
   return links
 })

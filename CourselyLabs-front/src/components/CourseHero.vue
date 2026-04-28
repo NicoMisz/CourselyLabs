@@ -10,7 +10,7 @@
 
       <div class="col-12 col-md-7">
         <h1 class="text-h4 q-my-none">{{ title }}</h1>
-        <p class="text-body1 q-mt-sm q-mb-md">{{ shortDescription || 'Sin descripcion corta.' }}</p>
+        <p class="text-body1 q-mt-sm q-mb-md">{{ shortDescription || 'Sin descripción corta.' }}</p>
 
         <div class="row q-gutter-sm items-center q-mb-md">
           <LevelBadge :level="level" />
@@ -52,7 +52,7 @@ const studentsLabel = computed(() => {
 });
 
 const updatedLabel = computed(() => {
-  if (!props.updatedAt) return 'Actualizacion no disponible';
+  if (!props.updatedAt) return 'Actualización no disponible';
   const now = Date.now();
   const then = new Date(props.updatedAt).getTime();
   const diffMs = now - then;

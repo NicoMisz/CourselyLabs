@@ -50,15 +50,47 @@
             inline-actions
             style="max-width: 960px; margin-left: auto; margin-right: auto; width: 100%"
           >
-            Continuar desde {{ formatTime(lessonProgress?.lastPositionSeconds || 0) }}?
+            ¿Continuar desde {{ formatTime(lessonProgress?.lastPositionSeconds || 0) }}?
             <template #action>
-              <q-btn flat color="primary" label="Si" @click="resumeVideo" />
+              <q-btn flat color="primary" label="Sí" @click="resumeVideo" />
               <q-btn flat color="grey-7" label="Empezar de nuevo" @click="showResumeBanner = false" />
             </template>
           </q-banner>
 
           <div class="col q-pa-md q-pa-lg-lg" style="max-width: 960px; margin: 0 auto; width: 100%">
-            <Transition name="fade" mode="out-in">
+            <h1 class="text-h5 q-mt-none q-mb-sm">{{ lesson.title }}</h1>
+            <p v-if="lesson.description" class="text-body2 text-grey-7 q-mb-lg">{{ lesson.description }}</p>
+
+            <!-- Block list (ordered) -->
+            <div v-if="orderedBlocks.length > 0" class="block-stack">
+              <div v-for="block in orderedBlocks" :key="block.id" class="block-section">
+                <LessonVideoPlayer
+                  v-if="block.type === 'video' && block.videoUrl"
+                  :ref="block === firstVideoBlock ? (el => bindVideoRef(el)) : undefined"
+                  :src="block.videoUrl"
+                  @ended="handleVideoEnded"
+                  @time-update="handleTimeUpdate"
+                />
+                <LessonTextViewer
+                  v-else-if="block.type === 'text' && block.textContent"
+                  :content="block.textContent"
+                />
+                <LessonPdfViewer
+                  v-else-if="block.type === 'pdf' && block.pdfUrl"
+                  :src="block.pdfUrl"
+                />
+                <AssessmentLessonView
+                  v-else-if="isAssessmentBlockType(block.type)"
+                  :block-id="block.id"
+                />
+                <div v-else class="text-grey-6 text-body2 q-pa-md">
+                  Bloque sin contenido todavía.
+                </div>
+              </div>
+            </div>
+
+            <!-- Legacy fallback (lessons not yet split into blocks) -->
+            <Transition v-else name="fade" mode="out-in">
               <LessonVideoPlayer
                 v-if="lesson.type === 'video' && lesson.contentUrl"
                 ref="videoPlayerRef"
@@ -83,12 +115,9 @@
               </div>
             </Transition>
 
-            <div class="q-mt-lg row items-center justify-between">
-              <div class="col">
-                <h1 class="text-h5 q-my-sm">{{ lesson.title }}</h1>
-                <p v-if="lesson.description" class="text-body2 text-grey-7">{{ lesson.description }}</p>
-              </div>
+            <div class="q-mt-lg row items-center justify-end">
               <q-btn
+                v-if="!hasAssessmentBlock"
                 :color="isCurrentCompleted ? 'positive' : 'grey-5'"
                 :icon="isCurrentCompleted ? 'check_circle' : 'radio_button_unchecked'"
                 :label="isCurrentCompleted ? 'Completada' : 'Marcar como completada'"
@@ -97,6 +126,14 @@
                 :loading="completingLesson"
                 @click="handleToggleComplete"
               />
+              <q-chip
+                v-else-if="isCurrentCompleted"
+                color="positive"
+                text-color="white"
+                icon="check_circle"
+              >
+                Completada
+              </q-chip>
             </div>
 
             <LessonResources :lesson-id="lessonId" class="q-mt-lg" />
@@ -117,12 +154,12 @@
         <div class="completion-icon q-mx-auto q-mb-md">
           <q-icon name="emoji_events" size="48px" color="white" />
         </div>
-        <div class="text-h5 q-mb-sm">Has completado el curso!</div>
+        <div class="text-h5 q-mb-sm">¡Has completado el curso!</div>
         <div class="text-body2 text-grey-7 q-mb-lg">
           Felicidades por completar {{ courseTitle }}.
         </div>
         <q-card-actions align="center" class="q-gutter-sm">
-          <q-btn flat color="primary" label="Explorar mas cursos" to="/cursos" />
+          <q-btn flat color="primary" label="Explorar más cursos" to="/cursos" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -141,6 +178,9 @@ import CourseNavSidebar from '../components/CourseNavSidebar.vue'
 import LessonNavBar from '../components/LessonNavBar.vue'
 import LessonVideoPlayer from '../components/LessonVideoPlayer.vue'
 import LessonTextViewer from '../components/LessonTextViewer.vue'
+import AssessmentLessonView from '../components/AssessmentLessonView.vue'
+import { isAssessmentBlockType } from '../api/lessonBlock'
+
 import LessonPdfViewer from '../components/LessonPdfViewer.vue'
 import LessonResources from '../components/LessonResources.vue'
 
@@ -180,6 +220,23 @@ const isCurrentCompleted = computed(() =>
   courseProgress.value?.completedLessonIds.includes(lessonId.value) ?? false
 )
 
+const orderedBlocks = computed(() => {
+  const list = lesson.value?.blocks || []
+  return [...list].sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
+})
+
+const firstVideoBlock = computed(() =>
+  orderedBlocks.value.find(b => b.type === 'video' && !!b.videoUrl) || null
+)
+
+const hasAssessmentBlock = computed(() =>
+  orderedBlocks.value.some(b => isAssessmentBlockType(b.type))
+)
+
+function bindVideoRef(el: any) {
+  videoPlayerRef.value = el
+}
+
 const allLessons = computed<Lesson[]>(() =>
   sections.value.flatMap(s => s.lessons)
 )
@@ -206,7 +263,7 @@ function formatTime(seconds: number): string {
 
 function goToNext() {
   if (nextLesson.value) {
-    router.push(`/cursos/${slug.value}/leccion/${nextLesson.value.id}`)
+    router.push(`/cursos/${slug.value}/lección/${nextLesson.value.id}`)
   }
 }
 
@@ -280,16 +337,17 @@ async function loadData() {
     courseProgress.value = await getCourseProgress(course.id).catch(() => null)
     lessonProgress.value = await getLessonProgress(lessonId.value).catch(() => null)
 
-    // Show resume banner for video lessons with saved position
-    if (lesson.value?.type === 'video' && (lessonProgress.value?.lastPositionSeconds ?? 0) > 10) {
+    const hasVideo = orderedBlocks.value.some(b => b.type === 'video' && !!b.videoUrl)
+      || (lesson.value?.type === 'video' && !!lesson.value.contentUrl)
+
+    if (hasVideo && (lessonProgress.value?.lastPositionSeconds ?? 0) > 10) {
       showResumeBanner.value = true
     }
-
-    if (lesson.value?.type === 'video') {
+    if (hasVideo) {
       startPositionTracking()
     }
   } catch {
-    error.value = 'No se pudo cargar la leccion.'
+    error.value = 'No se pudo cargar la lección.'
   } finally {
     loading.value = false
   }
@@ -302,15 +360,17 @@ async function loadLesson() {
     lesson.value = await getLessonById(lessonId.value)
     lessonProgress.value = await getLessonProgress(lessonId.value).catch(() => null)
 
-    if (lesson.value?.type === 'video' && (lessonProgress.value?.lastPositionSeconds ?? 0) > 10) {
+    const hasVideo = orderedBlocks.value.some(b => b.type === 'video' && !!b.videoUrl)
+      || (lesson.value?.type === 'video' && !!lesson.value.contentUrl)
+    if (hasVideo && (lessonProgress.value?.lastPositionSeconds ?? 0) > 10) {
       showResumeBanner.value = true
     }
-    if (lesson.value?.type === 'video') {
+    if (hasVideo) {
       lastSavedPosition = 0
       startPositionTracking()
     }
   } catch {
-    error.value = 'No se pudo cargar la leccion.'
+    error.value = 'No se pudo cargar la lección.'
   }
 }
 
@@ -336,5 +396,18 @@ onBeforeUnmount(stopPositionTracking)
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #f59e0b, #ea580c);
+}
+
+.block-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.block-section {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
 }
 </style>

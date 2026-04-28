@@ -57,9 +57,9 @@
         </div>
       </section>
 
-      <!-- Categorias -->
+      <!-- Categorías -->
       <section v-if="categories.length" class="q-mb-xl">
-        <h2 class="text-h5 q-mb-md" style="font-family: Monda, sans-serif">Categorias</h2>
+        <h2 class="text-h5 q-mb-md" style="font-family: Monda, sans-serif">Categorías</h2>
         <div class="row q-gutter-sm">
           <q-chip
             v-for="cat in categories"
@@ -81,7 +81,7 @@
         <p class="text-body1 text-grey-8 q-mb-md">
           Comparte tu conocimiento con miles de estudiantes. Crea tu primer curso hoy.
         </p>
-        <q-btn unelevated rounded color="accent" label="Empieza aqui" icon="co_present" to="/instructor" />
+        <q-btn unelevated rounded color="accent" label="Empieza aquí" icon="co_present" to="/instructor" />
       </section>
     </div>
   </q-page>

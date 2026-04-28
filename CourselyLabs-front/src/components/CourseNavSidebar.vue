@@ -41,7 +41,7 @@
             v-for="lesson in section.lessons"
             :key="lesson.id"
             clickable
-            :to="`/cursos/${courseSlug}/leccion/${lesson.id}`"
+            :to="`/cursos/${courseSlug}/lección/${lesson.id}`"
             :active="lesson.id === activeLessonId"
             active-class="bg-primary text-white"
             class="q-pl-lg"
@@ -56,7 +56,7 @@
               />
               <LessonTypeIcon
                 v-else
-                :type="lesson.type"
+                :type="(lesson.type || 'text') as any"
                 size="18px"
                 :color="lesson.id === activeLessonId ? 'white' : 'grey-7'"
               />
@@ -97,7 +97,7 @@ defineEmits<{
 function sectionCaption(section: Section): string {
   const completed = section.lessons.filter(l => props.completedLessonIds.includes(l.id)).length
   const total = section.lessons.length
-  return `${completed}/${total} leccion${total !== 1 ? 'es' : ''}`
+  return `${completed}/${total} lección${total !== 1 ? 'es' : ''}`
 }
 </script>
 

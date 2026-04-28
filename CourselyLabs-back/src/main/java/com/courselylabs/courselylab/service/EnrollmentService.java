@@ -127,7 +127,7 @@ public class EnrollmentService {
         if (!Boolean.TRUE.equals(course.getIsFree())) {
             boolean isPremium = subscriptionRepository.existsByUserIdAndStatus(user.getId(), "active");
             if (!isPremium) {
-                throw new BadRequestException("Este curso requiere una suscripcion Premium");
+                throw new BadRequestException("Este curso requiere una suscripción Premium");
             }
         }
 

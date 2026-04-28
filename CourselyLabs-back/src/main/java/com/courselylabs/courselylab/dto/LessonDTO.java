@@ -1,6 +1,7 @@
 package com.courselylabs.courselylab.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import jakarta.validation.constraints.NotBlank;
@@ -20,7 +21,7 @@ public class LessonDTO {
 
     private String description;
 
-    @NotBlank(message = "Type is required")
+    /** Legacy field — content lives in {@code blocks} now; nullable. */
     private String type;
 
     private String contentUrl;
@@ -31,4 +32,6 @@ public class LessonDTO {
     private UUID sectionId;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    private List<LessonBlockDTO> blocks;
 }

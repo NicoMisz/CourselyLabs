@@ -85,7 +85,7 @@
                     @click="openSubmitDialog(course)"
                   >
                     <q-item-section avatar><q-icon name="send" size="20px" /></q-item-section>
-                    <q-item-section>Enviar a revision</q-item-section>
+                    <q-item-section>Enviar a revisión</q-item-section>
                   </q-item>
                   <q-item
                     v-if="course.status === 'rejected'"
@@ -120,7 +120,7 @@
           <div class="text-h6">Eliminar curso</div>
         </q-card-section>
         <q-card-section>
-          ¿Estas seguro de que quieres eliminar "{{ courseToDelete?.title }}"? Esta accion no se puede deshacer.
+          ¿Estás seguro de que quieres eliminar «{{ courseToDelete?.title }}»? Esta acción no se puede deshacer.
         </q-card-section>
         <q-card-actions align="right">
           <q-btn flat label="Cancelar" v-close-popup />
@@ -135,16 +135,16 @@
         <q-card-section>
           <div class="text-h6">Nuevo curso</div>
           <p class="text-body2 text-grey-7 q-mt-xs q-mb-none">
-            Empieza con un titulo. Podras completar el resto desde el editor.
+            Empieza con un título. Podras completar el resto desde el editor.
           </p>
         </q-card-section>
         <q-card-section>
           <q-input
             v-model="newCourseTitle"
-            label="Titulo del curso"
+            label="Título del curso"
             outlined
             autofocus
-            :rules="[v => v.length >= 3 || 'Minimo 3 caracteres']"
+            :rules="[v => v.length >= 3 || 'Mínimo 3 caracteres']"
             @keyup.enter="handleCreate"
           />
         </q-card-section>
@@ -166,10 +166,10 @@
     <q-dialog v-model="submitDialog">
       <q-card style="min-width: 400px">
         <q-card-section>
-          <div class="text-h6">Enviar a revision</div>
+          <div class="text-h6">Enviar a revisión</div>
         </q-card-section>
         <q-card-section>
-          <div class="text-body2 q-mb-md">Tu curso sera revisado por un administrador. Si es aprobado, se publicara automaticamente. Verifica que cumple los requisitos:</div>
+          <div class="text-body2 q-mb-md">Tu curso será revisado por un administrador. Si es aprobado, se publicara automáticamente. Verifica que cumple los requisitos:</div>
           <q-list dense>
             <q-item v-for="check in submitChecks" :key="check.label">
               <q-item-section avatar>
@@ -183,7 +183,7 @@
           <q-btn flat label="Cancelar" v-close-popup />
           <q-btn
             color="primary"
-            label="Enviar a revision"
+            label="Enviar a revisión"
             :disable="!allChecksPass"
             :loading="submitting"
             @click="handleSubmitReview"
@@ -274,7 +274,7 @@ function statusColor(status: string) {
 function statusLabel(status: string) {
   switch (status) {
     case 'published': return 'Publicado'
-    case 'pending_review': return 'En revision'
+    case 'pending_review': return 'En revisión'
     case 'rejected': return 'Rechazado'
     default: return 'Borrador'
   }
@@ -308,7 +308,7 @@ async function handleDelete() {
 async function openSubmitDialog(course: any) {
   submitCourseId.value = course.id
   submitChecks.value = [
-    { label: 'El curso tiene titulo', ok: !!course.title },
+    { label: 'El curso tiene título', ok: !!course.title },
     { label: 'Cargando contenido...', ok: false },
   ]
   submitDialog.value = true
@@ -317,13 +317,13 @@ async function openSubmitDialog(course: any) {
     const sections = await getCourseSections(course.id)
     const totalLessons = sections.reduce((sum: number, s: any) => sum + (s.lessons?.length || 0), 0)
     submitChecks.value = [
-      { label: 'El curso tiene titulo', ok: !!course.title },
-      { label: `Al menos 1 seccion (${sections.length} encontradas)`, ok: sections.length > 0 },
-      { label: `Al menos 1 leccion (${totalLessons} encontradas)`, ok: totalLessons > 0 },
+      { label: 'El curso tiene título', ok: !!course.title },
+      { label: `Al menos 1 sección (${sections.length} encontradas)`, ok: sections.length > 0 },
+      { label: `Al menos 1 lección (${totalLessons} encontradas)`, ok: totalLessons > 0 },
     ]
   } catch {
     submitChecks.value = [
-      { label: 'El curso tiene titulo', ok: !!course.title },
+      { label: 'El curso tiene título', ok: !!course.title },
       { label: 'Error al verificar contenido', ok: false },
     ]
   }
@@ -336,9 +336,9 @@ async function handleSubmitReview() {
     const course = courses.value.find(c => c.id === submitCourseId.value)
     if (course) course.status = 'pending_review'
     submitDialog.value = false
-    $q.notify({ type: 'positive', message: 'Curso enviado a revision', position: 'bottom-right' })
+    $q.notify({ type: 'positive', message: 'Curso enviado a revisión', position: 'bottom-right' })
   } catch {
-    $q.notify({ type: 'negative', message: 'Error al enviar a revision', position: 'bottom-right' })
+    $q.notify({ type: 'negative', message: 'Error al enviar a revisión', position: 'bottom-right' })
   } finally {
     submitting.value = false
   }

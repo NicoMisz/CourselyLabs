@@ -15,7 +15,7 @@
         <div class="row items-start justify-between q-col-gutter-sm">
             <div class="col">
             <div class="text-subtitle1 text-weight-medium">{{ course.title }}</div>
-            <div class="text-body2 text-grey-7 q-mt-xs">{{ course.shortDescription || 'Continua con tu aprendizaje.' }}</div>
+            <div class="text-body2 text-grey-7 q-mt-xs">{{ course.shortDescription || 'Continúa con tu aprendizaje.' }}</div>
             </div>
             <q-chip dense :color="statusColor" text-color="white">{{ statusLabel }}</q-chip>
         </div>
@@ -52,7 +52,7 @@ const statusColor = computed(() => {
 
 const lastAccessLabel = computed(() => {
     if (!props.course.lastAccessedAt) return 'Sin acceso reciente';
-    return `Ultimo acceso: ${new Date(props.course.lastAccessedAt).toLocaleDateString('es-ES')}`;
+    return `Último acceso: ${new Date(props.course.lastAccessedAt).toLocaleDateString('es-ES')}`;
 });
 
 function goToCourse() {

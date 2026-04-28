@@ -29,7 +29,7 @@
             v-if="course.status === 'draft' || course.status === 'rejected'"
             color="accent"
             icon="send"
-            label="Enviar a revision"
+            label="Enviar a revisión"
             unelevated
             no-caps
             @click="openSubmitDialog"
@@ -48,7 +48,7 @@
               @click="selected = { type: 'info' }"
             >
               <q-item-section avatar><q-icon name="info" /></q-item-section>
-              <q-item-section>Informacion basica</q-item-section>
+              <q-item-section>Información basica</q-item-section>
             </q-item>
             <q-item
               clickable
@@ -116,7 +116,7 @@
               dense
               no-caps
               icon="add"
-              label="Nueva seccion"
+              label="Nueva sección"
               color="primary"
               class="full-width"
               @click="showAddSection = true"
@@ -148,14 +148,14 @@
         <main class="edit-main">
           <!-- Info basica -->
           <div v-if="selected?.type === 'info'" class="panel">
-            <h2 class="panel-title">Informacion basica</h2>
-            <q-input v-model="info.title" label="Titulo" outlined />
+            <h2 class="panel-title">Información basica</h2>
+            <q-input v-model="info.title" label="Título" outlined />
             <q-input v-model="info.slug" label="Slug (URL)" outlined hint="/cursos/[slug]" />
-            <q-input v-model="info.shortDescription" label="Descripcion corta" outlined type="textarea" rows="2" maxlength="500" counter />
+            <q-input v-model="info.shortDescription" label="Descripción corta" outlined type="textarea" rows="2" maxlength="500" counter />
             <q-select
               v-model="info.categoryId"
               :options="categoryOptions"
-              label="Categoria"
+              label="Categoría"
               outlined
               emit-value map-options clearable
             />
@@ -176,7 +176,7 @@
             <h2 class="panel-title">Detalles del curso</h2>
 
             <div>
-              <label class="panel-label">Descripcion completa</label>
+              <label class="panel-label">Descripción completa</label>
               <RichTextEditor v-model="details.description" placeholder="Describe tu curso con detalle..." />
             </div>
 
@@ -208,14 +208,14 @@
               />
               <div class="text-caption text-grey-7 q-mt-xs">
                 {{ details.isPremium
-                  ? 'Solo accesible con suscripcion Premium activa.'
+                  ? 'Solo accesible con suscripción Premium activa.'
                   : 'Accesible para cualquier usuario autenticado.' }}
               </div>
               <q-banner v-if="!canUsePremiumFeatures" rounded class="bg-amber-1 q-mt-sm" dense>
                 <template #avatar>
                   <q-icon name="workspace_premium" color="amber-8" />
                 </template>
-                Crear cursos Premium es una funcion exclusiva para miembros Premium.
+                Crear cursos Premium es una función exclusiva para miembros Premium.
                 <template #action>
                   <q-btn flat dense color="amber-8" label="Hazte Premium" no-caps to="/premium" />
                 </template>
@@ -231,16 +231,16 @@
           <div v-else-if="selected?.type === 'prerequisites'" class="panel">
             <h2 class="panel-title">Prerequisitos</h2>
             <p class="text-body2 text-grey-7">
-              Los estudiantes necesitaran completar estos cursos antes de poder inscribirse en este.
+              Los estudiantes necesitarán completar estos cursos antes de poder inscribirse en este.
               Ideal para crear rutas de aprendizaje.
             </p>
 
             <!-- Locked for non-premium -->
             <div v-if="!canUsePremiumFeatures" class="premium-lock">
               <q-icon name="workspace_premium" size="48px" color="amber-8" />
-              <div class="text-h6 q-mt-md">Funcion exclusiva Premium</div>
+              <div class="text-h6 q-mt-md">Función exclusiva Premium</div>
               <p class="text-body2 text-grey-7 q-mb-md" style="max-width: 480px; margin-left: auto; margin-right: auto">
-                Enlazar cursos con prerequisitos es una de las ventajas de la suscripcion Premium.
+                Enlazar cursos con prerequisitos es una de las ventajas de la suscripción Premium.
                 Puedes seguir creando tu curso con el resto de funciones.
               </p>
               <q-btn
@@ -284,7 +284,7 @@
                   <q-item-section>
                     <q-item-label>{{ prerequisiteTitleById[id] || 'Curso' }}</q-item-label>
                     <q-item-label caption>
-                      Umbral de completacion:
+                      Umbral de completación:
                       <span class="text-weight-medium">{{ prerequisiteThresholds[id] ?? 80 }}%</span>
                     </q-item-label>
                   </q-item-section>
@@ -313,20 +313,20 @@
             </template>
           </div>
 
-          <!-- Seccion -->
+          <!-- Sección -->
           <div v-else-if="selected?.type === 'section'" class="panel">
             <div class="panel-header">
-              <h2 class="panel-title q-my-none">Seccion</h2>
+              <h2 class="panel-title q-my-none">Sección</h2>
               <q-btn flat dense no-caps icon="delete" label="Eliminar" color="negative" @click="confirmDeleteSection" />
             </div>
-            <q-input v-model="sectionForm.title" label="Titulo de la seccion" outlined />
-            <q-input v-model="sectionForm.description" label="Descripcion" outlined type="textarea" rows="2" />
+            <q-input v-model="sectionForm.title" label="Título de la sección" outlined />
+            <q-input v-model="sectionForm.description" label="Descripción" outlined type="textarea" rows="2" />
 
             <q-separator class="q-my-md" />
 
             <div class="row items-center justify-between q-mb-sm">
               <div class="text-subtitle2">Lecciones</div>
-              <q-btn outline color="primary" no-caps icon="add" label="Añadir leccion" size="sm" @click="addLessonToCurrentSection" />
+              <q-btn outline color="primary" no-caps icon="add" label="Añadir lección" size="sm" @click="addLessonToCurrentSection" />
             </div>
 
             <q-list v-if="currentSection?.lessons?.length" separator bordered>
@@ -342,60 +342,149 @@
               </q-item>
             </q-list>
             <div v-else class="empty-hint">
-              Esta seccion no tiene lecciones todavia.
+              Esta sección no tiene lecciones todavía.
             </div>
 
             <div class="panel-actions">
-              <q-btn color="primary" unelevated no-caps label="Guardar seccion" :loading="saving" @click="saveSection" />
+              <q-btn color="primary" unelevated no-caps label="Guardar sección" :loading="saving" @click="saveSection" />
             </div>
           </div>
 
-          <!-- Leccion -->
+          <!-- Lección -->
           <div v-else-if="selected?.type === 'lesson'" class="panel">
             <div class="panel-header">
-              <h2 class="panel-title q-my-none">Leccion</h2>
+              <h2 class="panel-title q-my-none">Lección</h2>
               <q-btn flat dense no-caps icon="delete" label="Eliminar" color="negative" @click="confirmDeleteLesson" />
             </div>
 
-            <q-input v-model="lessonForm.title" label="Titulo de la leccion" outlined />
+            <q-input v-model="lessonForm.title" label="Título de la lección" outlined />
+            <q-input v-model="lessonForm.description" label="Descripción breve (opcional)" outlined type="textarea" rows="2" />
+            <q-toggle v-model="lessonForm.isFree" label="Lección gratuita (preview público)" />
 
-            <q-select
-              v-model="lessonForm.type"
-              :options="lessonTypeOptions"
-              label="Tipo de contenido"
-              outlined
-              emit-value map-options
-            />
-
-            <q-input v-model="lessonForm.description" label="Descripcion breve (opcional)" outlined type="textarea" rows="2" />
-
-            <!-- Content by type -->
-            <div v-if="lessonForm.type === 'text'">
-              <label class="panel-label">Contenido</label>
-              <RichTextEditor v-model="lessonForm.contentText" placeholder="Escribe el contenido de la leccion..." />
+            <div class="panel-actions" style="border-top: none; margin-top: 0; padding-top: 0">
+              <q-btn color="primary" unelevated no-caps label="Guardar lección" :loading="saving" @click="saveLesson" />
             </div>
 
-            <div v-else-if="lessonForm.type === 'video' || lessonForm.type === 'pdf'">
-              <label class="panel-label">
-                Archivo ({{ lessonForm.type === 'video' ? 'video MP4' : 'PDF' }})
-              </label>
-              <div v-if="lessonForm.contentUrl" class="content-file-preview">
-                <q-icon :name="lessonForm.type === 'video' ? 'play_circle' : 'picture_as_pdf'" size="24px" color="primary" />
-                <span class="text-body2">Archivo subido correctamente</span>
-                <q-btn flat dense icon="open_in_new" size="sm" @click="openFile(lessonForm.contentUrl)" />
+            <q-separator class="q-my-md" />
+
+            <!-- Blocks -->
+            <div class="row items-center justify-between q-mb-sm">
+              <div class="text-subtitle2">
+                <q-icon name="view_agenda" size="18px" /> Contenido de la lección ({{ blocks.length }})
               </div>
-              <FileUploader
-                ref="contentUploaderRef"
-                :accept="lessonForm.type === 'video' ? 'video/mp4' : 'application/pdf'"
-                :max-size-mb="lessonForm.type === 'video' ? 500 : 50"
-                :label="lessonForm.contentUrl ? 'Reemplazar archivo' : 'Subir archivo'"
-                :hint="lessonForm.type === 'video' ? 'MP4 hasta 500 MB' : 'PDF hasta 50 MB'"
-                :icon="lessonForm.type === 'video' ? 'video_file' : 'picture_as_pdf'"
-                @upload="handleContentUpload"
-              />
             </div>
 
-            <q-toggle v-model="lessonForm.isFree" label="Leccion gratuita (preview publico)" class="q-mt-md" />
+            <p class="text-caption text-grey-7 q-mb-md" style="margin-top: -8px">
+              Compone la lección añadiendo bloques en el orden que quieras: texto, video, PDF, cuestionarios, proyectos o respuesta abierta.
+            </p>
+
+            <div v-if="loadingBlocks" class="text-center q-py-md">
+              <q-spinner-dots color="primary" size="32px" />
+            </div>
+
+            <draggable
+              v-else
+              v-model="blocks"
+              item-key="id"
+              handle=".block-handle"
+              animation="160"
+              ghost-class="block-ghost"
+              @end="handleBlockReorder"
+            >
+              <template #item="{ element: block }">
+                <q-card flat bordered class="block-card q-mb-sm" :id="`block-${block.id}`">
+                  <div class="block-header">
+                    <q-icon name="drag_indicator" class="block-handle" />
+                    <q-icon :name="blockIcon(block.type)" :color="blockColor(block.type)" size="20px" class="q-mr-sm" />
+                    <span class="text-weight-medium">{{ blockLabel(block.type) }}</span>
+                    <q-space />
+                    <q-btn flat dense round icon="delete" color="negative" size="sm" @click="confirmDeleteBlock(block)">
+                      <q-tooltip>Eliminar bloque</q-tooltip>
+                    </q-btn>
+                  </div>
+                  <q-card-section class="q-pt-none">
+                    <!-- Text block -->
+                    <div v-if="block.type === 'text'">
+                      <RichTextEditor
+                        v-model="block.textContent"
+                        placeholder="Escribe el contenido..."
+                      />
+                      <div class="row justify-end q-mt-sm">
+                        <q-btn color="primary" unelevated no-caps size="sm" label="Guardar bloque" :loading="block._saving" @click="saveBlock(block)" />
+                      </div>
+                    </div>
+
+                    <!-- Video / PDF block -->
+                    <div v-else-if="block.type === 'video' || block.type === 'pdf'">
+                      <div v-if="block.type === 'video' ? block.videoUrl : block.pdfUrl" class="content-file-preview">
+                        <q-icon :name="block.type === 'video' ? 'play_circle' : 'picture_as_pdf'" size="24px" color="primary" />
+                        <span class="text-body2">Archivo subido correctamente</span>
+                        <q-btn
+                          flat
+                          dense
+                          icon="open_in_new"
+                          size="sm"
+                          @click="openFile(block.type === 'video' ? block.videoUrl! : block.pdfUrl!)"
+                        />
+                      </div>
+                      <FileUploader
+                        :accept="block.type === 'video' ? 'video/mp4' : 'application/pdf'"
+                        :max-size-mb="block.type === 'video' ? 500 : 50"
+                        :label="(block.type === 'video' ? block.videoUrl : block.pdfUrl) ? 'Reemplazar archivo' : 'Subir archivo'"
+                        :hint="block.type === 'video' ? 'MP4 hasta 500 MB' : 'PDF hasta 50 MB'"
+                        :icon="block.type === 'video' ? 'video_file' : 'picture_as_pdf'"
+                        @upload="(file: File, onProgress: (pct: number) => void) => handleBlockFileUpload(block, file, onProgress)"
+                      />
+                    </div>
+
+                    <!-- Assessment block (quiz / project / open_text) -->
+                    <AssessmentEditor
+                      v-else-if="isAssessmentType(block.type)"
+                      :key="`assessment-${block.id}`"
+                      :block-id="block.id"
+                      :type="block.type"
+                      :can-use-premium-features="canUsePremiumFeatures"
+                    />
+                  </q-card-section>
+                </q-card>
+              </template>
+            </draggable>
+
+            <q-btn-dropdown
+              flat
+              no-caps
+              color="primary"
+              icon="add"
+              label="Añadir bloque"
+              class="full-width q-mt-sm"
+              :disable="addingBlock"
+            >
+              <q-list style="min-width: 320px">
+                <q-item-label header class="text-caption text-weight-bold text-grey-7 q-py-xs">
+                  Contenido
+                </q-item-label>
+                <q-item v-for="opt in contentBlockOptions" :key="opt.value" clickable v-close-popup @click="addBlock(opt.value)">
+                  <q-item-section avatar><q-icon :name="opt.icon" :color="opt.color" /></q-item-section>
+                  <q-item-section>
+                    <q-item-label>{{ opt.label }}</q-item-label>
+                    <q-item-label caption>{{ opt.hint }}</q-item-label>
+                  </q-item-section>
+                </q-item>
+
+                <q-separator class="q-my-xs" />
+
+                <q-item-label header class="text-caption text-weight-bold text-grey-7 q-py-xs">
+                  Evaluaciones
+                </q-item-label>
+                <q-item v-for="opt in assessmentBlockOptions" :key="opt.value" clickable v-close-popup @click="addBlock(opt.value)">
+                  <q-item-section avatar><q-icon :name="opt.icon" :color="opt.color" /></q-item-section>
+                  <q-item-section>
+                    <q-item-label>{{ opt.label }}</q-item-label>
+                    <q-item-label caption>{{ opt.hint }}</q-item-label>
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-btn-dropdown>
 
             <q-separator class="q-my-md" />
 
@@ -438,10 +527,6 @@
                 @upload="handleResourceUpload"
               />
             </div>
-
-            <div class="panel-actions">
-              <q-btn color="primary" unelevated no-caps label="Guardar leccion" :loading="saving" @click="saveLesson" />
-            </div>
           </div>
 
           <!-- Empty state -->
@@ -449,7 +534,7 @@
             <q-icon name="edit" size="48px" color="grey-4" />
             <div class="text-h6 text-grey-6 q-mt-md">Selecciona un elemento para editar</div>
             <p class="text-body2 text-grey-5">
-              Usa la barra lateral para navegar entre la informacion del curso, sus secciones y lecciones.
+              Usa la barra lateral para navegar entre la información del curso, sus secciones y lecciones.
             </p>
           </div>
         </main>
@@ -460,10 +545,10 @@
     <q-dialog v-model="showAddSection" persistent>
       <q-card style="min-width: 380px">
         <q-card-section>
-          <div class="text-h6">Nueva seccion</div>
+          <div class="text-h6">Nueva sección</div>
         </q-card-section>
         <q-card-section>
-          <q-input v-model="newSectionTitle" label="Titulo" outlined autofocus @keyup.enter="createSectionNow" />
+          <q-input v-model="newSectionTitle" label="Título" outlined autofocus @keyup.enter="createSectionNow" />
         </q-card-section>
         <q-card-actions align="right">
           <q-btn flat label="Cancelar" v-close-popup />
@@ -476,11 +561,11 @@
     <q-dialog v-model="submitDialog">
       <q-card style="min-width: 420px">
         <q-card-section>
-          <div class="text-h6">Enviar a revision</div>
+          <div class="text-h6">Enviar a revisión</div>
         </q-card-section>
         <q-card-section>
           <div class="text-body2 q-mb-md">
-            Si un administrador lo aprueba, tu curso se publicara automaticamente.
+            Si un administrador lo aprueba, tu curso se publicara automáticamente.
             Verifica que cumple estos requisitos:
           </div>
           <q-list dense>
@@ -549,11 +634,23 @@ import {
 import type { LessonResource } from '../../api/resources'
 import RichTextEditor from '../../components/RichTextEditor.vue'
 import FileUploader from '../../components/FileUploader.vue'
+import AssessmentEditor from '../../components/AssessmentEditor.vue'
+import draggable from 'vuedraggable'
 import { useAuthStore } from '../../stores/auth'
+
+function isAssessmentType(type: string): boolean {
+  return type === 'quiz' || type === 'project' || type === 'open_text'
+}
 import { formatFileSize as fmtBytes } from '../../api/resources'
 import { searchCourses } from '@/api/courseSearch'
 import { getCoursePrerequisites, syncCoursePrerequisites, getCoursePrerequisiteDrafts } from '@/api/prerequisite'
 import { checkIsPremium } from '@/api/payments'
+import {
+  listBlocks, createBlock, updateBlock, deleteBlock as deleteBlockApi, reorderBlocks,
+} from '@/api/lessonBlock'
+import type { LessonBlock, BlockType } from '@/types/lesson'
+
+type EditableBlock = LessonBlock & { _saving?: boolean }
 
 type Selected =
   | { type: 'info' }
@@ -586,20 +683,35 @@ const levelOptions = [
   { label: 'Intermedio', value: 'intermediate' },
   { label: 'Avanzado', value: 'advanced' },
 ]
-const lessonTypeOptions = [
-  { label: 'Texto', value: 'text' },
-  { label: 'Video', value: 'video' },
-  { label: 'PDF', value: 'pdf' },
+type BlockOption = { value: BlockType; label: string; icon: string; color: string; hint: string }
+
+const contentBlockOptions: BlockOption[] = [
+  { value: 'text', label: 'Texto', icon: 'article', color: 'primary', hint: 'Texto enriquecido que el alumno lee' },
+  { value: 'video', label: 'Vídeo', icon: 'play_circle', color: 'primary', hint: 'Subir un MP4 reproducible' },
+  { value: 'pdf', label: 'PDF', icon: 'picture_as_pdf', color: 'red-7', hint: 'Subir un PDF embebido' },
 ]
+
+const assessmentBlockOptions: BlockOption[] = [
+  { value: 'quiz', label: 'Cuestionario', icon: 'quiz', color: 'primary', hint: 'Preguntas de respuesta múltiple autocorregidas' },
+  { value: 'project', label: 'Proyecto', icon: 'upload_file', color: 'accent', hint: 'El alumno sube un archivo y tú lo calificas' },
+  { value: 'open_text', label: 'Pregunta abierta', icon: 'edit_note', color: 'deep-purple', hint: 'El alumno escribe una respuesta y tú la calificas' },
+]
+
+const blockTypeOptions: BlockOption[] = [...contentBlockOptions, ...assessmentBlockOptions]
 
 // Forms
 const info = reactive({ title: '', slug: '', shortDescription: '', categoryId: null as number | null, level: 'beginner' })
 const details = reactive({ description: '', thumbnailUrl: '', isPremium: false })
 const sectionForm = reactive({ title: '', description: '' })
 const lessonForm = reactive({
-  title: '', type: 'text', description: '', contentText: '', contentUrl: '', isFree: false,
+  title: '', description: '', isFree: false,
 })
 const lessonResources = ref<LessonResource[]>([])
+
+// Blocks
+const blocks = ref<EditableBlock[]>([])
+const loadingBlocks = ref(false)
+const addingBlock = ref(false)
 
 // Prerequisites
 const prerequisiteIds = ref<string[]>([])
@@ -700,7 +812,7 @@ const storageRatio = computed(() => {
 })
 
 const storageLabel = computed(() => {
-  if (isUnlimited.value) return `${fmtBytes(storageUsed.value)} (sin limite)`
+  if (isUnlimited.value) return `${fmtBytes(storageUsed.value)} (sin límite)`
   return `${fmtBytes(storageUsed.value)} / ${fmtBytes(storageLimit.value)}`
 })
 
@@ -712,7 +824,6 @@ const storageColor = computed(() => {
 
 // Uploader refs
 const thumbnailUploaderRef = ref<InstanceType<typeof FileUploader> | null>(null)
-const contentUploaderRef = ref<InstanceType<typeof FileUploader> | null>(null)
 const resourceUploaderRef = ref<InstanceType<typeof FileUploader> | null>(null)
 
 // Section dialog
@@ -773,7 +884,7 @@ function statusColor(s: string) {
 function statusLabel(s: string) {
   switch (s) {
     case 'published': return 'Publicado'
-    case 'pending_review': return 'En revision'
+    case 'pending_review': return 'En revisión'
     case 'rejected': return 'Rechazado'
     default: return 'Borrador'
   }
@@ -823,6 +934,9 @@ async function loadData() {
       loadOwnCoursePrerequisiteOptions().catch(err => console.error('[loadData] loadOwnCoursePrerequisiteOptions failed:', err)),
       loadExistingPrerequisites().catch(err => console.error('[loadData] loadExistingPrerequisites failed:', err)),
     ])
+
+    // Deep-link from /instructor/calificar (?lesson=...&block=...) → focus that lesson + highlight the block
+    applyDeepLinkFromQuery()
   } catch (err: any) {
     console.error('[loadData] Failed to load course:', err)
     const msg = err?.response?.data?.message
@@ -843,16 +957,14 @@ watch(selected, async (s) => {
   }
   if (s?.type === 'lesson' && currentLesson.value) {
     lessonForm.title = currentLesson.value.title || ''
-    lessonForm.type = currentLesson.value.type || 'text'
     lessonForm.description = currentLesson.value.description || ''
-    lessonForm.contentText = currentLesson.value.contentText || ''
-    lessonForm.contentUrl = currentLesson.value.contentUrl || ''
     lessonForm.isFree = currentLesson.value.isFree || false
     try {
       lessonResources.value = await listResources(currentLesson.value.id)
     } catch {
       lessonResources.value = []
     }
+    await loadBlocks(currentLesson.value.id)
   }
 })
 
@@ -906,9 +1018,9 @@ async function saveSection() {
     })
     currentSection.value.title = sectionForm.title
     currentSection.value.description = sectionForm.description
-    $q.notify({ type: 'positive', message: 'Seccion guardada', position: 'bottom-right' })
+    $q.notify({ type: 'positive', message: 'Sección guardada', position: 'bottom-right' })
   } catch {
-    $q.notify({ type: 'negative', message: 'Error al guardar seccion', position: 'bottom-right' })
+    $q.notify({ type: 'negative', message: 'Error al guardar sección', position: 'bottom-right' })
   } finally {
     saving.value = false
   }
@@ -920,19 +1032,142 @@ async function saveLesson() {
   try {
     const payload = {
       title: lessonForm.title,
-      type: lessonForm.type,
       description: lessonForm.description || undefined,
-      contentText: lessonForm.type === 'text' ? lessonForm.contentText : undefined,
-      contentUrl: ['video', 'pdf'].includes(lessonForm.type) ? lessonForm.contentUrl : undefined,
       isFree: lessonForm.isFree,
     }
     const updated = await updateLesson(currentLesson.value.id, payload)
     Object.assign(currentLesson.value, updated)
-    $q.notify({ type: 'positive', message: 'Leccion guardada', position: 'bottom-right' })
+    $q.notify({ type: 'positive', message: 'Lección guardada', position: 'bottom-right' })
   } catch {
-    $q.notify({ type: 'negative', message: 'Error al guardar leccion', position: 'bottom-right' })
+    $q.notify({ type: 'negative', message: 'Error al guardar lección', position: 'bottom-right' })
   } finally {
     saving.value = false
+  }
+}
+
+// --- Blocks ---
+
+async function loadBlocks(lessonId: string) {
+  loadingBlocks.value = true
+  try {
+    const list = await listBlocks(lessonId)
+    blocks.value = list.map(b => ({ ...b }))
+  } catch {
+    blocks.value = []
+  } finally {
+    loadingBlocks.value = false
+  }
+}
+
+function applyDeepLinkFromQuery() {
+  const targetLessonId = (route.query.lesson as string | undefined) || ''
+  const targetBlockId = (route.query.block as string | undefined) || ''
+  if (!targetLessonId) return
+
+  const section = sections.value.find(s => s.lessons?.some((l: any) => l.id === targetLessonId))
+  if (!section) return
+
+  selected.value = { type: 'lesson', id: targetLessonId, sectionId: section.id }
+
+  if (!targetBlockId) return
+  // Wait until the lesson watcher has loaded blocks and the DOM has rendered them
+  const tryHighlight = (attempt = 0) => {
+    const el = document.getElementById(`block-${targetBlockId}`)
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      el.classList.add('block-highlight')
+      setTimeout(() => el.classList.remove('block-highlight'), 2200)
+    } else if (attempt < 20) {
+      setTimeout(() => tryHighlight(attempt + 1), 100)
+    }
+  }
+  setTimeout(() => tryHighlight(), 200)
+}
+
+function blockIcon(type: string) {
+  const opt = blockTypeOptions.find(o => o.value === type)
+  return opt?.icon || 'view_agenda'
+}
+function blockColor(type: string) {
+  const opt = blockTypeOptions.find(o => o.value === type)
+  return opt?.color || 'grey-7'
+}
+function blockLabel(type: string) {
+  const opt = blockTypeOptions.find(o => o.value === type)
+  return opt?.label || 'Bloque'
+}
+
+async function addBlock(type: BlockType) {
+  if (!currentLesson.value) return
+  addingBlock.value = true
+  try {
+    const created = await createBlock(currentLesson.value.id, {
+      type,
+      position: blocks.value.length,
+    })
+    blocks.value.push({ ...created })
+  } catch (err: any) {
+    $q.notify({
+      type: 'negative',
+      message: err?.response?.data?.message || 'Error al añadir bloque',
+      position: 'bottom-right',
+    })
+  } finally {
+    addingBlock.value = false
+  }
+}
+
+async function saveBlock(block: EditableBlock) {
+  block._saving = true
+  try {
+    const updated = await updateBlock(block.id, {
+      textContent: block.textContent,
+      videoUrl: block.videoUrl,
+      pdfUrl: block.pdfUrl,
+      position: block.position,
+    })
+    Object.assign(block, updated)
+    $q.notify({ type: 'positive', message: 'Bloque guardado', position: 'bottom-right' })
+  } catch {
+    $q.notify({ type: 'negative', message: 'Error al guardar bloque', position: 'bottom-right' })
+  } finally {
+    block._saving = false
+  }
+}
+
+function confirmDeleteBlock(block: EditableBlock) {
+  deleteTitle.value = 'Eliminar bloque'
+  deleteMessage.value = `¿Eliminar este bloque (${blockLabel(block.type)})? Si tiene una evaluación asociada, también se eliminara.`
+  deleteFn = async () => {
+    await deleteBlockApi(block.id)
+    blocks.value = blocks.value.filter(b => b.id !== block.id)
+  }
+  deleteDialog.value = true
+}
+
+async function handleBlockReorder() {
+  if (!currentLesson.value) return
+  blocks.value.forEach((b, i) => { b.position = i })
+  try {
+    await reorderBlocks(currentLesson.value.id, blocks.value.map(b => b.id))
+  } catch {
+    $q.notify({ type: 'negative', message: 'Error al reordenar', position: 'bottom-right' })
+  }
+}
+
+async function handleBlockFileUpload(block: EditableBlock, file: File, onProgress: (pct: number) => void) {
+  if (!currentLesson.value) return
+  try {
+    const url = await uploadLessonContent(currentLesson.value.id, file, onProgress)
+    if (block.type === 'video') block.videoUrl = url
+    else if (block.type === 'pdf') block.pdfUrl = url
+    await saveBlock(block)
+  } catch (err: any) {
+    $q.notify({
+      type: 'negative',
+      message: err?.response?.data?.message || 'Error al subir archivo',
+      position: 'bottom-right',
+    })
   }
 }
 
@@ -949,7 +1184,7 @@ async function createSectionNow() {
     newSectionTitle.value = ''
     selected.value = { type: 'section', id: created.id }
   } catch {
-    $q.notify({ type: 'negative', message: 'Error al crear seccion', position: 'bottom-right' })
+    $q.notify({ type: 'negative', message: 'Error al crear sección', position: 'bottom-right' })
   }
 }
 
@@ -957,20 +1192,20 @@ async function addLessonToCurrentSection() {
   if (!currentSection.value) return
   try {
     const created = await createLesson(currentSection.value.id, {
-      title: 'Nueva leccion',
+      title: 'Nueva lección',
       type: 'text',
       position: currentSection.value.lessons.length,
     })
     currentSection.value.lessons.push(created)
     selected.value = { type: 'lesson', id: created.id, sectionId: currentSection.value.id }
   } catch {
-    $q.notify({ type: 'negative', message: 'Error al crear leccion', position: 'bottom-right' })
+    $q.notify({ type: 'negative', message: 'Error al crear lección', position: 'bottom-right' })
   }
 }
 
 function confirmDeleteSection() {
   if (!currentSection.value) return
-  deleteTitle.value = 'Eliminar seccion'
+  deleteTitle.value = 'Eliminar sección'
   deleteMessage.value = `¿Eliminar "${currentSection.value.title}" y todas sus lecciones?`
   deleteFn = async () => {
     await deleteSection(currentSection.value!.id)
@@ -982,7 +1217,7 @@ function confirmDeleteSection() {
 
 function confirmDeleteLesson() {
   if (!currentLesson.value) return
-  deleteTitle.value = 'Eliminar leccion'
+  deleteTitle.value = 'Eliminar lección'
   deleteMessage.value = `¿Eliminar "${currentLesson.value.title}"?`
   deleteFn = async () => {
     await deleteLesson(currentLesson.value!.id)
@@ -1020,20 +1255,6 @@ async function handleThumbnailUpload(file: File, onProgress: (pct: number) => vo
   }
 }
 
-async function handleContentUpload(file: File, onProgress: (pct: number) => void) {
-  if (!currentLesson.value) return
-  try {
-    const url = await uploadLessonContent(currentLesson.value.id, file, onProgress)
-    lessonForm.contentUrl = url
-    contentUploaderRef.value?.finish()
-    $q.notify({ type: 'positive', message: 'Archivo subido', position: 'bottom-right' })
-    await saveLesson()
-  } catch (err: any) {
-    const msg = err?.response?.data?.message || 'Error al subir'
-    contentUploaderRef.value?.finish(msg)
-  }
-}
-
 async function handleResourceUpload(file: File, onProgress: (pct: number) => void) {
   if (!currentLesson.value) return
   try {
@@ -1065,11 +1286,11 @@ function openSubmitDialog() {
   const hasLesson = sections.value.some(s => s.lessons && s.lessons.length > 0)
 
   submitChecks.value = [
-    { label: 'El curso tiene titulo', ok: hasTitle },
-    { label: 'Descripcion completa (al menos 20 caracteres)', ok: hasDescription },
-    { label: 'Categoria seleccionada', ok: hasCategory },
-    { label: `Al menos 1 seccion (${sections.value.length})`, ok: hasSection },
-    { label: `Al menos 1 leccion en alguna seccion`, ok: hasLesson },
+    { label: 'El curso tiene título', ok: hasTitle },
+    { label: 'Descripción completa (al menos 20 caracteres)', ok: hasDescription },
+    { label: 'Categoría seleccionada', ok: hasCategory },
+    { label: `Al menos 1 sección (${sections.value.length})`, ok: hasSection },
+    { label: `Al menos 1 lección en alguna sección`, ok: hasLesson },
   ]
   submitDialog.value = true
 }
@@ -1086,9 +1307,9 @@ async function doSubmitReview() {
     await submitForReview(courseId.value)
     course.value.status = 'pending_review'
     submitDialog.value = false
-    $q.notify({ type: 'positive', message: 'Curso enviado a revision', position: 'bottom-right' })
+    $q.notify({ type: 'positive', message: 'Curso enviado a revisión', position: 'bottom-right' })
   } catch {
-    $q.notify({ type: 'negative', message: 'Error al enviar a revision', position: 'bottom-right' })
+    $q.notify({ type: 'negative', message: 'Error al enviar a revisión', position: 'bottom-right' })
   } finally {
     submitting.value = false
   }
@@ -1297,5 +1518,45 @@ onMounted(loadData)
   border: 1px solid #99f6e4;
   border-radius: 8px;
   margin-bottom: 8px;
+}
+
+.block-card {
+  border-radius: 10px;
+  background: #fff;
+}
+
+.block-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+}
+
+.block-handle {
+  cursor: grab;
+  color: #94a3b8;
+}
+
+.block-handle:active {
+  cursor: grabbing;
+}
+
+.block-ghost {
+  opacity: 0.4;
+  background: #ecfeff;
+}
+
+.block-highlight {
+  animation: block-flash 2.2s ease-out;
+}
+
+@keyframes block-flash {
+  0%   { box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.55); background: #f0fdfa; }
+  60%  { box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.25); background: #f0fdfa; }
+  100% { box-shadow: 0 0 0 4px rgba(15, 118, 110, 0); background: #fff; }
 }
 </style>

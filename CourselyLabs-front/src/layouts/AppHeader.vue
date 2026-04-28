@@ -80,7 +80,7 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
   color: #ea580c;
 }
 
-@media (min-width: 1009px) {/* Por culpa del minisidebar es este numero tan raro */
+@media (min-width: 1009px) {/* Por culpa del minisidebar es este número tan raro */
   .mobile-menu-btn,
   .mobile-menu-spacer {
     display: none !important;

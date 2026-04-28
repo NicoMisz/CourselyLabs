@@ -22,12 +22,12 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'login',
         component: () => import('@/views/formView.vue'),
-        meta: { title: 'Iniciar sesion — CourselyLabs' },
+        meta: { title: 'Iniciar sesión — CourselyLabs' },
       },
       {
         path: 'iniSession',
         component: () => import('@/components/formLogin.vue'),
-        meta: { title: 'Iniciar sesion — CourselyLabs' },
+        meta: { title: 'Iniciar sesión — CourselyLabs' },
       },
       {
         path: 'register',
@@ -60,7 +60,7 @@ const routes: RouteRecordRaw[] = [
         meta: { title: 'Premium — CourselyLabs' },
       },
       {
-        path: 'pago/exito',
+        path: 'pago/éxito',
         component: () => import('@/views/PaymentSuccessView.vue'),
         meta: { title: 'Pago exitoso — CourselyLabs' },
       },
@@ -72,7 +72,7 @@ const routes: RouteRecordRaw[] = [
     ],
   },
   {
-    path: '/cursos/:slug/leccion/:lessonId',
+    path: '/cursos/:slug/lección/:lessonId',
     component: () => import('@/views/LessonView.vue'),
     meta: { requiresAuth: true },
   },
@@ -89,6 +89,11 @@ const routes: RouteRecordRaw[] = [
         path: 'cursos',
         component: () => import('@/views/instructor/InstructorCourseList.vue'),
         meta: { title: 'Mis cursos — Instructor' },
+      },
+      {
+        path: 'calificar',
+        component: () => import('@/views/instructor/GradingDashboard.vue'),
+        meta: { title: 'Calificar — Instructor' },
       },
       {
         path: 'cursos/nuevo',
@@ -134,7 +139,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: '',
         component: () => import('@/views/NotFoundView.vue'),
-        meta: { title: 'Pagina no encontrada — CourselyLabs' },
+        meta: { title: 'Página no encontrada — CourselyLabs' },
       },
     ],
   },

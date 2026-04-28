@@ -5,7 +5,7 @@
             <div>
             <h1 class="text-h4 q-my-none">Mis cursos</h1>
             <p class="text-body1 text-grey-7 q-mt-sm q-mb-none">
-                Retoma tus cursos y continua donde lo dejaste.
+                Retoma tus cursos y continúa donde lo dejaste.
             </p>
             </div>
         </div>
@@ -48,8 +48,8 @@
 
         <EmptyState
             v-else-if="!courses.length"
-            title="Aun no te has inscrito en ningun curso"
-            description="Explora el catalogo y empieza por el curso que mas encaje contigo."
+            title="Aún no te has inscrito en ningún curso"
+            description="Explora el catálogo y empieza por el curso que más encaje contigo."
             cta-label="Explorar cursos"
             @action="goToCatalog"
         />
@@ -80,7 +80,7 @@ const filter = ref<'todos' | 'no-iniciados' | 'en-curso' | 'completados'>('todos
 const sortBy = ref<'lastAccessedAt' | 'title' | 'progressPercent'>('lastAccessedAt');
 
 const sortOptions = [
-  { label: 'Ultimo acceso', value: 'lastAccessedAt' },
+  { label: 'Último acceso', value: 'lastAccessedAt' },
   { label: 'Nombre', value: 'title' },
   { label: 'Progreso', value: 'progressPercent' },
 ];

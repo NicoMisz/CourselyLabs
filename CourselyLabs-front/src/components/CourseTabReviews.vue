@@ -150,10 +150,10 @@ async function submitReview(payload: { rating: number; comment: string }) {
   try {
     if (editingReviewId.value) {
       await updateReview(editingReviewId.value, payload)
-      $q.notify({ type: 'positive', message: 'Valoracion actualizada' })
+      $q.notify({ type: 'positive', message: 'Valoración actualizada' })
     } else {
       await createReview(props.courseId, payload)
-      $q.notify({ type: 'positive', message: 'Valoracion enviada' })
+      $q.notify({ type: 'positive', message: 'Valoración enviada' })
     }
     editingReviewId.value = null
     await reloadAll()

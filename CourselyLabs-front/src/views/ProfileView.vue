@@ -6,7 +6,7 @@
         <template #avatar>
           <q-icon name="warning" color="warning" />
         </template>
-        Tu email no esta verificado. Revisa tu bandeja de entrada o spam.
+        Tu email no está verificado. Revisa tu bandeja de entrada o spam.
         <template #action>
           <q-btn
             flat
@@ -52,7 +52,7 @@
           <!-- Info personal -->
           <q-card flat bordered class="q-mb-md">
             <q-card-section>
-              <div class="text-subtitle1 text-weight-medium q-mb-md">Informacion personal</div>
+              <div class="text-subtitle1 text-weight-medium q-mb-md">Información personal</div>
 
               <template v-if="!editingProfile">
                 <div class="row q-col-gutter-md">
@@ -84,7 +84,7 @@
                         label="Nombre"
                         outlined
                         dense
-                        :rules="[v => v.length >= 2 || 'Minimo 2 caracteres']"
+                        :rules="[v => v.length >= 2 || 'Mínimo 2 caracteres']"
                       />
                     </div>
                     <div class="col-6">
@@ -93,7 +93,7 @@
                         label="Apellido"
                         outlined
                         dense
-                        :rules="[v => v.length >= 2 || 'Minimo 2 caracteres']"
+                        :rules="[v => v.length >= 2 || 'Mínimo 2 caracteres']"
                       />
                     </div>
                   </div>
@@ -132,7 +132,7 @@
                 <div class="row items-center justify-between">
                   <div>
                     <div class="text-body2">Contraseña</div>
-                    <div class="text-caption text-grey-6">Ultima actualizacion: {{ formattedDate(user?.updatedAt) }}</div>
+                    <div class="text-caption text-grey-6">Última actualización: {{ formattedDate(user?.updatedAt) }}</div>
                   </div>
                   <q-btn flat color="primary" label="Cambiar contraseña" no-caps icon="lock" @click="editingPassword = true" />
                 </div>
@@ -162,7 +162,7 @@
                     outlined
                     dense
                     :type="showNewPw ? 'text' : 'password'"
-                    :rules="[v => v.length >= 8 || 'Minimo 8 caracteres']"
+                    :rules="[v => v.length >= 8 || 'Mínimo 8 caracteres']"
                   >
                     <template #append>
                       <q-icon
@@ -204,10 +204,10 @@
             </q-card-section>
           </q-card>
 
-          <!-- Suscripcion -->
+          <!-- Suscripción -->
           <q-card flat bordered>
             <q-card-section>
-              <div class="text-subtitle1 text-weight-medium q-mb-md">Suscripcion</div>
+              <div class="text-subtitle1 text-weight-medium q-mb-md">Suscripción</div>
 
               <template v-if="subscription && subscription.status === 'active'">
                 <div class="row items-center q-gutter-sm q-mb-md">
@@ -224,7 +224,7 @@
                 <q-btn
                   flat
                   color="negative"
-                  label="Cancelar suscripcion"
+                  label="Cancelar suscripción"
                   no-caps
                   icon="cancel"
                   :loading="cancellingSubscription"
@@ -234,13 +234,13 @@
 
               <template v-else-if="subscription && subscription.status === 'cancelled'">
                 <div class="text-body2 text-grey-7 q-mb-sm">
-                  Suscripcion cancelada. Acceso hasta {{ formattedDate(subscription.currentPeriodEnd) }}.
+                  Suscripción cancelada. Acceso hasta {{ formattedDate(subscription.currentPeriodEnd) }}.
                 </div>
-                <q-btn outline color="primary" label="Renovar suscripcion" to="/premium" no-caps />
+                <q-btn outline color="primary" label="Renovar suscripción" to="/premium" no-caps />
               </template>
 
               <template v-else>
-                <div class="text-body2 text-grey-7 q-mb-sm">No tienes una suscripcion activa.</div>
+                <div class="text-body2 text-grey-7 q-mb-sm">No tienes una suscripción activa.</div>
                 <q-btn outline color="amber-8" label="Hazte Premium" to="/premium" no-caps icon="workspace_premium" />
               </template>
             </q-card-section>
@@ -383,7 +383,6 @@ const roleLabel = computed(() => {
   switch (user.value?.role) {
     case 'admin': return 'Administrador'
     case 'premium': return 'Premium'
-    case 'instructor': return 'Instructor'
     default: return 'Estudiante'
   }
 })
@@ -392,7 +391,6 @@ const roleColor = computed(() => {
   switch (user.value?.role) {
     case 'admin': return 'negative'
     case 'premium': return 'warning'
-    case 'instructor': return 'info'
     default: return 'primary'
   }
 })
@@ -484,7 +482,7 @@ async function resendFromProfile() {
   resendingFromProfile.value = true
   try {
     await api.post(`/api/auth/resend-verification?email=${encodeURIComponent(user.value.email)}`)
-    $q.notify({ type: 'positive', message: 'Email de verificacion reenviado', position: 'bottom-right' })
+    $q.notify({ type: 'positive', message: 'Email de verificación reenviado', position: 'bottom-right' })
   } catch {
     $q.notify({ type: 'negative', message: 'No se pudo reenviar el email', position: 'bottom-right' })
   } finally {
@@ -515,7 +513,7 @@ function statusColor(status: string) {
 function statusLabel(status: string) {
   switch (status) {
     case 'published': return 'Curso publicado'
-    case 'pending_review': return 'En revision'
+    case 'pending_review': return 'En revisión'
     case 'rejected': return 'Rechazado'
     default: return 'Borrador'
   }
@@ -524,7 +522,7 @@ function statusLabel(status: string) {
 function statusChipLabel(status: string) {
   switch (status) {
     case 'published': return 'Publicado'
-    case 'pending_review': return 'Revision'
+    case 'pending_review': return 'Revisión'
     case 'rejected': return 'Rechazado'
     default: return 'Borrador'
   }
@@ -535,9 +533,9 @@ async function handleCancelSubscription() {
   try {
     await cancelSubscription()
     subscription.value = await getSubscription()
-    $q.notify({ type: 'info', message: 'Suscripcion cancelada. Mantendras acceso hasta el final del periodo.', position: 'bottom-right' })
+    $q.notify({ type: 'info', message: 'Suscripción cancelada. Mantendrás acceso hasta el final del periodo.', position: 'bottom-right' })
   } catch {
-    $q.notify({ type: 'negative', message: 'Error al cancelar la suscripcion', position: 'bottom-right' })
+    $q.notify({ type: 'negative', message: 'Error al cancelar la suscripción', position: 'bottom-right' })
   } finally {
     cancellingSubscription.value = false
   }

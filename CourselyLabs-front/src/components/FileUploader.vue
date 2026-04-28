@@ -35,7 +35,7 @@
           :disable="disabled || uploading"
           @click="triggerInput"
         />
-        <div class="text-caption text-grey-5 q-mt-xs">o arrastra el archivo aqui</div>
+        <div class="text-caption text-grey-5 q-mt-xs">o arrastra el archivo aquí</div>
       </div>
     </div>
 
@@ -84,8 +84,9 @@ function triggerInput() {
 
 function handleInput(e: Event) {
   const target = e.target as HTMLInputElement
-  if (target.files && target.files.length > 0) {
-    processFile(target.files[0])
+  const file = target.files?.[0]
+  if (file) {
+    processFile(file)
   }
   target.value = ''
 }
@@ -93,15 +94,16 @@ function handleInput(e: Event) {
 function handleDrop(e: DragEvent) {
   isDragging.value = false
   if (props.disabled || uploading.value) return
-  if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
-    processFile(e.dataTransfer.files[0])
+  const file = e.dataTransfer?.files?.[0]
+  if (file) {
+    processFile(file)
   }
 }
 
 function processFile(file: File) {
   error.value = ''
   if (file.size > props.maxSizeMb * 1024 * 1024) {
-    error.value = `El archivo supera el limite de ${props.maxSizeMb} MB`
+    error.value = `El archivo supera el límite de ${props.maxSizeMb} MB`
     emit('error', error.value)
     return
   }

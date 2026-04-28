@@ -8,7 +8,7 @@
           CourselyLabs Premium
         </h1>
         <p class="text-body1 q-mt-md hero-subtitle">
-          Accede a todos los cursos premium, crea mas cursos y desbloquea funciones exclusivas.
+          Accede a todos los cursos premium, crea más cursos y desbloquea funciones exclusivas.
         </p>
       </div>
     </section>
@@ -18,13 +18,13 @@
       <q-banner v-if="isPremium" rounded class="bg-amber-1 q-mb-xl q-mt-lg" inline-actions>
         <template #avatar><q-icon name="check_circle" color="positive" size="28px" /></template>
         <div class="text-body1 text-weight-medium">Ya eres miembro Premium</div>
-        <div class="text-body2 text-grey-7">Gestiona tu suscripcion desde tu perfil.</div>
+        <div class="text-body2 text-grey-7">Gestiona tu suscripción desde tu perfil.</div>
         <template #action>
           <q-btn flat color="primary" label="Ir a mi perfil" to="/profile" no-caps />
         </template>
       </q-banner>
 
-      <!-- Pricing (arriba para CTA rapido) -->
+      <!-- Pricing (arriba para CTA rápido) -->
       <div class="text-center q-mt-xl q-mb-lg">
         <h2 class="text-h4 q-my-none" style="font-family: Monda, sans-serif">Elige tu plan</h2>
         <p class="text-body2 text-grey-7 q-mt-sm">Cancela cuando quieras. Sin compromiso.</p>
@@ -91,7 +91,7 @@
       <!-- Benefits -->
       <div class="text-center q-my-lg">
         <h2 class="text-h4 q-my-none" style="font-family: Monda, sans-serif">Todo lo que incluye</h2>
-        <p class="text-body2 text-grey-7 q-mt-sm">Beneficios para disfrutar y crear sin limites.</p>
+        <p class="text-body2 text-grey-7 q-mt-sm">Beneficios para disfrutar y crear sin límites.</p>
       </div>
 
       <div class="benefits-grid q-mb-xl">
@@ -112,7 +112,7 @@
         <q-markup-table flat>
           <thead>
             <tr>
-              <th class="text-left">Funcion</th>
+              <th class="text-left">Función</th>
               <th class="text-center">Gratis</th>
               <th class="text-center text-amber-8">
                 <q-icon name="workspace_premium" size="16px" /> Premium
@@ -207,7 +207,7 @@ const benefits = [
     icon: 'add_circle',
     bg: 'linear-gradient(135deg, #ea580c, #f59e0b)',
     title: 'Crea hasta 10 cursos',
-    description: 'Comparte tu conocimiento con 5 veces mas cursos propios que en gratuito.',
+    description: 'Comparte tu conocimiento con 5 veces más cursos propios que en gratuito.',
   },
   {
     icon: 'workspace_premium',
@@ -225,7 +225,7 @@ const benefits = [
     icon: 'support_agent',
     bg: 'linear-gradient(135deg, #0891b2, #06b6d4)',
     title: 'Soporte prioritario',
-    description: 'Respuestas rapidas de nuestro equipo cuando las necesites.',
+    description: 'Respuestas rápidas de nuestro equipo cuando las necesites.',
   },
   {
     icon: 'rocket_launch',
@@ -238,7 +238,7 @@ const benefits = [
 const comparison = [
   { feature: 'Cursos gratuitos', free: true, premium: true },
   { feature: 'Cursos premium', free: false, premium: true },
-  { feature: 'Cursos propios', free: '2 maximo', premium: '10 maximo' },
+  { feature: 'Cursos propios', free: '2 máximo', premium: '10 máximo' },
   { feature: 'Rutas de aprendizaje', free: false, premium: true },
   { feature: 'Badge Premium', free: false, premium: true },
   { feature: 'Soporte prioritario', free: false, premium: true },
@@ -246,15 +246,15 @@ const comparison = [
 ]
 
 const faqs = [
-  { q: '¿Puedo cancelar en cualquier momento?', a: 'Si, puedes cancelar tu suscripcion cuando quieras desde tu perfil. Mantendras acceso hasta el final del periodo de facturacion.' },
+  { q: '¿Puedo cancelar en cualquier momento?', a: 'Sí, puedes cancelar tu suscripción cuando quieras desde tu perfil. Mantendrás acceso hasta el final del periodo de facturación.' },
   { q: '¿Que pasa con mis cursos si cancelo?', a: 'Perderas acceso a los cursos premium. Los cursos gratuitos, tu progreso y los cursos que hayas creado se mantienen.' },
-  { q: '¿Los pagos son seguros?', a: 'Si, todos los pagos se procesan a traves de Stripe, una de las plataformas de pago mas seguras y utilizadas del mundo.' },
-  { q: '¿Puedo cambiar de plan mensual a anual?', a: 'Si, contacta con soporte y te ayudaremos a cambiar de plan.' },
+  { q: '¿Los pagos son seguros?', a: 'Sí, todos los pagos se procesan a través de Stripe, una de las plataformas de pago más seguras y utilizadas del mundo.' },
+  { q: '¿Puedo cambiar de plan mensual a anual?', a: 'Sí, contacta con soporte y te ayudaremos a cambiar de plan.' },
 ]
 
 async function handleCheckout(plan: 'monthly' | 'annual') {
   if (!authStore.isLoggedIn) {
-    $q.notify({ type: 'warning', message: 'Inicia sesion para suscribirte', position: 'bottom-right' })
+    $q.notify({ type: 'warning', message: 'Inicia sesión para suscribirte', position: 'bottom-right' })
     return
   }
 

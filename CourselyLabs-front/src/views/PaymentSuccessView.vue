@@ -27,7 +27,7 @@
         </div>
         <h1 class="text-h5 q-mb-sm">Bienvenido a Premium!</h1>
         <p class="text-body1 text-grey-7 q-mb-lg">
-          Tu suscripcion se ha activado correctamente. Ya tienes acceso a todos los cursos premium.
+          Tu suscripción se ha activado correctamente. Ya tienes acceso a todos los cursos premium.
         </p>
         <div class="row q-gutter-md justify-center">
           <q-btn color="primary" label="Explorar cursos" to="/cursos" unelevated no-caps />
@@ -61,7 +61,7 @@ async function confirm() {
   error.value = ''
   try {
     await confirmPayment(sessionId)
-    // Refresh session to get updated role
+    // Refresh sesión to get updated role
     await authStore.checkSession()
   } catch (err: any) {
     error.value = err?.response?.data?.message || 'Error al confirmar el pago. Intenta nuevamente.'

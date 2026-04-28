@@ -62,14 +62,14 @@ public class EmailService {
 
     public void verifyEmail(String token) {
         VerificationTokenEntity verificationToken = tokenRepository.findByToken(token)
-                .orElseThrow(() -> new BadRequestException("Token de verificacion invalido"));
+                .orElseThrow(() -> new BadRequestException("Token de verificación invalido"));
 
         if (Boolean.TRUE.equals(verificationToken.getUsed())) {
             throw new BadRequestException("Este enlace ya ha sido utilizado");
         }
 
         if (verificationToken.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new BadRequestException("El enlace de verificacion ha expirado. Solicita uno nuevo.");
+            throw new BadRequestException("El enlace de verificación ha expirado. Solicita uno nuevo.");
         }
 
         verificationToken.setUsed(true);
@@ -85,7 +85,7 @@ public class EmailService {
                 .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
 
         if (Boolean.TRUE.equals(user.getIsVerified())) {
-            throw new BadRequestException("Tu cuenta ya esta verificada");
+            throw new BadRequestException("Tu cuenta ya está verificada");
         }
 
         sendVerificationEmail(user);
@@ -101,7 +101,7 @@ public class EmailService {
             helper.setText(htmlBody, true);
             mailSender.send(message);
         } catch (MessagingException e) {
-            throw new RuntimeException("Error al enviar email de verificacion", e);
+            throw new RuntimeException("Error al enviar email de verificación", e);
         }
     }
 
@@ -114,7 +114,7 @@ public class EmailService {
                 <div style="background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
                     <h2 style="color: #1f2937; margin-top: 0;">Hola %s,</h2>
                     <p style="color: #4b5563; line-height: 1.6;">
-                        Gracias por registrarte en CourselyLabs. Para activar tu cuenta, haz clic en el siguiente boton:
+                        Gracias por registrarte en CourselyLabs. Para activar tu cuenta, haz clic en el siguiente botón:
                     </p>
                     <div style="text-align: center; margin: 30px 0;">
                         <a href="%s"
@@ -123,7 +123,7 @@ public class EmailService {
                         </a>
                     </div>
                     <p style="color: #6b7280; font-size: 14px;">
-                        Este enlace expira en 24 horas. Si no has creado una cuenta, puedes ignorar este email.
+                        Este enlace expira en 24 horas. Sí no has creado una cuenta, puedes ignorar este email.
                     </p>
                     <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
                     <p style="color: #9ca3af; font-size: 12px; text-align: center;">

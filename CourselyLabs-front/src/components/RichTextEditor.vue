@@ -41,7 +41,7 @@
           @click="editor.chain().focus().toggleHeading({ level: 2 }).run()"
         >
           <span class="text-weight-bold">H2</span>
-          <q-tooltip>Titulo</q-tooltip>
+          <q-tooltip>Título</q-tooltip>
         </q-btn>
         <q-btn
           flat dense size="sm"
@@ -126,7 +126,7 @@ const props = withDefaults(defineProps<{
   minHeight?: string
 }>(), {
   modelValue: '',
-  placeholder: 'Escribe aqui... Puedes usar negrita, cursiva, listas y mas.',
+  placeholder: 'Escribe aquí... Puedes usar negrita, cursiva, listas y mas.',
   minHeight: '260px',
 })
 
@@ -152,7 +152,7 @@ const editor = useEditor({
 
 watch(() => props.modelValue, (val) => {
   if (editor.value && editor.value.getHTML() !== val) {
-    editor.value.commands.setContent(val || '', false)
+    editor.value.commands.setContent(val || '', { emitUpdate: false })
   }
 })
 

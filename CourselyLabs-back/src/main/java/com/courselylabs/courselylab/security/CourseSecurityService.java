@@ -6,17 +6,25 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.courselylabs.courselylab.entity.AssessmentAttemptEntity;
+import com.courselylabs.courselylab.entity.AssessmentEntity;
 import com.courselylabs.courselylab.entity.CourseEntity;
+import com.courselylabs.courselylab.entity.LessonBlockEntity;
 import com.courselylabs.courselylab.entity.LessonEntity;
 import com.courselylabs.courselylab.entity.LessonResourceEntity;
 import com.courselylabs.courselylab.entity.SectionEntity;
+import com.courselylabs.courselylab.entity.SubmissionEntity;
 import com.courselylabs.courselylab.entity.UserEntity;
+import com.courselylabs.courselylab.repository.AssessmentAttemptRepository;
+import com.courselylabs.courselylab.repository.AssessmentRepository;
 import com.courselylabs.courselylab.repository.CourseInstructorRepository;
 import com.courselylabs.courselylab.repository.CourseRepository;
 import com.courselylabs.courselylab.repository.EnrollmentRepository;
+import com.courselylabs.courselylab.repository.LessonBlockRepository;
 import com.courselylabs.courselylab.repository.LessonRepository;
 import com.courselylabs.courselylab.repository.LessonResourceRepository;
 import com.courselylabs.courselylab.repository.SectionRepository;
+import com.courselylabs.courselylab.repository.SubmissionRepository;
 import com.courselylabs.courselylab.repository.UserRepository;
 
 @Service("courseSecurityService")
@@ -28,23 +36,35 @@ public class CourseSecurityService {
     private final UserRepository userRepository;
     private final SectionRepository sectionRepository;
     private final LessonRepository lessonRepository;
+    private final LessonBlockRepository blockRepository;
     private final LessonResourceRepository resourceRepository;
     private final EnrollmentRepository enrollmentRepository;
+    private final AssessmentRepository assessmentRepository;
+    private final AssessmentAttemptRepository attemptRepository;
+    private final SubmissionRepository submissionRepository;
 
     public CourseSecurityService(CourseRepository courseRepository,
                                   CourseInstructorRepository courseInstructorRepository,
                                   UserRepository userRepository,
                                   SectionRepository sectionRepository,
                                   LessonRepository lessonRepository,
+                                  LessonBlockRepository blockRepository,
                                   LessonResourceRepository resourceRepository,
-                                  EnrollmentRepository enrollmentRepository) {
+                                  EnrollmentRepository enrollmentRepository,
+                                  AssessmentRepository assessmentRepository,
+                                  AssessmentAttemptRepository attemptRepository,
+                                  SubmissionRepository submissionRepository) {
         this.courseRepository = courseRepository;
         this.courseInstructorRepository = courseInstructorRepository;
         this.userRepository = userRepository;
         this.sectionRepository = sectionRepository;
         this.lessonRepository = lessonRepository;
+        this.blockRepository = blockRepository;
         this.resourceRepository = resourceRepository;
         this.enrollmentRepository = enrollmentRepository;
+        this.assessmentRepository = assessmentRepository;
+        this.attemptRepository = attemptRepository;
+        this.submissionRepository = submissionRepository;
     }
 
     public boolean isOwnerOrInstructor(UUID courseId, Authentication auth) {
@@ -78,6 +98,18 @@ public class CourseSecurityService {
         LessonEntity lesson = lessonRepository.findById(lessonId).orElse(null);
         if (lesson == null) return false;
         return isOwnerOrInstructorOrAdmin(lesson.getSection().getCourse().getId(), auth);
+    }
+
+    public boolean canEditBlock(UUID blockId, Authentication auth) {
+        LessonBlockEntity block = blockRepository.findById(blockId).orElse(null);
+        if (block == null) return false;
+        return isOwnerOrInstructorOrAdmin(block.getLesson().getSection().getCourse().getId(), auth);
+    }
+
+    public boolean canAccessBlock(UUID blockId, Authentication auth) {
+        LessonBlockEntity block = blockRepository.findById(blockId).orElse(null);
+        if (block == null) return false;
+        return canAccessLesson(block.getLesson().getId(), auth);
     }
 
     public boolean canEditResource(UUID resourceId, Authentication auth) {
@@ -116,6 +148,42 @@ public class CourseSecurityService {
 
         // Student: must be enrolled
         return enrollmentRepository.existsByUserIdAndCourseId(user.getId(), courseId);
+    }
+
+    public boolean canEditAssessment(UUID assessmentId, Authentication auth) {
+        AssessmentEntity assessment = assessmentRepository.findById(assessmentId).orElse(null);
+        if (assessment == null) return false;
+        return isOwnerOrInstructorOrAdmin(assessment.getLesson().getSection().getCourse().getId(), auth);
+    }
+
+    public boolean canEditAssessmentByLesson(UUID lessonId, Authentication auth) {
+        LessonEntity lesson = lessonRepository.findById(lessonId).orElse(null);
+        if (lesson == null) return false;
+        return isOwnerOrInstructorOrAdmin(lesson.getSection().getCourse().getId(), auth);
+    }
+
+    public boolean canAccessAssessment(UUID assessmentId, Authentication auth) {
+        AssessmentEntity assessment = assessmentRepository.findById(assessmentId).orElse(null);
+        if (assessment == null) return false;
+        return canAccessLesson(assessment.getLesson().getId(), auth);
+    }
+
+    public boolean canAccessAttempt(UUID attemptId, Authentication auth) {
+        AssessmentAttemptEntity attempt = attemptRepository.findById(attemptId).orElse(null);
+        if (attempt == null) return false;
+        UserEntity user = getUser(auth);
+        if (user == null) return false;
+        // Owner of attempt OR course instructor/admin
+        if (attempt.getUser().getId().equals(user.getId())) return true;
+        return isOwnerOrInstructorOrAdmin(
+                attempt.getAssessment().getLesson().getSection().getCourse().getId(), auth);
+    }
+
+    public boolean canGradeSubmission(UUID submissionId, Authentication auth) {
+        SubmissionEntity submission = submissionRepository.findById(submissionId).orElse(null);
+        if (submission == null) return false;
+        return isOwnerOrInstructorOrAdmin(
+                submission.getAttempt().getAssessment().getLesson().getSection().getCourse().getId(), auth);
     }
 
     public boolean canAccessResource(UUID resourceId, Authentication auth) {
