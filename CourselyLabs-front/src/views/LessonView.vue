@@ -263,7 +263,7 @@ function formatTime(seconds: number): string {
 
 function goToNext() {
   if (nextLesson.value) {
-    router.push(`/cursos/${slug.value}/lección/${nextLesson.value.id}`)
+    router.push(`/cursos/${slug.value}/leccion/${nextLesson.value.id}`)
   }
 }
 

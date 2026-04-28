@@ -321,14 +321,8 @@ public class CourseService {
         dto.setSections(sectionMapper.toDTOList(
                 sectionRepository.findByCourseIdOrderByPositionAsc(entity.getId())));
 
-        // Prerequisitos: visibles para cualquier usuario (y público si no hay auth).
-        // Solo la creación/edición de prerequisitos está restringida a premium/admin.
-        String emailForLookup = currentUser != null ? currentUser.getEmail() : "";
-        try {
-            dto.setPrerequisites(coursePrerequisiteService.findByCourseId(entity.getId(), emailForLookup));
-        } catch (Exception e) {
-            dto.setPrerequisites(List.of());
-        } */
+        // Prerequisitos: solo se cargan si hay usuario autenticado.
+        // La creación/edición está restringida a premium/admin.
         if (currentUser != null) {
             try {
                 dto.setPrerequisites(coursePrerequisiteService.findByCourseId(entity.getId(), currentUser.getEmail()));
@@ -336,7 +330,7 @@ public class CourseService {
                 dto.setPrerequisites(List.of());
             }
         } else {
-            // Usuario anonimo: opcion privada (sin mostrar)
+            // Usuario anónimo: no se muestran prerequisitos
             dto.setPrerequisites(List.of());
         }
         return dto;

@@ -72,19 +72,26 @@ CourselyLabs/
 │   │   ├── i18n/locales/es.json        # Claves de traducción
 │   │   ├── router/                     # routes.ts + guards
 │   │   └── types/                      # Tipos TypeScript
-│   └── CHANGELOG.md                    # Registro de cambios
 ├── init_db/                            # Schema base + seeders SQL
 ├── docker-compose.yml                  # postgres + mailhog + minio
-├── CLAUDE.md                           # Especificaciones funcionales
-├── branch-plan.md                      # Plan de ramas + estado por feature
-└── docs/                               # Documentación técnica
+├── CLAUDE.md                           # Memorias y preferencias para Claude
+├── CHANGELOG.md                        # Registro de cambios global
+├── README.md                           # Puerta de entrada del repo
+└── docs/                               # Toda la documentación técnica
+    ├── 01-overview/
+    ├── 02-getting-started/
+    ├── 03-frontend/
+    ├── 04-backend/
+    ├── 05-features/
+    ├── 06-roadmap/
+    └── 07-conventions/
 ```
 
 ---
 
 ## 4. Features completadas
 
-> Cada entrada apunta al doc detallado cuando existe; el resto está documentado solo en `branch-plan.md`.
+> Cada entrada apunta al doc detallado cuando existe; el resto está documentado solo en [`../06-roadmap/branches.md`](../06-roadmap/branches.md).
 
 | Feature | Estado | Notas / docs |
 |---|---|---|
@@ -93,25 +100,25 @@ CourselyLabs/
 | **Catálogo de cursos** | ✅ | Listado público, filtros, búsqueda full-text PostgreSQL |
 | **Inscripciones (enrollment)** | ✅ | Checks de prerequisitos antes de inscribir |
 | **Curso → secciones → lecciones** | ✅ | CRUD completo + reorden |
-| **Recursos descargables** | ✅ | MinIO + signed URLs · doc: [`downloadable-resources.md`](downloadable-resources.md) |
+| **Recursos descargables** | ✅ | MinIO + signed URLs · doc: [`../04-backend/storage.md`](../04-backend/storage.md) |
 | **Progreso del estudiante** | ✅ | `lesson_progress` + `course_progress` derivado |
 | **Prerequisitos entre cursos** | ✅ | `course_prerequisites` con `completion_threshold`; solo creación es feature Premium |
 | **Reviews / valoraciones** | ✅ (backend); ⚠️ frontend mínimo | Falta página dedicada |
-| **Suscripción Premium (Stripe)** | ✅ | doc: [`payments-flow.md`](payments-flow.md) · webhook + `subscriptions` table |
+| **Suscripción Premium (Stripe)** | ✅ | doc: [`../05-features/premium-stripe.md`](../05-features/premium-stripe.md) · webhook + `subscriptions` table |
 | **Evaluaciones (quiz / project / open_text)** | ✅ | Migrado a multi-bloque en `V11` |
-| **Multi-bloque en lecciones** | ✅ (este branch) | doc: [`lesson-blocks-refactor.md`](lesson-blocks-refactor.md) |
-| **Dashboard de calificación** | ✅ (este branch) | doc: [`grading-dashboard.md`](grading-dashboard.md) |
+| **Multi-bloque en lecciones** | ✅ (este branch) | doc: [`../05-features/lesson-blocks.md`](../05-features/lesson-blocks.md) |
+| **Dashboard de calificación** | ✅ (este branch) | doc: [`../05-features/grading.md`](../05-features/grading.md) |
 | **Panel admin (cursos pendientes, usuarios, conceder Premium)** | ✅ | `/admin/cursos`, `/admin/usuarios` |
 | **Panel instructor (mis cursos, calificar)** | ✅ | `/instructor/cursos`, `/instructor/calificar` |
 | **Editor visual de cursos (CourseWizard)** | ✅ | Sidebar + panel principal + bloques con DnD |
-| **i18n con vue-i18n** | ✅ (este branch, parcial) | doc: [`i18n.md`](i18n.md) — solo 3 componentes migrados |
+| **i18n con vue-i18n** | ✅ (este branch, parcial) | doc: [`../03-frontend/i18n.md`](../03-frontend/i18n.md) — solo 3 componentes migrados |
 | **Sweep ortográfico castellano** | ✅ (este branch) | ~150 patrones aplicados con `sed` |
 
 ---
 
 ## 5. Features en curso / no empezadas
 
-Detalle completo en [`../branch-plan.md`](../branch-plan.md). Resumen:
+Detalle completo en [`../06-roadmap/branches.md`](../06-roadmap/branches.md). Resumen:
 
 | Feature | Estado | Prioridad |
 |---|---|---|
@@ -205,11 +212,11 @@ Estas decisiones están **conscientemente** así y conviene conocerlas antes de 
 
 ## 9. Cómo seguir
 
-1. **Para levantar el proyecto en local**: [`../README.md`](../README.md) sección "Instalación" (también `DOCKER.md` y `servicios.md`).
+1. **Para levantar el proyecto en local**: [`../README.md`](../README.md) sección "Instalación" (también [`docker.md`](../02-getting-started/docker.md) y [`services.md`](../02-getting-started/services.md)).
 2. **Para entender qué hay en cada feature**: lee este documento y abre el doc específico (columna "Notas / docs" de §4).
-3. **Para añadir una feature nueva**: crea rama desde `develop`, sigue convenciones de [`../branch-plan.md`](../branch-plan.md).
+3. **Para añadir una feature nueva**: crea rama desde `develop`, sigue convenciones de [`../06-roadmap/branches.md`](../06-roadmap/branches.md).
 4. **Para añadir migraciones**: siguiente Flyway sería `V12__…sql`. Actualiza también `init_db/01_schema.sql`.
-5. **Para añadir strings UI**: ver [`i18n.md`](i18n.md) — añade clave a `es.json` y usa `t('clave')`.
+5. **Para añadir strings UI**: ver [`../03-frontend/i18n.md`](../03-frontend/i18n.md) — añade clave a `es.json` y usa `t('clave')`.
 
 ---
 

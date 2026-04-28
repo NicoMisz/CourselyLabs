@@ -60,7 +60,7 @@ const routes: RouteRecordRaw[] = [
         meta: { title: 'Premium — CourselyLabs' },
       },
       {
-        path: 'pago/éxito',
+        path: 'pago/exito',
         component: () => import('@/views/PaymentSuccessView.vue'),
         meta: { title: 'Pago exitoso — CourselyLabs' },
       },
@@ -72,7 +72,7 @@ const routes: RouteRecordRaw[] = [
     ],
   },
   {
-    path: '/cursos/:slug/lección/:lessonId',
+    path: '/cursos/:slug/leccion/:lessonId',
     component: () => import('@/views/LessonView.vue'),
     meta: { requiresAuth: true },
   },

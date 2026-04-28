@@ -116,7 +116,7 @@ WHERE a.lesson_id IS NOT NULL;
 
 | Método | Ruta | Auth | Descripción |
 |---|---|---|---|
-| `GET` | `/api/grading/pending` | autenticado | Lista entregas pendientes en cursos donde el caller es owner/instructor (admin → todas). Ver [`grading-dashboard.md`](grading-dashboard.md). |
+| `GET` | `/api/grading/pending` | autenticado | Lista entregas pendientes en cursos donde el caller es owner/instructor (admin → todas). Ver [`grading.md`](grading.md). |
 
 ---
 

@@ -41,7 +41,7 @@
             v-for="lesson in section.lessons"
             :key="lesson.id"
             clickable
-            :to="`/cursos/${courseSlug}/lección/${lesson.id}`"
+            :to="`/cursos/${courseSlug}/leccion/${lesson.id}`"
             :active="lesson.id === activeLessonId"
             active-class="bg-primary text-white"
             class="q-pl-lg"

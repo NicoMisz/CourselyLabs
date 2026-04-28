@@ -717,7 +717,7 @@ const addingBlock = ref(false)
 const prerequisiteIds = ref<string[]>([])
 const prerequisiteThresholds = reactive<Record<string, number>>({})
 const prerequisiteTitleById = reactive<Record<string, string>>({})
-const allPrereqCourses = ref<{ label: string; value: string }[]>([])
+const allPrereqCourses = ref<{ label: string; value: string; isPublished: boolean }[]>([])
 const prerequisiteOptions = ref<Array<{ label: string; value: string; isPublished: boolean }>>([])
 const draftPrerequisiteDrafts = ref<string[]>([])
 const showDraftPrerequisiteWarning = ref(false)
@@ -739,7 +739,7 @@ async function loadAllCoursesForPicker() {
     const page = await searchCourses({ page: 0, size: 200, sortBy: 'recent' })
     allPrereqCourses.value = (page.content || [])
       .filter((c: any) => c.id && c.id !== courseId.value)
-      .map((c: any) => ({ label: c.title, value: c.id }))
+      .map((c: any) => ({ label: c.title, value: c.id, isPublished: !!c.isPublished }))
     // Keep title cache for rendering existing selections
     for (const opt of allPrereqCourses.value) {
       prerequisiteTitleById[opt.value] = opt.label

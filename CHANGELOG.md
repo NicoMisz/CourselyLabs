@@ -1,8 +1,73 @@
 # Changelog
 
-Todos los cambios relevantes del proyecto se documentan en este archivo.
+Todos los cambios relevantes del proyecto se documentan en este archivo. Cubre **frontend**, **backend** e **infraestructura**.
 
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es/1.1.0/).
+
+> Antes del 2026-04-28 este changelog vivía en `CourselyLabs-front/CHANGELOG.md` y solo cubría el frontend. Se ha elevado a la raíz y se documentan los cambios de toda la pila.
+
+---
+
+## [Sin versión] - 2026-04-28 — Reorganización completa de la documentación
+
+### Cambiado
+
+- **Estructura de `/docs/`**: ahora tiene 7 subcarpetas numéricas (`01-overview`, `02-getting-started`, `03-frontend`, `04-backend`, `05-features`, `06-roadmap`, `07-conventions`) con índice maestro en [`docs/README.md`](docs/README.md).
+- **`README.md` raíz** reescrito como puerta de entrada concisa: pitch, quick start de 5 comandos, atajos a docs según rol/objetivo, estructura del repo. Sin duplicación con docs internos.
+- **`CLAUDE.md`** simplificado a memorias y preferencias para Claude. Las especificaciones funcionales del producto se movieron a [`docs/01-overview/product-spec.md`](docs/01-overview/product-spec.md).
+- **`CHANGELOG.md`** elevado a la raíz para cubrir front + back + infra (antes vivía solo en `CourselyLabs-front/`).
+
+### Movido (con `git mv`, preserva historial)
+
+- `branch-plan.md` → `docs/06-roadmap/branches.md`
+- `DOCKER.md` → `docs/02-getting-started/docker.md`
+- `servicios.md` → `docs/02-getting-started/services.md`
+- `CourselyLabs-front/README.md` → `docs/03-frontend/README.md`
+- `CourselyLabs-front/DESIGN.md` → `docs/03-frontend/design-system.md`
+- `CourselyLabs-front/README-QUASAR.md` → `docs/03-frontend/quasar.md`
+- `CourselyLabs-front/CHANGELOG.md` → `CHANGELOG.md` (raíz)
+- `docs/i18n.md` → `docs/03-frontend/i18n.md`
+- `docs/state-of-project.md` → `docs/01-overview/state.md`
+- `docs/lesson-blocks-refactor.md` → `docs/05-features/lesson-blocks.md`
+- `docs/grading-dashboard.md` → `docs/05-features/grading.md`
+- `docs/payments-flow.md` → `docs/05-features/premium-stripe.md`
+- `docs/downloadable-resources.md` → `docs/04-backend/storage.md`
+- `docs/ux-improvements.md` → `docs/06-roadmap/ux-backlog.md`
+
+### Agregado (documentación nueva)
+
+- `docs/README.md` — índice navegable de toda la doc.
+- `docs/01-overview/product-spec.md` — especificación funcional consolidada.
+- `docs/01-overview/architecture.md` — capas, módulos, flujo de datos.
+- `docs/01-overview/data-model.md` — entidades JPA, relaciones, migraciones.
+- `docs/02-getting-started/setup.md` — instalación, comandos, troubleshooting.
+- `docs/02-getting-started/env-vars.md` — todas las variables de entorno (front + back).
+- `docs/02-getting-started/seeders.md` — datos de prueba y usuarios.
+- `docs/03-frontend/routing.md` — mapa de rutas, guards, deep-links.
+- `docs/03-frontend/state.md` — Pinia, patrones de estado.
+- `docs/04-backend/README.md` — layout de paquetes y comandos.
+- `docs/04-backend/api.md` — referencia REST completa.
+- `docs/04-backend/security.md` — JWT, refresh, `@PreAuthorize`, `CourseSecurityService`.
+- `docs/04-backend/migrations.md` — Flyway: cómo añadir migraciones.
+- `docs/05-features/auth.md` — flujo de auth completo.
+- `docs/05-features/courses-lessons.md` — modelo y flujo de cursos.
+- `docs/05-features/assessments.md` — quiz, project, open_text.
+- `docs/05-features/prerequisites.md` — prerequisitos entre cursos.
+- `docs/05-features/progress.md` — tracking de progreso.
+- `docs/05-features/reviews.md` — sistema de valoraciones.
+- `docs/07-conventions/git-workflow.md` — ramas, commits, PRs.
+- `docs/07-conventions/code-style.md` — estilo backend y frontend.
+- `docs/07-conventions/i18n-policy.md` — política de strings castellano.
+
+### Eliminado
+
+- `CourselyLabs-back/HELP.md` — boilerplate de Spring Initializr sin valor.
+
+### Corregido
+
+- **`application.properties`**: `spring.flyway.baseline-versión=0` → `spring.flyway.baseline-version=0` (la clave de configuración había quedado tildada por el sweep ortográfico previo).
+- **`router/routes.ts`**: paths `/cursos/:slug/lección/:id` → `/cursos/:slug/leccion/:id` y `/pago/éxito` → `/pago/exito` (las URLs no llevan tildes; el sweep las había tocado al merge).
+- **Componentes que generan URLs**: `CourseNavSidebar.vue`, `CourseSectionList.vue`, `LessonNavBar.vue`, `LessonView.vue` — `/lección/` → `/leccion/`.
 
 ---
 

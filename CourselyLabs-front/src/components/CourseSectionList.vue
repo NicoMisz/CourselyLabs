@@ -61,7 +61,7 @@ function sectionCaption(section: Section): string {
 
 function lessonRoute(lesson: Lesson): string {
   if (!props.enrolled && !lesson.isFree) return ''
-  return `/cursos/${props.courseSlug}/lección/${lesson.id}`
+  return `/cursos/${props.courseSlug}/leccion/${lesson.id}`
 }
 
 function formatDuration(seconds: number): string {

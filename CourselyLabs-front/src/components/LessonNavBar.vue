@@ -4,7 +4,7 @@
       flat
       no-caps
       :disable="!prev"
-      :to="prev ? `/cursos/${courseSlug}/lección/${prev.id}` : undefined"
+      :to="prev ? `/cursos/${courseSlug}/leccion/${prev.id}` : undefined"
       icon="arrow_back"
       :label="prev ? prev.title : ''"
       class="col-5 text-left ellipsis-btn"
@@ -13,7 +13,7 @@
       flat
       no-caps
       :disable="!next"
-      :to="next ? `/cursos/${courseSlug}/lección/${next.id}` : undefined"
+      :to="next ? `/cursos/${courseSlug}/leccion/${next.id}` : undefined"
       icon-right="arrow_forward"
       :label="next ? next.title : ''"
       class="col-5 text-right ellipsis-btn"

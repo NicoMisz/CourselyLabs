@@ -1,276 +1,75 @@
 # CourselyLabs
 
-Plataforma de cursos online con múltiples formatos de contenido, sistema de evaluaciones, foros y mensajería.
+Plataforma de cursos online en castellano con autoría asistida, evaluaciones variadas y suscripción Premium.
 
-## Requisitos Previos
+> **Stack**: Vue 3 + Quasar + Vite (frontend) · Spring Boot 4 + Java 21 + PostgreSQL 16 (backend) · MinIO + MailHog + Stripe.
 
-Antes de comenzar, asegúrate de tener instalado:
+---
 
-- **Java 21** o superior
-- **Node.js 20.19.0+** o **22.12.0+**
-- **Maven 3.6+** (o usar el wrapper incluido `mvnw`)
-- **Docker** y **Docker Compose**
-- **Git**
+## Quick start (5 comandos)
 
-### Verificar versiones
+Requisitos: Java 21, Node 20.19+, Docker.
 
 ```bash
-java -version
-node -v
-npm -v
-docker --version
-docker compose version
-```
-
-## Instalación
-
-### 1. Clonar el repositorio
-
-```bash
-git clone <url-del-repositorio>
+git clone <url>
 cd CourselyLabs
+docker compose up -d                       # postgres + mailhog + minio
+(cd CourselyLabs-back  && ./mvnw spring-boot:run)   # → :8080
+(cd CourselyLabs-front && npm install && npm run dev)  # → :5173
 ```
 
-## Backend (Spring Boot)
+Login con un seeder: `admin@cursos.com` / `admin123` (ver [`docs/02-getting-started/seeders.md`](docs/02-getting-started/seeders.md) para más usuarios).
 
-### 2. Configurar y ejecutar el backend
+Detalles, env vars y troubleshooting: [`docs/02-getting-started/setup.md`](docs/02-getting-started/setup.md).
 
-#### Opción A: Con Docker Compose (Recomendado)
+---
 
-El proyecto incluye un archivo `compose.yaml` que levanta PostgreSQL automáticamente:
+## Documentación
 
-```bash
-cd CourselyLabs-back
+Toda la documentación técnica vive en [`docs/`](docs/). Punto de entrada: [`docs/README.md`](docs/README.md).
 
-# Levantar PostgreSQL con Docker
-docker compose up -d
+**Atajos según para qué vienes**:
 
-# Ejecutar la aplicación Spring Boot
-./mvnw spring-boot:run
+- 🆕 **Llegas por primera vez** → [`docs/01-overview/state.md`](docs/01-overview/state.md) (snapshot completo en 10 min).
+- 🚀 **Quieres levantarlo** → [`docs/02-getting-started/setup.md`](docs/02-getting-started/setup.md).
+- 🎨 **Vas a tocar el frontend** → [`docs/03-frontend/`](docs/03-frontend/).
+- ⚙️ **Vas a tocar el backend** → [`docs/04-backend/`](docs/04-backend/).
+- 🧱 **Quieres entender una feature concreta** → [`docs/05-features/`](docs/05-features/).
+- 🛠️ **Quieres añadir una migración Flyway** → [`docs/04-backend/migrations.md`](docs/04-backend/migrations.md).
+- ✏️ **Quieres añadir strings de UI** → [`docs/03-frontend/i18n.md`](docs/03-frontend/i18n.md).
 
-# En Windows, usar:
-# mvnw.cmd spring-boot:run
-```
+---
 
-#### Opción B: Sin Docker (PostgreSQL local) (NO RECOMENDADO)
-
-Si tienes PostgreSQL instalado localmente, configura las credenciales en `src/main/resources/application.properties`:
-
-```properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/mydatabase
-spring.datasource.username=myuser
-spring.datasource.password=secret
-```
-
-Luego ejecuta:
-
-```bash
-cd CourselyLabs-back
-./mvnw spring-boot:run
-```
-
-### Verificar que el backend está corriendo
-
-El backend estará disponible en: **http://localhost:8080**
-
-### Compilar el proyecto (opcional)
-
-```bash
-cd CourselyLabs-back
-./mvnw clean install
-```
-
-## Frontend (Vue 3 + Quasar)
-
-### 3. Configurar y ejecutar el frontend
-
-```bash
-cd CourselyLabs-front
-
-# Instalar dependencias
-npm install
-
-# Ejecutar en modo desarrollo
-npm run dev
-```
-
-El frontend estará disponible en: **http://localhost:5173** (o 5174 si el puerto 5173 está ocupado)
-
-### Comandos disponibles del frontend
-
-```bash
-# Modo desarrollo
-npm run dev
-
-# Compilar para producción
-npm run build
-
-# Vista previa de la build de producción
-npm run preview
-
-# Ejecutar tests unitarios
-npm run test:unit
-
-# Type checking
-npm run type-check
-
-# Linting
-npm run lint
-
-# Formatear código
-npm run format
-```
-
-## Stack Tecnológico
-
-### Backend
-- **Framework**: Spring Boot 4.1.0-M1
-- **Lenguaje**: Java 21
-- **Base de datos**: PostgreSQL (latest)
-- **Build Tool**: Maven
-- **ORM**: Spring Data JPA
-
-### Frontend
-- **Framework**: Vue 3.5.26
-- **UI Framework**: Quasar 2.18.6
-- **Lenguaje**: TypeScript 5.9
-- **Build Tool**: Vite 7.3
-- **Estado global**: Pinia 3.0
-- **Router**: Vue Router 4.6
-- **Testing**: Vitest 4.0
-
-## Estructura del Proyecto
+## Estructura del repositorio
 
 ```
 CourselyLabs/
-├── CourselyLabs-back/          # Backend Spring Boot
-│   ├── src/
-│   ├── pom.xml
-│   ├── compose.yaml
-│   └── mvnw
-├── CourselyLabs-front/         # Frontend Vue + Quasar
-│   ├── src/
-│   ├── package.json
-│   └── vite.config.ts
-├── CLAUDE.md                   # Especificaciones del proyecto
+├── CourselyLabs-back/          # Spring Boot
+├── CourselyLabs-front/         # Vue 3 + Quasar
+├── init_db/                    # Schema + seeders SQL
+├── docker-compose.yml          # Postgres + MailHog + MinIO
+├── docs/                       # Toda la documentación técnica
+├── CLAUDE.md                   # Instrucciones para Claude (asistente)
+├── CHANGELOG.md                # Registro de cambios global
 └── README.md                   # Este archivo
 ```
 
-## Configuración de Base de Datos
-
-### Credenciales por defecto (Docker Compose)
-
-```
-Host: localhost
-Port: 5432
-Database: mydatabase
-User: myuser
-Password: secret
-```
-
-Para cambiar estas credenciales, edita el archivo `CourselyLabs-back/compose.yaml`.
-
-## Desarrollo
-
-### Ejecutar ambos proyectos simultáneamente
-
-Abre dos terminales:
-
-**Terminal 1 - Backend:**
-```bash
-cd CourselyLabs-back
-docker compose up -d
-./mvnw spring-boot:run
-```
-
-**Terminal 2 - Frontend:**
-```bash
-cd CourselyLabs-front
-npm run dev
-```
-
-## Solución de Problemas
-
-### Backend
-
-**Error: "Port 8080 is already in use"**
-- Detén el proceso que está usando el puerto 8080 o cambia el puerto en `application.properties`:
-  ```properties
-  server.port=8081
-  ```
-
-**Error: "Could not connect to PostgreSQL"**
-- Verifica que Docker esté corriendo: `docker ps`
-- Reinicia el contenedor: `docker compose restart`
-
-**Error: "./mvnw: No existe el fichero o el directorio: ./.mvn/wrapper/maven-wrapper.properties"**
-- El Maven Wrapper no está completamente configurado. Solucionarlo con:
-  ```bash
-  cd CourselyLabs-back
-  mkdir -p .mvn/wrapper
-
-  # Crear archivo de propiedades
-  cat > .mvn/wrapper/maven-wrapper.properties << 'EOF'
-  distributionUrl=https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/3.9.6/apache-maven-3.9.6-bin.zip
-  wrapperUrl=https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-wrapper/3.2.0/maven-wrapper-3.2.0.jar
-  EOF
-
-  # Descargar el JAR del wrapper
-  curl -o .mvn/wrapper/maven-wrapper.jar https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-wrapper/3.2.0/maven-wrapper-3.2.0.jar
-  ```
-
-### Frontend
-
-**Error: "Cannot find module '@quasar/vite-plugin'"**
-- Ejecuta: `npm install`
-
-**Puerto ocupado**
-- Vite cambiará automáticamente al siguiente puerto disponible (5174, 5175, etc.)
-
-## Variables de Entorno
-
-### Backend
-Editar `CourselyLabs-back/src/main/resources/application.properties` según necesidades.
-
-### Frontend
-Crear archivo `.env` en `CourselyLabs-front/` (si es necesario):
-```env
-VITE_API_BASE_URL=http://localhost:8080
-```
-
-## Despliegue en Producción
-
-### Backend
-```bash
-cd CourselyLabs-back
-./mvnw clean package
-java -jar target/CourselyLabs-0.0.1-SNAPSHOT.jar
-```
-
-### Frontend
-```bash
-cd CourselyLabs-front
-npm run build
-# Los archivos compilados estarán en CourselyLabs-front/dist
-```
+---
 
 ## Contribuir
 
-1. Crea una rama para tu feature: `git checkout -b feature/nueva-funcionalidad`
-2. Haz commit de tus cambios: `git commit -m "Añadir nueva funcionalidad"`
-3. Push a la rama: `git push origin feature/nueva-funcionalidad`
-4. Crea un Pull Request
+1. Crea una rama desde `develop` siguiendo la convención (`feature/...`, `fix/...`, `chore/...`).
+2. Haz tus cambios respetando [`docs/07-conventions/code-style.md`](docs/07-conventions/code-style.md).
+3. Verifica que el build pasa:
+   ```bash
+   (cd CourselyLabs-back && ./mvnw clean compile)
+   (cd CourselyLabs-front && npm run build)
+   ```
+4. Actualiza [`CHANGELOG.md`](CHANGELOG.md) y los docs relevantes en [`docs/`](docs/).
+5. Abre un PR siguiendo la plantilla de [`docs/07-conventions/git-workflow.md`](docs/07-conventions/git-workflow.md).
 
-## Documentación Adicional
+---
 
-- [CLAUDE.md](CLAUDE.md) - Especificaciones técnicas completas del proyecto
-- [Backend HELP.md](CourselyLabs-back/HELP.md) - Documentación de Spring Boot
-- [Frontend README](CourselyLabs-front/README.md) - Documentación de Vue
+## Licencia y contacto
 
-## Licencia
-
-[Especificar licencia]
-
-## Contacto
-
-[Especificar información de contacto]
+Pendiente de definir.
