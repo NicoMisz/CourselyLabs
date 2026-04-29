@@ -172,14 +172,21 @@ public class CourseService {
         UserEntity creator = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
 
+        String role = creator.getRole() == null ? "user" : creator.getRole();
+
+        // Solo usuarios con email verificado pueden crear cursos. Admins se saltan el check.
+        if (!"admin".equals(role) && !Boolean.TRUE.equals(creator.getIsVerified())) {
+            throw new BadRequestException(
+                "Verifica tu correo electrónico antes de crear un curso. Revisa tu bandeja de entrada o reenvía el correo desde tu perfil.");
+        }
+
         // Check course limit per role
         long currentCount = courseRepository.countByCreatedById(creator.getId());
-        String role = creator.getRole() == null ? "user" : creator.getRole();
         if (!"admin".equals(role)) {
             int maxCourses = "premium".equals(role) ? MAX_COURSES_PREMIUM : MAX_COURSES_USER;
             if (currentCount >= maxCourses) {
                 throw new BadRequestException(
-                    "Has alcanzado el límite de cursos para tu plan (" + maxCourses + " cursos). Actualiza a premium para crear mas.");
+                    "Has alcanzado el límite de cursos para tu plan (" + maxCourses + " cursos). Actualiza a premium para crear más.");
             }
         }
 

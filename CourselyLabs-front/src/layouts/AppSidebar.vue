@@ -136,7 +136,7 @@ const isPremiumOrAdmin = computed(() =>
 )
 
 const navLinks = [
-  { title: 'Inicio', icon: 'home', link: '/' },
+  { title: 'Inicio', icon: 'home', link: '/', exact: true },
   { title: 'Cursos', icon: 'school', link: '/cursos' },
 ]
 

@@ -8,6 +8,17 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es/1.1.0/).
 
 ---
 
+## [Sin versión] - 2026-04-29 — Pasada de bugs y UX (bloque 1)
+
+### Corregido
+
+- **Email verificado obligatorio para crear cursos** — `CourseService.create()` lanza ahora `BadRequestException` si `user.isVerified == false`, salvo admin. Frontend: en [`InstructorCourseList.vue`](CourselyLabs-front/src/views/instructor/InstructorCourseList.vue) el botón "Nuevo curso" se deshabilita y aparece un banner ámbar con CTA a "Mi perfil" para reenviar el correo de verificación.
+- **Sidebar pública: link "Inicio" se quedaba marcado** — `<q-item :to="/">` sin `exact-active-class` hacía match con cualquier ruta. Solución: prop `exact?: boolean` en [`SidebarItem.vue`](CourselyLabs-front/src/layouts/SidebarItem.vue) que aplica `exact-active-class` solo al link `/`.
+- **Modal de inscripción "Seguir explorando" no redirigía** — el botón solo cerraba el dialog. Ahora `handleKeepExploring()` cierra el dialog **y** hace `router.push('/cursos')`.
+- **Tabs bloqueadas tras pulsar "Valoraciones" en vista previa** — el `<q-tab-panel name="valoraciones">` envolvía `<CourseTabReviews>` con un `<q-banner>` innecesario que rompía la interacción con las tabs. Eliminado.
+
+---
+
 ## [Sin versión] - 2026-04-28 — Fix: cursos no publicados no deben ser accesibles públicamente
 
 ### Corregido

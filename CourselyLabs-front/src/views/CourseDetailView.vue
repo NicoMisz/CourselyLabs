@@ -116,16 +116,14 @@
             </q-tab-panel>
 
             <q-tab-panel name="valoraciones">
-              <q-banner class="bg-grey-2 text-grey-8" rounded>
-                <CourseTabReviews
-                  v-if="course"
-                  :course-id="course.id"
-                  :enrolled="enrolled"
-                  :is-logged-in="authStore.isLoggedIn"
-                  :completed-lessons="courseCompletedLessons"
-                  :current-user-id="authStore.user?.id"
-                />
-              </q-banner>
+              <CourseTabReviews
+                v-if="course"
+                :course-id="course.id"
+                :enrolled="enrolled"
+                :is-logged-in="authStore.isLoggedIn"
+                :completed-lessons="courseCompletedLessons"
+                :current-user-id="authStore.user?.id"
+              />
             </q-tab-panel>
           </q-tab-panels>
         </div>
@@ -155,7 +153,7 @@
 
     <EnrollSuccessDialog
       v-model="showEnrollSuccess"
-      @close="showEnrollSuccess = false"
+      @close="handleKeepExploring"
       @go-to-course="showEnrollSuccess = false"
     />
 
@@ -199,6 +197,11 @@ const course = ref<CourseDetail | null>(null);
 const enrolled = ref(false);
 const enrollLoading = ref(false);
 const showEnrollSuccess = ref(false);
+
+function handleKeepExploring() {
+  showEnrollSuccess.value = false;
+  router.push('/cursos');
+}
 const enrollError = ref('');
 
 const courseCompletedLessons = ref(0);
