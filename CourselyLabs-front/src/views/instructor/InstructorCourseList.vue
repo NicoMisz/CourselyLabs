@@ -48,7 +48,7 @@
       <q-icon name="add_circle" size="64px" color="grey-4" />
       <div class="text-h6 text-grey-6 q-mt-md">Crea tu primer curso</div>
       <p class="text-body2 text-grey-5">Comparte tus conocimientos con el mundo</p>
-      <q-btn color="primary" label="Nuevo curso" icon="add" no-caps unelevated class="q-mt-sm" @click="openCreateDialog" />
+      <q-btn color="primary" label="Nuevo curso" icon="add" no-caps unelevated class="q-mt-sm" :disable="!canCreate" @click="openCreateDialog" />
     </div>
 
     <!-- Course list -->

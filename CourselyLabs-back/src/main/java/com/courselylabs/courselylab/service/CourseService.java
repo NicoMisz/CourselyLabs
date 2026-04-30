@@ -382,13 +382,20 @@ public class CourseService {
             String first = user.getFirstName() == null ? "" : user.getFirstName().trim();
             String last = user.getLastName() == null ? "" : user.getLastName().trim();
             String fullName = (first + " " + last).trim();
+            if (fullName.isEmpty()) fullName = user.getEmail();
 
             instructors.add(new InstructorSummaryDTO(
                     user.getId(),
                     fullName,
                     user.getBio(),
-                    user.getProfilePictureUrl()));
+                    user.getProfilePictureUrl(),
+                    Boolean.TRUE.equals(link.getIsMain())));
         }
+
+        // Que el instructor principal aparezca primero
+        instructors.sort((a, b) -> Boolean.compare(
+                Boolean.FALSE.equals(a.getIsMain()),
+                Boolean.FALSE.equals(b.getIsMain())));
 
         return instructors;
     }

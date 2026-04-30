@@ -19,6 +19,8 @@ export interface InstructorSummary {
   name: string;
   bio?: string;
   avatarUrl?: string;
+  /** True si es el instructor principal del curso. */
+  isMain?: boolean;
 }
 
 import type { Section } from './lesson'
