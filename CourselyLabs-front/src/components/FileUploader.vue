@@ -134,8 +134,8 @@ defineExpose({ finish })
 }
 
 .uploader-zone--drag {
-  border-color: #0f766e;
-  background: #f0fdfa;
+  border-color: var(--q-primary);
+  background: var(--app-primary-soft);
   border-style: solid;
 }
 

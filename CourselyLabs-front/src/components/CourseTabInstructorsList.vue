@@ -38,7 +38,7 @@
       </q-card>
     </div>
   </div>
-  <q-banner v-else class="bg-grey-2 text-grey-8" rounded>
+  <q-banner v-else class="app-banner-soft" rounded>
     No hay instructores asignados.
   </q-banner>
 </template>

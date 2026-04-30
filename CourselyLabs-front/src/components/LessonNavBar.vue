@@ -34,7 +34,7 @@ defineProps<{
 <style scoped>
 .lesson-nav-bar {
   border-top: 1px solid rgba(0, 0, 0, 0.08);
-  background: white;
+  background: var(--app-surface);
   position: sticky;
   bottom: 0;
   z-index: 10;

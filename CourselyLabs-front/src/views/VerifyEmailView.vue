@@ -110,6 +110,6 @@ async function resendEmail() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #0f766e, #0d9488);
+  background: linear-gradient(135deg, var(--q-primary), var(--q-primary));
 }
 </style>

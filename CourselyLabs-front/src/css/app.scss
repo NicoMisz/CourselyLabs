@@ -1,84 +1,137 @@
-// Resetear TODO el grid y padding
+// =============================================================================
+// Paleta semántica con soporte para modo oscuro
+// =============================================================================
+// Los componentes deben usar var(--app-*) en lugar de hex hardcoded.
+// Quasar añade automáticamente la clase .body--dark al body cuando el modo
+// oscuro está activo (vía $q.dark.set(true)).
+// =============================================================================
+
+:root {
+    // Fondos
+    --app-bg: #ffffff;
+    --app-bg-soft: #f9fafb;          // fondos suaves (página, secciones)
+    --app-surface: #ffffff;          // cards, paneles
+    --app-surface-soft: #f1f5f9;     // surfaces secundarias (toolbars de card)
+
+    // Texto
+    --app-text: #1f2937;             // texto principal
+    --app-text-strong: #0f172a;      // títulos
+    --app-text-soft: #6b7280;        // texto secundario
+    --app-text-muted: #9ca3af;       // placeholders, captions
+
+    // Bordes
+    --app-border: #e5e7eb;
+    --app-border-strong: #d1d5db;
+
+    // Tints de marca (fondos suaves de banners y highlights)
+    --app-primary-soft: #f0fdfa;     // teal-50
+    --app-primary-tint: #99f6e4;     // teal-200 (bordes de banners primary)
+    --app-accent-soft: #fff7ed;      // orange-50
+    --app-warning-soft: #fef3c7;     // amber-100
+    --app-warning-text: #92400e;     // amber-900
+    --app-info-soft: #dbeafe;        // blue-100
+    --app-info-text: #1e40af;        // blue-900
+
+    // Estado (gris para badges, dialog backdrops, etc.)
+    --app-overlay: rgba(0, 0, 0, 0.04);
+}
+
+body.body--dark {
+    --app-bg: #18181b;
+    --app-bg-soft: #1f2937;
+    --app-surface: #27272a;
+    --app-surface-soft: #3f3f46;
+
+    --app-text: #f3f4f6;
+    --app-text-strong: #ffffff;
+    --app-text-soft: #d1d5db;
+    --app-text-muted: #9ca3af;
+
+    --app-border: #3f3f46;
+    --app-border-strong: #52525b;
+
+    --app-primary-soft: rgba(15, 118, 110, 0.18);
+    --app-primary-tint: rgba(20, 184, 166, 0.4);
+    --app-accent-soft: rgba(234, 88, 12, 0.18);
+    --app-warning-soft: rgba(217, 119, 6, 0.18);
+    --app-warning-text: #fcd34d;
+    --app-info-soft: rgba(59, 130, 246, 0.18);
+    --app-info-text: #93c5fd;
+
+    --app-overlay: rgba(255, 255, 255, 0.06);
+}
+
+// =============================================================================
+// Reset y layout base
+// =============================================================================
+
 * {
     box-sizing: border-box;
 }
 
 html,
 body {
-    width: 100vw !important;
-    height: 100vh !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow-x: hidden !important;
-    background-color: white !important;
-    color: black !important;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    width: 100%;
+    min-height: 100%;
+    // Quasar gestiona color/background via body.body--dark; no forzamos aquí.
 }
 
 #q-app,
 #app {
-    width: 100vw !important;
-    height: 100vh !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    display: block !important;
-    grid-template-columns: unset !important;
-}
-
-// Forzar layout completo
-.q-layout {
-    width: 100vw !important;
-    max-width: 100vw !important;
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
-.q-header {
-    width: 100% !important;
-}
-
-.q-page-container {
-    width: 100% !important;
-}
-
-// Drawer blanco
-.q-drawer {
-    background-color: white !important;
-}
-
-// Eliminar cualquier media query problemática
-@media (min-width: 1024px) {
-
-    #app,
-    #q-app {
-        display: block !important;
-        grid-template-columns: unset !important;
-        padding: 0 !important;
-    }
+    width: 100%;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
 }
 
 // Contenedor de texto enriquecido (TipTap output o textarea plano).
 // Se usa con v-html en descripciones de cursos, lecciones y evaluaciones.
+// =============================================================================
+// Utilidades globales que respetan modo oscuro
+// =============================================================================
+
+// Banner suave para empty states ("No hay X todavía"). Reemplaza el patrón
+// "bg-grey-2 text-grey-8" que era invisible en oscuro.
+.app-banner-soft {
+    background: var(--app-bg-soft) !important;
+    color: var(--app-text-soft) !important;
+}
+
+// Item con fondo suave (valoraciones, comentarios, etc.). Reemplaza "bg-grey-1".
+.app-surface-soft {
+    background: var(--app-bg-soft) !important;
+}
+
+// En modo oscuro, las clases text-grey-7/8 de Quasar quedan demasiado oscuras
+// (Quasar no las invierte automáticamente). Las reasignamos a un gris claro
+// para que el texto secundario siga siendo legible sobre fondos oscuros.
+body.body--dark {
+    .text-grey-7 { color: #cbd5e1 !important; }   // gris claro
+    .text-grey-8 { color: #e2e8f0 !important; }   // aún más claro
+    // Mantenemos -5 y -6 (ya son medios-claros) para preservar jerarquía.
+}
+
 .rich-content {
     line-height: 1.7;
     font-size: 16px;
-    color: #1f2937;
-    // pre-line preserva los \n cuando el contenido es texto plano (textarea sin
-    // wrap). Si llega HTML estructurado de TipTap, los <p>/<br> tampoco se rompen.
+    color: var(--app-text);
     white-space: pre-line;
-    // Parte palabras largas (URLs, tokens, "aaaaa…") para que no rompan el layout.
     overflow-wrap: anywhere;
     word-break: break-word;
 
     h1, h2 {
         font-family: 'Monda', sans-serif;
         font-weight: 700;
-        color: #0f172a;
+        color: var(--app-text-strong);
         margin-top: 1.5em;
         margin-bottom: 0.5em;
     }
     h2 {
         font-size: 1.75rem;
-        border-bottom: 2px solid #e5e7eb;
+        border-bottom: 2px solid var(--app-border);
         padding-bottom: 0.3em;
     }
     h3 {
@@ -86,7 +139,7 @@ body {
         font-weight: 600;
         margin-top: 1.25em;
         margin-bottom: 0.4em;
-        color: #0f172a;
+        color: var(--app-text-strong);
     }
     p {
         margin: 0 0 1em;
@@ -100,23 +153,23 @@ body {
     }
     strong {
         font-weight: 700;
-        color: #0f172a;
+        color: var(--app-text-strong);
     }
     em {
         font-style: italic;
     }
     blockquote {
-        border-left: 4px solid #0f766e;
+        border-left: 4px solid var(--q-primary);
         padding: 10px 16px;
         margin: 1em 0;
-        color: #4b5563;
+        color: var(--app-text-soft);
         font-style: italic;
-        background: #f0fdfa;
+        background: var(--app-primary-soft);
         border-radius: 0 8px 8px 0;
     }
     code {
-        background: #f1f5f9;
-        color: #0f766e;
+        background: var(--app-surface-soft);
+        color: var(--q-primary);
         padding: 2px 6px;
         border-radius: 4px;
         font-size: 0.9em;
@@ -143,7 +196,7 @@ body {
         margin: 1em 0;
     }
     a {
-        color: #0f766e;
+        color: var(--q-primary);
         text-decoration: underline;
     }
 }

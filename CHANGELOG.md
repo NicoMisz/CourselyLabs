@@ -8,6 +8,76 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es/1.1.0/).
 
 ---
 
+## [Sin versión] - 2026-04-30 — Modo oscuro completo `feature/dark-mode-polish`
+
+### Sistema de temas
+
+- **Paleta semántica de variables CSS** en [`src/css/app.scss`](CourselyLabs-front/src/css/app.scss). Define en `:root` los tokens del modo claro y los redefine bajo `body.body--dark` para el modo oscuro. Tokens:
+  - `--app-bg`, `--app-bg-soft`, `--app-surface`, `--app-surface-soft`
+  - `--app-text`, `--app-text-strong`, `--app-text-soft`, `--app-text-muted`
+  - `--app-border`, `--app-border-strong`
+  - `--app-primary-soft`, `--app-primary-tint`, `--app-accent-soft`
+  - `--app-warning-soft`, `--app-warning-text`, `--app-info-soft`, `--app-info-text`
+  - `--app-overlay`
+- **Eliminados los overrides agresivos en `app.scss`** que rompían el modo oscuro:
+  - `body { background-color: white !important; color: black !important; }` → eliminado.
+  - `.q-drawer { background-color: white !important; }` → eliminado.
+  - Reemplazados por estilos sin `!important` que dejan a Quasar gestionar el body según `Dark.set(...)`.
+
+### Sweep masivo de hex → var()
+
+Aplicado con `sed` selectivo a 28 archivos `.vue`. Mapeo principal:
+
+| Hex hardcoded | Variable nueva |
+|---|---|
+| `#ffffff` / `#fff` | `var(--app-surface)` |
+| `#f9fafb` / `#f3f4f6` | `var(--app-bg-soft)` |
+| `#f1f5f9` | `var(--app-surface-soft)` |
+| `#1f2937` | `var(--app-text)` |
+| `#0f172a` | `var(--app-text-strong)` |
+| `#6b7280` / `#4b5563` / `#64748b` / `#475569` | `var(--app-text-soft)` |
+| `#9ca3af` / `#94a3b8` | `var(--app-text-muted)` |
+| `#e5e7eb` | `var(--app-border)` |
+| `#d1d5db` | `var(--app-border-strong)` |
+| `#f0fdfa` | `var(--app-primary-soft)` |
+| `#99f6e4` | `var(--app-primary-tint)` |
+| `#fff7ed` | `var(--app-accent-soft)` |
+| `#fef3c7` / `#fffbeb` | `var(--app-warning-soft)` |
+| `#92400e` | `var(--app-warning-text)` |
+| `#0f766e` | `var(--q-primary)` (Quasar) |
+| `#ea580c` | `var(--q-accent)` |
+| `#d97706` | `var(--q-warning)` |
+| `#059669` | `var(--q-positive)` |
+| `background: white;` | `background: var(--app-surface);` |
+
+### Layouts
+
+- **[`AppFooter.vue`](CourselyLabs-front/src/layouts/AppFooter.vue)** — usa colores fijos oscuros siempre (es un footer dark intencional). En modo oscuro baja un escalón (`#1f2937` → `#0a0a0a`) para mantener contraste con el contenido. Selector `:global(.body--dark)` para no romper el scoped.
+- **[`AppSidebar.vue`](CourselyLabs-front/src/layouts/AppSidebar.vue)** — `class="bg-grey-1"` (hardcoded) → `:class="$q.dark.isActive ? 'bg-grey-9' : 'bg-grey-1'"`.
+- **[`LessonView.vue`](CourselyLabs-front/src/views/LessonView.vue)** — `q-layout` y `q-header` con clases condicionales (antes `bg-white text-dark` fijos).
+- **[`AppHeader.vue`](CourselyLabs-front/src/layouts/AppHeader.vue)** — sigue usando `var(--q-primary)` para el fondo (teal en ambos modos, intencional).
+
+### Notas
+
+- **Gradientes intencionados** se preservan (hero del curso, banners de éxito, badges Premium…). Algunos usan `var(--q-primary)` y `var(--q-accent)` ahora; otros (gradientes de marketing en PremiumPage) mantienen hex específicos.
+- **`AdminLayout`, `InstructorLayout` y `MainLayout`** ya tenían modo oscuro de la rama anterior (`fix/ux-pass-1`).
+- **Pendiente refinamiento manual** — algunos componentes con `text-grey-7` (clase Quasar) pueden verse poco legibles en oscuro. Ajustar caso por caso a medida que aparezcan.
+
+### Iteración tras testing manual
+
+- **Layout roto en toda la app**: el archivo `src/assets/main.css` (scaffold inicial de Vue/Vite que nunca se quitó) imponía `#app { max-width: 1280px; margin: 0 auto; padding: 2rem; }` y `body { display: flex; place-items: center; }`. Esto creaba bandas negras a los lados. Antes era invisible porque `app.scss` con `!important` lo sobrescribía; al quitar los `!important` para que el dark mode funcionara, `main.css` tomó el control y rompió el layout.
+  - **Eliminados `src/assets/main.css` y `src/assets/base.css`** (deuda del scaffold).
+  - **Quitado el import** de `main.css` en [`main.ts`](CourselyLabs-front/src/main.ts).
+  - **Restaurado `width: 100%`** y `min-height` en `html, body, #app, #q-app` en `app.scss` (sin `!important`).
+- **Fondo del body en dark**: quitado el override `body { background: var(--app-bg); color: var(--app-text); }` del `app.scss` para dejar a Quasar gestionar `body.body--dark` automáticamente. Quasar pinta el body con `$dark-page` (`#111827`) y los componentes con `$dark` (`#1F2937`) sin que tengamos que tocar nada.
+- **Contraste del HomeView en dark**: el hero tenía gradient con muy poca opacidad sobre fondo oscuro y `text-grey-8` en subtítulos (invisible en oscuro). Solución:
+  - `.hero-title` y `.hero-subtitle` con `color: var(--app-text-strong)` / `var(--app-text-soft)` (cambian con el tema).
+  - Selector `:global(.body--dark) .hero` con gradient más opaco (0.18/0.12) para que se vea sobre fondo oscuro.
+  - `text-grey-8` → `text-grey-7` en todos los lugares de HomeView.
+- **CourseCard**: títulos y descripciones se veían "fantasma" en dark. Reemplazado `text-grey-7`/`text-grey-8` por clases custom `.card-title` (var(--app-text-strong)), `.card-description` y `.rating-text` (var(--app-text-soft)).
+
+---
+
 ## [Sin versión] - 2026-04-30 — Pasada de bugs y UX `fix/ux-pass-1`
 
 ### Bloque 6 — Iteración tras testing manual

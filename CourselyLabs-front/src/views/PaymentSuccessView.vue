@@ -81,6 +81,6 @@ onMounted(confirm)
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #059669, #0f766e);
+  background: linear-gradient(135deg, var(--q-positive), var(--q-primary));
 }
 </style>

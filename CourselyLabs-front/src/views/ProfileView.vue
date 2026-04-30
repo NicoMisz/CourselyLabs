@@ -585,7 +585,7 @@ onMounted(async () => {
   max-width: 900px;
 }
 .profile-header {
-  background: linear-gradient(135deg, #0f766e 0%, #0d9488 100%);
+  background: linear-gradient(135deg, var(--q-primary) 0%, var(--q-primary) 100%);
   color: white;
 }
 .profile-header .text-grey-6 {

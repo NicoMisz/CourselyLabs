@@ -257,11 +257,11 @@ onMounted(load)
   font-size: 1.75rem;
   font-weight: 700;
   margin: 0 0 4px;
-  color: #0f172a;
+  color: var(--app-text-strong);
 }
 
 .page-sub {
-  color: #64748b;
+  color: var(--app-text-soft);
   margin: 0;
 }
 
@@ -275,21 +275,21 @@ onMounted(load)
 .empty-state {
   text-align: center;
   padding: 64px 24px;
-  background: white;
-  border: 2px dashed #e5e7eb;
+  background: var(--app-surface);
+  border: 2px dashed var(--app-border);
   border-radius: 12px;
 }
 
 .grading-list {
-  background: white;
+  background: var(--app-surface);
   border-radius: 12px;
 }
 
 .answer-box {
   white-space: pre-wrap;
   padding: 12px;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
+  background: var(--app-bg-soft);
+  border: 1px solid var(--app-border);
   border-radius: 8px;
   max-height: 320px;
   overflow-y: auto;

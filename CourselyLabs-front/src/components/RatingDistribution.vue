@@ -82,7 +82,7 @@ const ratingLevels = [5, 4, 3, 2, 1] as const
 }
 
 .total {
-  color: #666;
+  color: var(--app-text-soft);
   font-size: 0.9rem;
 }
 
@@ -111,6 +111,6 @@ const ratingLevels = [5, 4, 3, 2, 1] as const
 .count {
   width: 40px;
   text-align: left;
-  color: #555;
+  color: var(--app-text-soft);
 }
 </style>

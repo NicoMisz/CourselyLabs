@@ -85,7 +85,7 @@ function getLabel(value: number) {
 }
 
 .star {
-  fill: #ddd;
+  fill: var(--app-border-strong);
 }
 
 .star.filled {

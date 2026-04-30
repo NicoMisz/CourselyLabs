@@ -85,7 +85,7 @@ function goToCourse() {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #0f766e, #ea580c);
+    background: linear-gradient(135deg, var(--q-primary), var(--q-accent));
 }
 
 .progress-bar-wrap {

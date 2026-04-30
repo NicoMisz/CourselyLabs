@@ -138,7 +138,7 @@ function handleClick() {
   position: sticky;
   top: 80px;
   border: 1px solid rgba(0, 0, 0, 0.08);
-  background: white;
+  background: var(--app-surface);
 }
 
 @media (max-width: 767px) {

@@ -1,6 +1,6 @@
 <template>
-  <q-layout view="lHh Lpr lFf">
-    <q-header bordered class="bg-white text-dark">
+  <q-layout view="lHh Lpr lFf" :class="$q.dark.isActive ? 'bg-grey-10' : 'bg-grey-1'">
+    <q-header bordered :class="$q.dark.isActive ? 'bg-grey-9 text-white' : 'bg-white text-dark'">
       <q-toolbar>
         <q-btn flat dense icon="menu" @click="sidebarOpen = !sidebarOpen" class="lt-lg" />
         <q-btn flat dense icon="arrow_back" :to="`/cursos/${slug}`" />
@@ -395,7 +395,7 @@ onBeforeUnmount(stopPositionTracking)
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #f59e0b, #ea580c);
+  background: linear-gradient(135deg, #f59e0b, var(--q-accent));
 }
 
 .block-stack {
@@ -405,8 +405,8 @@ onBeforeUnmount(stopPositionTracking)
 }
 
 .block-section {
-  background: white;
-  border: 1px solid #e5e7eb;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
   border-radius: 12px;
   padding: 16px;
 }

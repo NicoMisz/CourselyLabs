@@ -36,7 +36,7 @@ const relativeDate = computed(() =>
 </script>
 
 <template>
-  <div class="review-item q-pa-md q-mb-md bg-grey-1 rounded-borders">
+  <div class="review-item q-pa-md q-mb-md app-surface-soft rounded-borders">
 
     <!-- Header -->
     <div class="row items-center q-gutter-sm">

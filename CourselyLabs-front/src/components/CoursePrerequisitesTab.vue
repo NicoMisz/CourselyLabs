@@ -13,7 +13,7 @@
         <q-skeleton v-if="loading" type="rect" height="90px" class="q-mb-sm" />
         
         <template v-else>
-            <q-banner v-if="!statuses.length && !requiredBy?.length" class="bg-grey-2 text-grey-8" rounded>
+            <q-banner v-if="!statuses.length && !requiredBy?.length" class="app-banner-soft" rounded>
                 Este curso no tiene prerequisitos o no hay estado disponible.
             </q-banner>
 

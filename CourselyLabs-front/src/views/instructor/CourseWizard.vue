@@ -1372,7 +1372,7 @@ onMounted(loadData)
   display: flex;
   flex-direction: column;
   height: calc(100vh - 50px);
-  background: #f9fafb;
+  background: var(--app-bg-soft);
 }
 
 .edit-topbar {
@@ -1380,8 +1380,8 @@ onMounted(loadData)
   align-items: center;
   justify-content: space-between;
   padding: 10px 16px;
-  background: white;
-  border-bottom: 1px solid #e5e7eb;
+  background: var(--app-surface);
+  border-bottom: 1px solid var(--app-border);
   flex-shrink: 0;
 }
 
@@ -1393,8 +1393,8 @@ onMounted(loadData)
 
 .edit-sidebar {
   width: 280px;
-  background: white;
-  border-right: 1px solid #e5e7eb;
+  background: var(--app-surface);
+  border-right: 1px solid var(--app-border);
   overflow-y: auto;
   flex-shrink: 0;
 }
@@ -1405,15 +1405,15 @@ onMounted(loadData)
 
 .edit-sidebar :deep(.active-item) {
   background: rgba(15, 118, 110, 0.08);
-  color: #0f766e;
+  color: var(--q-primary);
   font-weight: 500;
 }
 
 .storage-panel {
   padding: 12px 14px;
   margin: 8px;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
+  background: var(--app-bg-soft);
+  border: 1px solid var(--app-border);
   border-radius: 8px;
 }
 
@@ -1426,13 +1426,13 @@ onMounted(loadData)
 .panel {
   max-width: 800px;
   margin: 0 auto;
-  background: white;
+  background: var(--app-surface);
   border-radius: 12px;
   padding: 28px;
   display: flex;
   flex-direction: column;
   gap: 16px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--app-border);
 }
 
 .panel-title {
@@ -1440,14 +1440,14 @@ onMounted(loadData)
   font-size: 1.5rem;
   font-weight: 700;
   margin: 0 0 8px;
-  color: #0f172a;
+  color: var(--app-text-strong);
 }
 
 .panel-label {
   display: block;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #374151;
+  color: var(--app-text);
   margin-bottom: 6px;
 }
 
@@ -1461,22 +1461,22 @@ onMounted(loadData)
   display: flex;
   justify-content: flex-end;
   padding-top: 12px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--app-surface-soft);
   margin-top: 8px;
 }
 
 .empty-panel {
   text-align: center;
   padding: 64px 24px;
-  border: 2px dashed #e5e7eb;
+  border: 2px dashed var(--app-border);
   background: transparent;
 }
 
 .empty-hint {
   padding: 16px;
-  background: #f9fafb;
+  background: var(--app-bg-soft);
   border-radius: 8px;
-  color: #6b7280;
+  color: var(--app-text-soft);
   font-size: 0.875rem;
   text-align: center;
 }
@@ -1484,8 +1484,8 @@ onMounted(loadData)
 .premium-lock {
   text-align: center;
   padding: 40px 24px;
-  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
-  border: 1px dashed #d97706;
+  background: linear-gradient(135deg, var(--app-warning-soft) 0%, var(--app-warning-soft) 100%);
+  border: 1px dashed var(--q-warning);
   border-radius: 12px;
 }
 
@@ -1514,15 +1514,15 @@ onMounted(loadData)
   align-items: center;
   gap: 12px;
   padding: 12px;
-  background: #f0fdfa;
-  border: 1px solid #99f6e4;
+  background: var(--app-primary-soft);
+  border: 1px solid var(--app-primary-tint);
   border-radius: 8px;
   margin-bottom: 8px;
 }
 
 .block-card {
   border-radius: 10px;
-  background: #fff;
+  background: var(--app-surface);
 }
 
 .block-header {
@@ -1530,15 +1530,15 @@ onMounted(loadData)
   align-items: center;
   gap: 8px;
   padding: 10px 14px;
-  background: #f9fafb;
-  border-bottom: 1px solid #e5e7eb;
+  background: var(--app-bg-soft);
+  border-bottom: 1px solid var(--app-border);
   border-top-left-radius: 10px;
   border-top-right-radius: 10px;
 }
 
 .block-handle {
   cursor: grab;
-  color: #94a3b8;
+  color: var(--app-text-muted);
 }
 
 .block-handle:active {
@@ -1555,8 +1555,8 @@ onMounted(loadData)
 }
 
 @keyframes block-flash {
-  0%   { box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.55); background: #f0fdfa; }
-  60%  { box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.25); background: #f0fdfa; }
-  100% { box-shadow: 0 0 0 4px rgba(15, 118, 110, 0); background: #fff; }
+  0%   { box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.55); background: var(--app-primary-soft); }
+  60%  { box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.25); background: var(--app-primary-soft); }
+  100% { box-shadow: 0 0 0 4px rgba(15, 118, 110, 0); background: var(--app-surface); }
 }
 </style>
