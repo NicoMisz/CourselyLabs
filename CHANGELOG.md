@@ -24,6 +24,13 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es/1.1.0/).
 - **Contador "Cursos pendientes" en sidebar admin se actualiza al instante** tras aprobar/rechazar: `AdminLayout` escucha `window` event `admin:refresh-pending`; `AdminCourseQueue` lo emite en `handleApprove` y `handleReject`. Sin recargar la página.
 - **Fallback en `CourseTabInstructorsList`** acepta tanto los nombres nuevos (`name`, `avatarUrl`) como los antiguos (`fullName`, `profilePictureUrl`) por si el backend no se ha reiniciado tras el cambio del DTO.
 
+- **`/profile` no guardaba al editar perfil** — el handler `saveProfile` salía con un `return` silencioso si los campos no pasaban un check inline (`length < 2`), sin notificar al usuario. Y el botón "Guardar cambios" tenía `@click` además del `@submit` del `<q-form>` (doble llamada). Solución:
+  - Botón con `type="submit"` (cancela tiene `type="button"`); `q-form` con `ref` y validación vía `profileFormRef.value.validate()` antes de enviar (muestra errores visuales si los hay).
+  - Eliminado el guard silencioso.
+  - El `catch` ahora extrae `err.response.data.message` (mensaje real del backend) en lugar de un genérico.
+  - Guard para `user.value?.id` con notify ("Sesión expirada") si no hay sesión.
+  - Texto "Sobre mi" → "Sobre mí" (tilde correcta).
+
 
 
 ### Bloque 1 — Bugs rápidos

@@ -76,7 +76,7 @@
               </template>
 
               <template v-else>
-                <q-form @submit.prevent="saveProfile" class="q-gutter-sm">
+                <q-form ref="profileFormRef" @submit.prevent="saveProfile" class="q-gutter-sm">
                   <div class="row q-col-gutter-sm">
                     <div class="col-6">
                       <q-input
@@ -84,7 +84,7 @@
                         label="Nombre"
                         outlined
                         dense
-                        :rules="[v => v.length >= 2 || 'Mínimo 2 caracteres']"
+                        :rules="[v => (v && v.length >= 2) || 'Mínimo 2 caracteres']"
                       />
                     </div>
                     <div class="col-6">
@@ -93,13 +93,13 @@
                         label="Apellido"
                         outlined
                         dense
-                        :rules="[v => v.length >= 2 || 'Mínimo 2 caracteres']"
+                        :rules="[v => (v && v.length >= 2) || 'Mínimo 2 caracteres']"
                       />
                     </div>
                   </div>
                   <q-input
                     v-model="profileForm.bio"
-                    label="Sobre mi"
+                    label="Sobre mí"
                     outlined
                     dense
                     type="textarea"
@@ -108,14 +108,14 @@
                     maxlength="500"
                   />
                   <div class="row justify-end q-gutter-sm q-mt-sm">
-                    <q-btn flat label="Cancelar" no-caps @click="editingProfile = false" />
+                    <q-btn flat label="Cancelar" no-caps type="button" @click="editingProfile = false" />
                     <q-btn
                       unelevated
                       color="primary"
                       label="Guardar cambios"
                       no-caps
+                      type="submit"
                       :loading="savingProfile"
-                      @click="saveProfile"
                     />
                   </div>
                 </q-form>
@@ -404,6 +404,7 @@ function formattedDate(iso?: string): string {
 const editingProfile = ref(false)
 const savingProfile = ref(false)
 const profileForm = reactive({ firstName: '', lastName: '', bio: '' })
+const profileFormRef = ref<{ validate: () => Promise<boolean> } | null>(null)
 
 function startEditingProfile() {
   profileForm.firstName = user.value?.firstName || ''
@@ -413,11 +414,19 @@ function startEditingProfile() {
 }
 
 async function saveProfile() {
-  if (profileForm.firstName.length < 2 || profileForm.lastName.length < 2) return
+  // Validamos a través del ref del q-form para mostrar errores visualmente.
+  const ok = await profileFormRef.value?.validate()
+  if (!ok) return
+
+  if (!user.value?.id) {
+    $q.notify({ type: 'negative', message: 'Sesión expirada, vuelve a iniciar sesión', position: 'bottom-right' })
+    return
+  }
+
   savingProfile.value = true
   try {
-    const { data } = await api.put(`/api/users/${user.value?.id}`, {
-      email: user.value?.email,
+    const { data } = await api.put(`/api/users/${user.value.id}`, {
+      email: user.value.email,
       firstName: profileForm.firstName,
       lastName: profileForm.lastName,
       bio: profileForm.bio,
@@ -425,8 +434,11 @@ async function saveProfile() {
     authStore.updateUser(data)
     editingProfile.value = false
     $q.notify({ type: 'positive', message: 'Perfil actualizado', position: 'bottom-right' })
-  } catch {
-    $q.notify({ type: 'negative', message: 'Error al actualizar el perfil', position: 'bottom-right' })
+  } catch (err: any) {
+    const msg = err?.response?.data?.message
+      || err?.response?.statusText
+      || 'Error al actualizar el perfil'
+    $q.notify({ type: 'negative', message: msg, position: 'bottom-right' })
   } finally {
     savingProfile.value = false
   }
