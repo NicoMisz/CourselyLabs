@@ -12,7 +12,9 @@ import lombok.NoArgsConstructor;
 public class InstructorSummaryDTO {
 
     private UUID id;
-    private String fullName;
+    private String name;
     private String bio;
-    private String profilePictureUrl;
+    private String avatarUrl;
+    /** True si es el instructor principal del curso (course_instructors.is_main). */
+    private Boolean isMain;
 }

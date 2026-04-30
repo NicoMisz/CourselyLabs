@@ -13,10 +13,28 @@
         label="Nuevo curso"
         no-caps
         unelevated
-        :disable="limits !== null && limits.currentCourses >= limits.maxCourses && limits.maxCourses !== 2147483647"
+        :disable="!canCreate || (limits !== null && limits.currentCourses >= limits.maxCourses && limits.maxCourses !== 2147483647)"
         @click="openCreateDialog"
       />
     </div>
+
+    <!-- Banner: email no verificado -->
+    <q-banner
+      v-if="!canCreate"
+      rounded
+      class="bg-amber-1 text-amber-9 q-mb-md"
+      inline-actions
+    >
+      <template #avatar>
+        <q-icon name="mail_outline" color="amber-9" />
+      </template>
+      <span class="text-body2">
+        Para crear cursos, primero verifica tu correo electrónico. Revisa tu bandeja de entrada o reenvía el correo desde tu perfil.
+      </span>
+      <template #action>
+        <q-btn flat dense color="amber-9" label="Ir a mi perfil" no-caps to="/profile" />
+      </template>
+    </q-banner>
 
     <!-- Loading -->
     <div v-if="loading" class="row q-gutter-md">
@@ -30,7 +48,7 @@
       <q-icon name="add_circle" size="64px" color="grey-4" />
       <div class="text-h6 text-grey-6 q-mt-md">Crea tu primer curso</div>
       <p class="text-body2 text-grey-5">Comparte tus conocimientos con el mundo</p>
-      <q-btn color="primary" label="Nuevo curso" icon="add" no-caps unelevated class="q-mt-sm" @click="openCreateDialog" />
+      <q-btn color="primary" label="Nuevo curso" icon="add" no-caps unelevated class="q-mt-sm" :disable="!canCreate" @click="openCreateDialog" />
     </div>
 
     <!-- Course list -->
@@ -201,12 +219,20 @@ import { useRouter } from 'vue-router'
 import { getMyCreatedCourses, getMyCourseLimits, deleteCourse, submitForReview, createCourse } from '../../api/instructor'
 import { getCourseSections } from '../../api/lesson'
 import type { CourseLimits } from '../../api/instructor'
+import { useAuthStore } from '@/stores/auth'
 
 const $q = useQuasar()
 const router = useRouter()
+const authStore = useAuthStore()
 const loading = ref(true)
 const courses = ref<any[]>([])
 const limits = ref<CourseLimits | null>(null)
+
+const canCreate = computed(() => {
+  const u = authStore.user
+  if (!u) return false
+  return u.role === 'admin' || u.isVerified === true
+})
 const deleteDialog = ref(false)
 const courseToDelete = ref<any>(null)
 

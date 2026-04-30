@@ -1111,6 +1111,80 @@ Configuración para desplegar toda la stack en un VPS usando Docker Compose. Un 
 
 ---
 
+## 19. `feature/co-instructors` 🆕 PENDIENTE
+
+**Prioridad:** Baja — depende de `feature/messaging` para que el dueño pueda contactar al co-instructor.
+**Dependencias:** `feature/messaging` (idealmente).
+
+### Estado actual del modelo
+
+- Tabla `course_instructors` (N:M usuarios↔cursos) **ya existe** (V1) con `is_main` boolean.
+- Backend al crear curso ya inserta automáticamente al creator como instructor con `is_main=true`.
+- `InstructorSummaryDTO` (corregido en `fix/ux-pass-1`) incluye `id, name, bio, avatarUrl, isMain`.
+- La pestaña "Instructores" del detalle pública ya muestra los datos correctamente, con badge "Principal".
+
+### Lo que falta (UI y backend)
+
+- **Backend**:
+  - `POST /api/courses/{id}/instructors {userId}` — añadir co-instructor (solo owner del curso o admin).
+  - `DELETE /api/courses/{id}/instructors/{userId}` — eliminar co-instructor (no permite eliminar al `is_main`).
+  - `PATCH /api/courses/{id}/instructors/{userId}/main` — promover a principal (solo el actual `is_main` o admin).
+  - `GET /api/users/search?q=...` — buscador de usuarios para invitar (con autocompletado).
+  - Validación: el co-instructor debe estar verificado (`is_verified=true`).
+
+- **Frontend** (`CourseWizard.vue`):
+  - Nuevo apartado "Instructores" en el sidebar del wizard.
+  - Lista de co-instructores actuales con avatar, nombre, "Principal" badge, botón "X" para eliminar.
+  - Buscador de usuarios (debounced) que autocompleta y muestra resultados con avatar+nombre+email.
+  - Diálogo de confirmación al eliminar co-instructor.
+  - Aviso visual si la cuenta del co-instructor no está verificada.
+
+### Decisiones de producto pendientes
+
+- ¿Pueden los co-instructores **editar** el curso o solo aparecer en la pestaña "Instructores"? Hoy `CourseSecurityService.canEditX` da edición a cualquiera de `course_instructors`; revisar si esto sigue siendo lo correcto.
+- ¿Hay que enviar **notificación** al co-instructor invitado (email + in-app)? Depende de `feature/notifications`.
+- ¿Hay que poder **rechazar** la invitación, o se añade directamente sin consentimiento del co-instructor? Cuestión legal/UX.
+
+### Mientras tanto
+
+- En `fix/ux-pass-1` queda lo mínimo: la pestaña pública muestra al instructor real (no placeholder) con badge "Principal".
+- El usuario que crea el curso es el único instructor hasta que esta feature se implemente.
+
+---
+
+## 20. `chore/i18n-total` 🆕 PENDIENTE
+
+**Prioridad:** Baja — la app funciona en castellano correcto con strings inline.
+**Dependencias:** Ninguna técnica.
+
+### Estado actual
+
+- `vue-i18n@9.14` instalado y configurado.
+- `src/i18n/locales/es.json` con ~250 claves principales.
+- 3 componentes migrados a `t()`: `InstructorLayout`, `GradingDashboard`, `AssessmentEditor`.
+- Resto del frontend (~65 archivos `.vue`) usa strings inline en castellano correcto.
+
+### Tareas
+
+- **Migrar a `t()` los archivos restantes** por dominio:
+  - Layouts: `MainLayout`, `AdminLayout`, `AppHeader`, `AppSidebar`, `AppFooter`, `SidebarItem`.
+  - Páginas: `HomeView`, `CoursesView`, `CourseDetailView`, `MyCoursesView`, `ProfileView`, `PremiumPage`, `LessonView`, `formView`, `formRegister`, `VerifyEmailView`, `PaymentSuccessView`, `PaymentCancelledView`, `NotFoundView`.
+  - Vistas instructor: `InstructorCourseList`, `CourseWizard`.
+  - Vistas admin: `AdminDashboard`, `AdminCourseQueue`, `AdminUserTable`.
+  - Componentes (cards, hero, banners, dialogs, tabs, formularios).
+- **Categorías de cursos** — actualmente `name` viene del backend (BD) en idioma fijo. Plan:
+  - Mantener `slug` como identificador estable (`programacion`, `diseno`, `negocios`, `marketing`, `idiomas`, `musica`).
+  - Añadir bloque `category` a `es.json`: `{ "programacion": "Programación", "diseno": "Diseño", ... }`.
+  - Frontend usa `t('category.' + cat.slug, cat.name)` con fallback al `name` del backend.
+  - Actualizar `init_db/02_seed_base.sql`: corregir nombres a castellano correcto (los actuales mezclan catalán/castellano: "Programacio", "Disseny", "Negocis", "Idiomes", "Musica").
+- **Validar con `unplugin-vue-i18n`** que detecte claves inexistentes en build (no obligatorio).
+
+### Cuándo abordarlo
+
+Cuando se decida añadir un segundo idioma (probablemente inglés o catalán). Hasta entonces, el coste es alto y el beneficio bajo.
+
+---
+
 ## Orden de merge sugerido
 
 ```

@@ -1,6 +1,6 @@
 <template>
-  <q-layout view="lHh Lpr lFf">
-    <q-header bordered class="bg-white text-dark">
+  <q-layout view="lHh Lpr lFf" :class="$q.dark.isActive ? 'bg-grey-10' : 'bg-grey-1'">
+    <q-header bordered :class="$q.dark.isActive ? 'bg-grey-9 text-white' : 'bg-white text-dark'">
       <q-toolbar>
         <q-btn flat dense round icon="menu" @click="drawerOpen = !drawerOpen" class="lt-lg" />
         <q-toolbar-title class="text-body1 text-weight-medium">
@@ -9,7 +9,7 @@
       </q-toolbar>
     </q-header>
 
-    <q-drawer v-model="drawerOpen" bordered show-if-above :width="240" class="bg-grey-1">
+    <q-drawer v-model="drawerOpen" bordered show-if-above :width="240" :class="$q.dark.isActive ? 'bg-grey-9' : 'bg-grey-1'">
       <q-list class="q-pt-md">
         <q-item clickable to="/">
           <q-item-section avatar><q-icon name="arrow_back" /></q-item-section>
@@ -47,16 +47,30 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { getPendingCourses } from '../api/admin'
 
 const drawerOpen = ref(true)
 const pendingCount = ref(0)
 
-onMounted(async () => {
+async function refreshPending() {
   try {
     const courses = await getPendingCourses()
     pendingCount.value = courses.length
   } catch { /* ignore */ }
+}
+
+// Otros componentes (p. ej. AdminCourseQueue) emiten este evento tras aprobar/rechazar
+// para que el badge del sidebar se actualice sin recargar la página.
+function handleRefreshEvent() {
+  refreshPending()
+}
+
+onMounted(() => {
+  refreshPending()
+  window.addEventListener('admin:refresh-pending', handleRefreshEvent)
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('admin:refresh-pending', handleRefreshEvent)
 })
 </script>

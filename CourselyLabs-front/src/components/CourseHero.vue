@@ -10,7 +10,7 @@
 
       <div class="col-12 col-md-7">
         <h1 class="text-h4 q-my-none">{{ title }}</h1>
-        <p class="text-body1 q-mt-sm q-mb-md">{{ shortDescription || 'Sin descripción corta.' }}</p>
+        <p class="text-body1 q-mt-sm q-mb-md hero-short-description">{{ shortDescription || 'Sin descripción corta.' }}</p>
 
         <div class="row q-gutter-sm items-center q-mb-md">
           <LevelBadge :level="level" />
@@ -71,6 +71,12 @@ const updatedLabel = computed(() => {
 <style scoped>
 .hero {
   background: linear-gradient(135deg, rgba(15, 118, 110, 0.08), rgba(234, 88, 12, 0.08));
+}
+.hero-short-description {
+  /* Respeta los \n del textarea + parte palabras largas para que no rompan el layout. */
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 .hero-thumb {
   width: 100%;

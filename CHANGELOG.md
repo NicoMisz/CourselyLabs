@@ -8,6 +8,69 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es/1.1.0/).
 
 ---
 
+## [Sin versión] - 2026-04-30 — Pasada de bugs y UX `fix/ux-pass-1`
+
+### Bloque 6 — Iteración tras testing manual
+
+- **Botón "Nuevo curso" del estado vacío** también respeta `:disable="!canCreate"` (antes solo el del header).
+- **`SidebarItem.vue` rehecho** con dos templates `v-if/v-else` y prop `exact` nativa de `q-item` (evita el problema de `:exact-active-class="undefined"` no aplicando bien la cancelación del `active-class` por defecto).
+- **Saltos de línea con palabras largas** (`aaaaa…`): añadido `overflow-wrap: anywhere; word-break: break-word;` en `.hero-short-description` y en `.rich-content` global.
+- **Tab "Valoraciones" bloqueaba el resto de tabs**: causa probable era doble — `<CourseTabInstructors>` se usaba como hijo directo de `q-tab-panels` (Quasar lo busca por hijos directos `q-tab-panel`); además los `name="descripción"` con tilde en tabs/panels eran frágiles. Solución: nuevo componente [`CourseTabInstructorsList.vue`](CourselyLabs-front/src/components/CourseTabInstructorsList.vue) sin `q-tab-panel` envolvente, inline dentro de un `<q-tab-panel name="instructores">` en CourseDetailView; tabs renombradas a ASCII (`descripcion` en lugar de `descripción`); `animated` reemplazado por `keep-alive` en `q-tab-panels`.
+- **Modo oscuro de los layouts**:
+  - [`MainLayout.vue`](CourselyLabs-front/src/layouts/MainLayout.vue): `class="bg-white"` → `:class="$q.dark.isActive ? 'bg-grey-10' : 'bg-grey-1'"`.
+  - [`AdminLayout.vue`](CourselyLabs-front/src/layouts/AdminLayout.vue): mismo tratamiento al `q-layout`, al `q-header` y al `q-drawer`.
+  - [`InstructorLayout.vue`](CourselyLabs-front/src/layouts/InstructorLayout.vue): `q-drawer` con `:class` condicional. Pendiente: muchos `<style scoped>` con colores hardcoded, eso es trabajo de `feature/dark-mode-polish`.
+- **Header sin huecos en el layout**: la versión anterior cambiaba la altura del `q-header` (120 → 56 px), lo que dejaba un hueco en el `q-page-container`. Reescrito con altura fija (~64 px) y la animación se aplica solo al **branding interno** (logo se contrae de 44 → 32 px y se desplaza de centrado a la izquierda con `flexbox justify-content`). El `q-layout` no recalcula el espacio reservado y no hay huecos.
+- **Contador "Cursos pendientes" en sidebar admin se actualiza al instante** tras aprobar/rechazar: `AdminLayout` escucha `window` event `admin:refresh-pending`; `AdminCourseQueue` lo emite en `handleApprove` y `handleReject`. Sin recargar la página.
+- **Fallback en `CourseTabInstructorsList`** acepta tanto los nombres nuevos (`name`, `avatarUrl`) como los antiguos (`fullName`, `profilePictureUrl`) por si el backend no se ha reiniciado tras el cambio del DTO.
+
+- **`/profile` no guardaba al editar perfil** — el handler `saveProfile` salía con un `return` silencioso si los campos no pasaban un check inline (`length < 2`), sin notificar al usuario. Y el botón "Guardar cambios" tenía `@click` además del `@submit` del `<q-form>` (doble llamada). Solución:
+  - Botón con `type="submit"` (cancela tiene `type="button"`); `q-form` con `ref` y validación vía `profileFormRef.value.validate()` antes de enviar (muestra errores visuales si los hay).
+  - Eliminado el guard silencioso.
+  - El `catch` ahora extrae `err.response.data.message` (mensaje real del backend) en lugar de un genérico.
+  - Guard para `user.value?.id` con notify ("Sesión expirada") si no hay sesión.
+  - Texto "Sobre mi" → "Sobre mí" (tilde correcta).
+
+
+
+### Bloque 1 — Bugs rápidos
+
+- **Email verificado obligatorio para crear cursos** — `CourseService.create()` lanza ahora `BadRequestException` si `user.isVerified == false`, salvo admin. Frontend: en [`InstructorCourseList.vue`](CourselyLabs-front/src/views/instructor/InstructorCourseList.vue) el botón "Nuevo curso" se deshabilita y aparece un banner ámbar con CTA a "Mi perfil" para reenviar el correo de verificación.
+- **Sidebar pública: link "Inicio" se quedaba marcado** — `<q-item :to="/">` sin `exact-active-class` hacía match con cualquier ruta. Solución: prop `exact?: boolean` en [`SidebarItem.vue`](CourselyLabs-front/src/layouts/SidebarItem.vue) que aplica `exact-active-class` solo al link `/`.
+- **Modal de inscripción "Seguir explorando" no redirigía** — el botón solo cerraba el dialog. Ahora `handleKeepExploring()` cierra el dialog **y** hace `router.push('/cursos')`.
+- **Tabs bloqueadas tras pulsar "Valoraciones" en vista previa** — el `<q-tab-panel name="valoraciones">` envolvía `<CourseTabReviews>` con un `<q-banner>` innecesario que rompía la interacción con las tabs. Eliminado.
+
+### Bloque 2 — UX media
+
+- **Saltos de línea en descripciones** — `course.shortDescription` (texto plano de un textarea) no respetaba `\n`. Solución: clase `.hero-short-description` con `white-space: pre-line` en [`CourseHero.vue`](CourselyLabs-front/src/components/CourseHero.vue), y migración del bloque `.rich-content` a [`src/css/app.scss`](CourselyLabs-front/src/css/app.scss) global con la misma propiedad para que la descripción larga (TipTap) también respete saltos.
+- **Pestaña instructores mostraba "placeholder" siempre** — el `InstructorSummaryDTO` del backend usaba `fullName` y `profilePictureUrl`, pero el frontend esperaba `name` y `avatarUrl`. Renombrado en backend para alinear con el frontend; añadido `isMain` para mostrar badge "Principal". Inline en `CourseDetailView` reemplazado por componente [`CourseTabInstructors.vue`](CourselyLabs-front/src/components/CourseTabInstructors.vue) con avatar, badge "Principal", bio con saltos de línea y orden del principal primero.
+- **Filtros de cursos rediseñados** — antes había 5 selects sueltos en línea ocupando 2 filas. Ahora hay una **barra de búsqueda** + un botón **"Filtros"** con `q-btn-dropdown` que despliega categoría + nivel + tipo en un panel ordenado, con badge de contador de filtros activos + botón "Limpiar todo". Aparte, un select de orden. Chips activos debajo con labels descriptivos. Strings traducidos al castellano (antes había `Beginner`/`Intermediate`/`Advanced` mezclados).
+
+### Bloque 3 — Layout
+
+- **Header rediseñado** — antes el header se ocultaba al hacer scroll. Ahora arranca alto (~120 px) con logo (`/logo.png`, sin fondo) + texto "CourselyLabs" centrados juntos. Al scrollear se contrae a ~56 px y branding se desplaza a la izquierda con animación de 0.3 s. El logo `Logo-no-bg.png` se ha movido a `CourselyLabs-front/public/logo.png` (URL pública estable).
+- **Footer compacto con contenido real** — antes era una `q-toolbar` fija con un solo `<q-toolbar-title>` enorme con el copyright. Ahora es no-fijo (`q-layout view="hHh Lpr fff"` con `f` minúscula → footer estático que aparece al final del scroll). Contenido: branding con logo, 3 columnas (Producto, Legal, Soporte) y barra inferior con copyright pequeño. Algunos links apuntan a `/proximamente` (página por crear).
+
+### Bloque 4 — Modo oscuro fase 1
+
+- **Toggle en sidebar** — nuevo item "Modo oscuro" / "Modo claro" en [`AppSidebar.vue`](CourselyLabs-front/src/layouts/AppSidebar.vue) con icono `dark_mode`/`light_mode`.
+- **Persistencia** — la elección se guarda en `localStorage` con clave `coursely-dark`.
+- **Inicialización** — al arrancar la app, [`main.ts`](CourselyLabs-front/src/main.ts) lee `localStorage` y aplica `Dark.set(true/false)` antes de montar.
+- ⚠️ **Deuda**: muchos componentes propios usan colores hardcoded en `<style scoped>` (`#0f766e`, `#f9fafb`, etc.) que no respetan el modo oscuro. El sweep de variables Quasar es trabajo del Bloque 6 (rama futura `feature/dark-mode-polish`).
+
+### Bloque 5 — Planificación (sin código)
+
+- Documentadas dos secciones nuevas en [`docs/06-roadmap/branches.md`](docs/06-roadmap/branches.md):
+  - **§19 `feature/co-instructors`** — qué falta de UI/backend para gestionar co-instructores: añadir/eliminar, promover principal, búsqueda de usuarios. Dependencias con `feature/messaging` y `feature/notifications`. Decisiones de producto pendientes (¿pueden editar?, ¿requieren consentimiento?).
+  - **§20 `chore/i18n-total`** — plan completo de migración del resto del frontend a `t()`. Incluye el traspaso de las **categorías de cursos** (hoy mezclan catalán/castellano en el seed: `Programacio`, `Disseny`, `Negocis`, `Idiomes`, `Musica`) usando `t('category.' + slug)` con bloque `category` en `es.json`.
+
+### Otros cambios menores
+
+- Movidos `CourselyLabs-front/Logo*.png` a `CourselyLabs-front/public/logo.png` y `logo-with-bg.png` (URLs estables, no `git mv` con rename solo una vez).
+- Removidos los estilos duplicados de `.rich-content` en `LessonTextViewer.vue` (ahora viven en `app.scss` global).
+
+---
+
 ## [Sin versión] - 2026-04-28 — Fix: cursos no publicados no deben ser accesibles públicamente
 
 ### Corregido

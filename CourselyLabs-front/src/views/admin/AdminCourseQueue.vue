@@ -96,7 +96,8 @@ async function handleApprove(course: any) {
   try {
     await approveCourse(course.id)
     courses.value = courses.value.filter(c => c.id !== course.id)
-    $q.notify({ type: 'positive', message: `"${course.title}" aprobado y publicado`, position: 'bottom-right' })
+    window.dispatchEvent(new CustomEvent('admin:refresh-pending'))
+    $q.notify({ type: 'positive', message: `«${course.title}» aprobado y publicado`, position: 'bottom-right' })
   } catch {
     $q.notify({ type: 'negative', message: 'Error al aprobar el curso', position: 'bottom-right' })
   }
@@ -115,7 +116,8 @@ async function handleReject() {
     await rejectCourseApi(rejectCourseRef.value.id, rejectReason.value)
     courses.value = courses.value.filter(c => c.id !== rejectCourseRef.value.id)
     rejectDialog.value = false
-    $q.notify({ type: 'info', message: `"${rejectCourseRef.value.title}" rechazado`, position: 'bottom-right' })
+    window.dispatchEvent(new CustomEvent('admin:refresh-pending'))
+    $q.notify({ type: 'info', message: `«${rejectCourseRef.value.title}» rechazado`, position: 'bottom-right' })
   } catch {
     $q.notify({ type: 'negative', message: 'Error al rechazar el curso', position: 'bottom-right' })
   } finally {

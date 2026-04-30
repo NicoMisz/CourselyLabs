@@ -36,6 +36,21 @@
 
       <q-separator class="q-my-sm" />
 
+      <!-- Toggle modo oscuro -->
+      <q-item clickable @click="toggleDark">
+        <q-item-section avatar>
+          <q-icon :name="$q.dark.isActive ? 'light_mode' : 'dark_mode'" />
+          <q-tooltip v-if="mini" anchor="center right" self="center left" :offset="[10, 0]">
+            {{ $q.dark.isActive ? 'Modo claro' : 'Modo oscuro' }}
+          </q-tooltip>
+        </q-item-section>
+        <q-item-section>
+          <q-item-label>{{ $q.dark.isActive ? 'Modo claro' : 'Modo oscuro' }}</q-item-label>
+        </q-item-section>
+      </q-item>
+
+      <q-separator class="q-my-sm" />
+
       <!-- Autenticado -->
       <template v-if="authStore.isLoggedIn">
         <SidebarItem
@@ -100,6 +115,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useQuasar } from 'quasar'
 import { useAuthStore } from '../stores/auth'
 import SidebarItem from './SidebarItem.vue'
 
@@ -114,8 +130,15 @@ defineEmits<{
   'update:mini': [value: boolean]
 }>()
 
+const $q = useQuasar()
 const authStore = useAuthStore()
 const router = useRouter()
+
+function toggleDark() {
+  const next = !$q.dark.isActive
+  $q.dark.set(next)
+  localStorage.setItem('coursely-dark', next ? '1' : '0')
+}
 
 const initials = computed(() => {
   const f = authStore.user?.firstName?.[0] || ''
@@ -136,7 +159,7 @@ const isPremiumOrAdmin = computed(() =>
 )
 
 const navLinks = [
-  { title: 'Inicio', icon: 'home', link: '/' },
+  { title: 'Inicio', icon: 'home', link: '/', exact: true },
   { title: 'Cursos', icon: 'school', link: '/cursos' },
 ]
 

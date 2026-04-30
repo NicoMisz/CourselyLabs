@@ -64,7 +64,7 @@
             active-color="primary"
             indicator-color="primary"
           >
-            <q-tab name="descripción" label="Descripción" />
+            <q-tab name="descripcion" label="Descripción" />
             <q-tab name="prerequisitos" label="Relacionados" />
             <q-tab name="contenido" label="Contenido" />
             <q-tab name="instructores" label="Instructores" />
@@ -73,8 +73,8 @@
 
           <q-separator />
 
-          <q-tab-panels v-model="tab" animated>
-            <q-tab-panel name="descripción">
+          <q-tab-panels v-model="tab" keep-alive>
+            <q-tab-panel name="descripcion">
               <div v-if="course.description" class="rich-content" v-html="course.description" />
               <p v-else class="text-grey-7">Sin descripción completa por ahora.</p>
             </q-tab-panel>
@@ -102,30 +102,18 @@
             </q-tab-panel>
 
             <q-tab-panel name="instructores">
-              <div v-if="course.instructors?.length" class="row q-col-gutter-md">
-                <div v-for="i in course.instructors" :key="i.id" class="col-12 col-sm-6">
-                  <q-card flat bordered class="q-pa-md">
-                    <div class="text-subtitle1 text-weight-medium">{{ i.name }}</div>
-                    <div class="text-body2 text-grey-7">{{ i.bio || 'Sin bio' }}</div>
-                  </q-card>
-                </div>
-              </div>
-              <q-banner v-else class="bg-grey-2 text-grey-8" rounded>
-                No hay instructores asignados.
-              </q-banner>
+              <CourseTabInstructorsList :instructors="course.instructors" />
             </q-tab-panel>
 
             <q-tab-panel name="valoraciones">
-              <q-banner class="bg-grey-2 text-grey-8" rounded>
-                <CourseTabReviews
-                  v-if="course"
-                  :course-id="course.id"
-                  :enrolled="enrolled"
-                  :is-logged-in="authStore.isLoggedIn"
-                  :completed-lessons="courseCompletedLessons"
-                  :current-user-id="authStore.user?.id"
-                />
-              </q-banner>
+              <CourseTabReviews
+                v-if="course"
+                :course-id="course.id"
+                :enrolled="enrolled"
+                :is-logged-in="authStore.isLoggedIn"
+                :completed-lessons="courseCompletedLessons"
+                :current-user-id="authStore.user?.id"
+              />
             </q-tab-panel>
           </q-tab-panels>
         </div>
@@ -155,7 +143,7 @@
 
     <EnrollSuccessDialog
       v-model="showEnrollSuccess"
-      @close="showEnrollSuccess = false"
+      @close="handleKeepExploring"
       @go-to-course="showEnrollSuccess = false"
     />
 
@@ -177,6 +165,7 @@ import { checkEnrollment, createEnrollment } from '../api/enrollment';
 import type { CourseDetail } from '../types/course';
 
 import CourseTabReviews from '@/components/CourseTabReviews.vue';
+import CourseTabInstructorsList from '@/components/CourseTabInstructorsList.vue';
 import { getCourseProgress } from '@/api/progress';
 
 import CoursePrerequisitesTab from '@/components/CoursePrerequisitesTab.vue'
@@ -191,7 +180,7 @@ const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
 
-const tab = ref('descripción');
+const tab = ref('descripcion');
 const loading = ref(true);
 const notFound = ref(false);
 const errorMessage = ref('');
@@ -199,6 +188,11 @@ const course = ref<CourseDetail | null>(null);
 const enrolled = ref(false);
 const enrollLoading = ref(false);
 const showEnrollSuccess = ref(false);
+
+function handleKeepExploring() {
+  showEnrollSuccess.value = false;
+  router.push('/cursos');
+}
 const enrollError = ref('');
 
 const courseCompletedLessons = ref(0);
