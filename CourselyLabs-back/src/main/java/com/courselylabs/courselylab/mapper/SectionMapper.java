@@ -28,7 +28,10 @@ public class SectionMapper {
         dto.setUpdatedAt(entity.getUpdatedAt());
 
         if (entity.getLessons() != null) {
-            dto.setLessons(lessonMapper.toDTOList(entity.getLessons()));
+            // Listado público: solo metadatos (título, duración, isFree).
+            // El contenido (bloques, contentText, contentUrl) solo se sirve a
+            // través de GET /api/lessons/{id} con @PreAuthorize canAccessLesson.
+            dto.setLessons(lessonMapper.toSummaryList(entity.getLessons()));
         }
 
         return dto;

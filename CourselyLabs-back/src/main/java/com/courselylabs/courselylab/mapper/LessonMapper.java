@@ -18,26 +18,52 @@ public class LessonMapper {
         this.blockService = blockService;
     }
 
+    /**
+     * DTO completo de la lección, incluyendo bloques y contenido legacy.
+     * Usar SOLO en endpoints protegidos por canAccessLesson (vista de
+     * la lección reproduciendo su contenido).
+     */
     public LessonDTO toDTO(LessonEntity entity) {
+        return toDTO(entity, true);
+    }
+
+    /**
+     * Si {@code includeContent} es false, devuelve metadatos públicos
+     * (id, title, description, duration, position, isFree, sectionId,
+     * timestamps) sin bloques ni texto/URL del contenido.
+     * Esto evita exponer el contenido a usuarios no inscritos cuando
+     * solo necesitan el listado del curso (sidebar/preview).
+     */
+    public LessonDTO toDTO(LessonEntity entity, boolean includeContent) {
         LessonDTO dto = new LessonDTO();
         dto.setId(entity.getId());
         dto.setTitle(entity.getTitle());
         dto.setDescription(entity.getDescription());
         dto.setType(entity.getType());
-        dto.setContentUrl(entity.getContentUrl());
-        dto.setContentText(entity.getContentText());
         dto.setDuration(entity.getDuration());
         dto.setPosition(entity.getPosition());
         dto.setIsFree(entity.getIsFree());
         dto.setSectionId(entity.getSection().getId());
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
-        dto.setBlocks(blockService.findByLessonId(entity.getId()));
+
+        if (includeContent) {
+            dto.setContentUrl(entity.getContentUrl());
+            dto.setContentText(entity.getContentText());
+            dto.setBlocks(blockService.findByLessonId(entity.getId()));
+        }
         return dto;
     }
 
     public List<LessonDTO> toDTOList(List<LessonEntity> entities) {
         return entities.stream().map(this::toDTO).collect(Collectors.toList());
+    }
+
+    /**
+     * Variante para listados públicos (sidebar de curso) — sin contenido.
+     */
+    public List<LessonDTO> toSummaryList(List<LessonEntity> entities) {
+        return entities.stream().map(e -> toDTO(e, false)).collect(Collectors.toList());
     }
 
     public void updateEntityFromDTO(LessonDTO dto, LessonEntity entity) {
