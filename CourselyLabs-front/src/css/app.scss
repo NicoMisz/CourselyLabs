@@ -112,6 +112,23 @@ body.body--dark {
     .text-grey-7 { color: #cbd5e1 !important; }   // gris claro
     .text-grey-8 { color: #e2e8f0 !important; }   // aún más claro
     // Mantenemos -5 y -6 (ya son medios-claros) para preservar jerarquía.
+
+    // Banners con fondo claro fijo (q-banner con bg-amber-1, bg-blue-1, etc.).
+    // Estas clases de Quasar no se invierten en dark; forzamos texto oscuro
+    // para que el banner siga siendo legible sin tocarlo en cada componente.
+    .bg-amber-1, .bg-amber-2,
+    .bg-blue-1,  .bg-blue-2,
+    .bg-red-1,   .bg-red-2,
+    .bg-green-1, .bg-green-2,
+    .bg-orange-1,
+    .bg-yellow-1,
+    .bg-teal-1,
+    .bg-grey-1,  .bg-grey-2 {
+        color: #1f2937 !important;
+
+        // El texto secundario hijo también necesita refuerzo
+        .text-grey-7, .text-grey-8 { color: #4b5563 !important; }
+    }
 }
 
 .rich-content {

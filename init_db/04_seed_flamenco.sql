@@ -5,7 +5,7 @@ DO $$
 DECLARE
   cat_id       INTEGER;
   course_id    UUID;
-  instructor UUID; -- Joan Garcia
+  instructor UUID; -- Carmen Vargas (instructora de flamenco)
   student1   UUID; -- Maria Lopez
   student2   UUID; -- Sara Martin
   enroll1      UUID;
@@ -16,7 +16,19 @@ DECLARE
   l11 UUID; l12 UUID; l13 UUID; l14 UUID;
 BEGIN
 
-SELECT id INTO instructor FROM users WHERE email = 'instructor@cursos.com';
+-- Crear usuaria instructora específica de flamenco si no existe.
+-- Password: admin123 (mismo hash bcrypt que los demás seeds).
+INSERT INTO users (email, password_hash, first_name, last_name, role, bio, is_verified, is_active)
+VALUES (
+    'carmen.vargas@cursos.com',
+    '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5lMjH.UPA4C.m',
+    'Carmen', 'Vargas', 'user',
+    'Bailaora y profesora de flamenco con 20 años de experiencia. Formada en la Bienal de Sevilla.',
+    TRUE, TRUE
+)
+ON CONFLICT (email) DO NOTHING;
+
+SELECT id INTO instructor FROM users WHERE email = 'carmen.vargas@cursos.com';
 SELECT id INTO student1 FROM users WHERE email = 'student@cursos.com';
 SELECT id INTO student2 FROM users WHERE email = 'sara.martin@cursos.com';
 

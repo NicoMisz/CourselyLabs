@@ -37,6 +37,15 @@
           <q-item-section avatar><q-icon name="people" /></q-item-section>
           <q-item-section>Usuarios</q-item-section>
         </q-item>
+
+        <q-separator class="q-my-sm" />
+
+        <q-item clickable @click="toggleDark">
+          <q-item-section avatar>
+            <q-icon :name="$q.dark.isActive ? 'light_mode' : 'dark_mode'" />
+          </q-item-section>
+          <q-item-section>{{ $q.dark.isActive ? 'Modo claro' : 'Modo oscuro' }}</q-item-section>
+        </q-item>
       </q-list>
     </q-drawer>
 
@@ -48,10 +57,18 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { useQuasar } from 'quasar'
 import { getPendingCourses } from '../api/admin'
 
+const $q = useQuasar()
 const drawerOpen = ref(true)
 const pendingCount = ref(0)
+
+function toggleDark() {
+  const next = !$q.dark.isActive
+  $q.dark.set(next)
+  localStorage.setItem('coursely-dark', next ? '1' : '0')
+}
 
 async function refreshPending() {
   try {
