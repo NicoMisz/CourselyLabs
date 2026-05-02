@@ -105,6 +105,24 @@ body {
     background: var(--app-bg-soft) !important;
 }
 
+// Autofill del navegador (Chrome/Firefox/Safari) — el navegador inyecta un
+// fondo blanco/amarillo en los inputs autocompletados que pisa los estilos
+// de Quasar y queda ilegible en modo oscuro. Lo neutralizamos con un
+// box-shadow inset enorme que tapa el fondo nativo + transition larga
+// (truco clásico para que el navegador no lo recupere).
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 1000px var(--app-surface) inset !important;
+    -webkit-text-fill-color: var(--app-text) !important;
+    caret-color: var(--app-text) !important;
+    transition: background-color 5000s ease-in-out 0s;
+    background-clip: content-box !important;
+}
+
 // En modo oscuro, las clases text-grey-7/8 de Quasar quedan demasiado oscuras
 // (Quasar no las invierte automáticamente). Las reasignamos a un gris claro
 // para que el texto secundario siga siendo legible sobre fondos oscuros.
