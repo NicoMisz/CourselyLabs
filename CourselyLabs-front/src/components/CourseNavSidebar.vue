@@ -6,7 +6,7 @@
     side="left"
     :width="300"
     :breakpoint="1024"
-    class="bg-white"
+    :class="$q.dark.isActive ? 'bg-grey-9' : 'bg-white'"
   >
     <div class="q-pa-md">
       <router-link :to="`/cursos/${courseSlug}`" class="text-subtitle1 text-weight-medium text-primary" style="text-decoration: none">
@@ -68,10 +68,22 @@
         </q-expansion-item>
       </template>
     </q-list>
+
+    <q-separator class="q-my-sm" />
+
+    <q-list dense>
+      <q-item clickable @click="toggleDark">
+        <q-item-section avatar>
+          <q-icon :name="$q.dark.isActive ? 'light_mode' : 'dark_mode'" />
+        </q-item-section>
+        <q-item-section>{{ $q.dark.isActive ? 'Modo claro' : 'Modo oscuro' }}</q-item-section>
+      </q-item>
+    </q-list>
   </q-drawer>
 </template>
 
 <script setup lang="ts">
+import { useQuasar } from 'quasar'
 import type { Section } from '../types/lesson'
 import LessonTypeIcon from './LessonTypeIcon.vue'
 
@@ -93,6 +105,14 @@ const props = withDefaults(defineProps<{
 defineEmits<{
   'update:modelValue': [value: boolean]
 }>()
+
+const $q = useQuasar()
+
+function toggleDark() {
+  const next = !$q.dark.isActive
+  $q.dark.set(next)
+  localStorage.setItem('coursely-dark', next ? '1' : '0')
+}
 
 function sectionCaption(section: Section): string {
   const completed = section.lessons.filter(l => props.completedLessonIds.includes(l.id)).length
