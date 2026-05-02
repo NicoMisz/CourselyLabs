@@ -163,15 +163,15 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .rich-editor {
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--app-border-strong);
   border-radius: 8px;
-  background: white;
+  background: var(--app-surface);
   overflow: hidden;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .rich-editor--focused {
-  border-color: #0f766e;
+  border-color: var(--q-primary);
   box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.1);
 }
 
@@ -181,14 +181,14 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 4px;
   padding: 8px 10px;
-  background: #f9fafb;
-  border-bottom: 1px solid #e5e7eb;
+  background: var(--app-bg-soft);
+  border-bottom: 1px solid var(--app-border);
 }
 
 .toolbar-divider {
   width: 1px;
   height: 20px;
-  background: #d1d5db;
+  background: var(--app-border-strong);
   margin: 0 4px;
 }
 
@@ -200,7 +200,7 @@ onBeforeUnmount(() => {
 
 .editor-toolbar .q-btn.active {
   background: rgba(15, 118, 110, 0.12);
-  color: #0f766e;
+  color: var(--q-primary);
 }
 </style>
 
@@ -218,13 +218,13 @@ onBeforeUnmount(() => {
   min-height: v-bind(minHeight);
   font-size: 15px;
   line-height: 1.6;
-  color: #1f2937;
+  color: var(--app-text);
 }
 
 .rich-editor .tiptap p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
   float: left;
-  color: #9ca3af;
+  color: var(--app-text-muted);
   pointer-events: none;
   height: 0;
   font-style: italic;
@@ -238,7 +238,7 @@ onBeforeUnmount(() => {
   font-size: 1.5rem;
   font-weight: 700;
   margin-top: 1.25em;
-  color: #0f172a;
+  color: var(--app-text-strong);
   font-family: 'Monda', sans-serif;
 }
 
@@ -246,7 +246,7 @@ onBeforeUnmount(() => {
   font-size: 1.25rem;
   font-weight: 600;
   margin-top: 1em;
-  color: #0f172a;
+  color: var(--app-text-strong);
 }
 
 .rich-editor .tiptap ul,
@@ -259,18 +259,18 @@ onBeforeUnmount(() => {
 }
 
 .rich-editor .tiptap blockquote {
-  border-left: 4px solid #0f766e;
+  border-left: 4px solid var(--q-primary);
   padding-left: 1em;
-  color: #4b5563;
+  color: var(--app-text-soft);
   font-style: italic;
-  background: #f0fdfa;
+  background: var(--app-primary-soft);
   padding: 8px 16px;
   border-radius: 0 6px 6px 0;
 }
 
 .rich-editor .tiptap code {
-  background: #f1f5f9;
-  color: #0f766e;
+  background: var(--app-surface-soft);
+  color: var(--q-primary);
   padding: 2px 6px;
   border-radius: 4px;
   font-size: 0.9em;
@@ -296,6 +296,6 @@ onBeforeUnmount(() => {
 
 .rich-editor .tiptap strong {
   font-weight: 700;
-  color: #0f172a;
+  color: var(--app-text-strong);
 }
 </style>

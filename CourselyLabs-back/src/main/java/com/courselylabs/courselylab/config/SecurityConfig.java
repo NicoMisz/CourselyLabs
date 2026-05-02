@@ -64,7 +64,10 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/courses/*/related").authenticated() //relación entre cursos "prerequisitos"
                 .requestMatchers(HttpMethod.GET, "/api/courses/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/lessons/**").permitAll()
+                // Las lecciones requieren autenticación + verificación de acceso a nivel
+                // de método (@PreAuthorize en LessonController). No publicar como permitAll
+                // porque expondría contenido de lecciones no gratuitas a no inscritos.
+                .requestMatchers(HttpMethod.GET, "/api/lessons/**").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/reviews/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/users").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PATCH, "/api/users/*/verify").hasRole("ADMIN")

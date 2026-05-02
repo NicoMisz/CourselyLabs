@@ -4,7 +4,7 @@
     @update:model-value="$emit('update:modelValue', $event)"
     show-if-above
     bordered
-    class="bg-grey-1"
+    :class="$q.dark.isActive ? 'bg-grey-9' : 'bg-grey-1'"
     :mini="mini"
     @mouseenter="$emit('update:mini', false)"
     @mouseleave="$emit('update:mini', true)"
@@ -12,20 +12,6 @@
     :mini-width="60"
   >
     <q-list class="q-pt-sm">
-      <!-- Mini logo when header is hidden -->
-      <q-item v-if="headerHidden" clickable to="/" class="q-mb-xs">
-        <q-item-section avatar>
-          <span class="sidebar-logo-mini">C<span class="sidebar-logo-mini__accent">L</span></span>
-        </q-item-section>
-        <q-item-section>
-          <span class="sidebar-logo">
-            <span class="sidebar-logo__coursely">Coursely</span><span class="sidebar-logo__labs">Labs</span>
-          </span>
-        </q-item-section>
-      </q-item>
-
-      <q-separator v-if="headerHidden" class="q-mb-sm" />
-
       <!-- Navegación principal -->
       <SidebarItem
         v-for="link in navLinks"
@@ -122,7 +108,6 @@ import SidebarItem from './SidebarItem.vue'
 defineProps<{
   modelValue: boolean
   mini: boolean
-  headerHidden?: boolean
 }>()
 
 defineEmits<{
@@ -180,26 +165,3 @@ async function handleLogout() {
 }
 </script>
 
-<style scoped>
-.sidebar-logo-mini {
-  font-family: 'Monda', sans-serif;
-  font-weight: 700;
-  font-size: 1.2rem;
-  color: #0f766e;
-}
-.sidebar-logo-mini__accent {
-  color: #ea580c;
-}
-.sidebar-logo {
-  font-family: 'Monda', sans-serif;
-  font-weight: 700;
-  font-size: 1.1rem;
-  text-decoration: none;
-}
-.sidebar-logo__coursely {
-  color: #0f766e;
-}
-.sidebar-logo__labs {
-  color: #ea580c;
-}
-</style>

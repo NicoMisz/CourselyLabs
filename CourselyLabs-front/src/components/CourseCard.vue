@@ -11,8 +11,8 @@
     </div>
 
     <q-card-section>
-      <div class="text-h6 ellipsis">{{ course.title }}</div>
-      <div class="text-body2 text-grey-7 ellipsis-2-lines q-mt-xs" style="min-height: 40px">
+      <div class="text-h6 ellipsis card-title">{{ course.title }}</div>
+      <div class="text-body2 ellipsis-2-lines q-mt-xs card-description" style="min-height: 40px">
         {{ course.shortDescription }}
       </div>
     </q-card-section>
@@ -21,7 +21,7 @@
       <LevelBadge :level="course.level" />
       <PriceBadge :is-free="course.isFree" :price="course.price" />
       <q-space />
-      <div v-if="course.averageRating" class="text-caption text-grey-8 row items-center no-wrap">
+      <div v-if="course.averageRating" class="text-caption row items-center no-wrap rating-text">
         <q-icon name="star" color="warning" size="16px" class="q-mr-xs" />
         {{ course.averageRating.toFixed(1) }}
       </div>
@@ -59,6 +59,16 @@ defineProps<{ course: Course }>()
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #0f766e, #ea580c);
+  background: linear-gradient(135deg, var(--q-primary), var(--q-accent));
+}
+
+.card-title {
+  color: var(--app-text-strong);
+}
+.card-description {
+  color: var(--app-text-soft);
+}
+.rating-text {
+  color: var(--app-text-soft);
 }
 </style>

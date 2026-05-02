@@ -126,16 +126,16 @@ defineExpose({ finish })
 
 <style scoped>
 .uploader-zone {
-  border: 2px dashed #cbd5e1;
+  border: 2px dashed var(--app-border-strong);
   border-radius: 10px;
   padding: 1.5rem;
-  background: #f8fafc;
+  background: var(--app-bg-soft);
   transition: all 0.15s ease;
 }
 
 .uploader-zone--drag {
-  border-color: #0f766e;
-  background: #f0fdfa;
+  border-color: var(--q-primary);
+  background: var(--app-primary-soft);
   border-style: solid;
 }
 

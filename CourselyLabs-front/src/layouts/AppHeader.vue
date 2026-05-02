@@ -55,7 +55,7 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
 
 <style scoped>
 .app-header {
-  background: #0f766e;
+  background: var(--q-primary);
 }
 
 .app-toolbar {
@@ -84,9 +84,13 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
   transition: justify-content 0.3s ease;
 }
 
-/* Estado compacto: el branding se va a la izquierda */
-.app-toolbar--compact .brand-wrapper {
-  justify-content: flex-start;
+/* Estado compacto: el branding se va a la izquierda. Solo en desktop —
+   en mobile queda mejor centrado (la barra es más estrecha y
+   moverlo a un lado deja un espacio raro). */
+@media (min-width: 1009px) {
+  .app-toolbar--compact .brand-wrapper {
+    justify-content: flex-start;
+  }
 }
 
 /* Branding (logo + texto) */
@@ -114,11 +118,11 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
 }
 
 .app-brand__coursely {
-  color: #ffffff;
+  color: var(--app-surface);
 }
 
 .app-brand__labs {
-  color: #ea580c;
+  color: var(--q-accent);
 }
 
 /* Estado compacto: logo y texto un poco más pequeños */

@@ -33,6 +33,7 @@ public class LessonController {
     }
 
     @GetMapping("/lessons/{id}")
+    @PreAuthorize("@courseSecurityService.canAccessLesson(#id, authentication)")
     public ResponseEntity<LessonDTO> findById(@PathVariable UUID id) {
         return ResponseEntity.ok(lessonService.findById(id));
     }

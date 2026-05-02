@@ -74,7 +74,7 @@
         <q-banner v-else-if="hasOpenAttempt" rounded class="bg-warning text-white">
           Tienes una entrega pendiente de calificar.
         </q-banner>
-        <q-banner v-else rounded class="bg-grey-3 text-grey-8">
+        <q-banner v-else rounded class="app-banner-soft">
           Has agotado todos los intentos.
         </q-banner>
       </q-card-actions>
@@ -282,14 +282,14 @@ onMounted(loadAll)
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: #f1f5f9;
+  background: var(--app-surface-soft);
   border-radius: 999px;
   font-size: 0.875rem;
-  color: #475569;
+  color: var(--app-text-soft);
 }
 
 .info-pill.pill-warning {
-  background: #fef3c7;
-  color: #92400e;
+  background: var(--app-warning-soft);
+  color: var(--app-warning-text);
 }
 </style>

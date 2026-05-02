@@ -126,11 +126,11 @@ function explanationForCorrect(q: QuizQuestion): string | undefined {
 }
 
 .results-header.pass {
-  background: linear-gradient(135deg, #059669, #10b981);
+  background: linear-gradient(135deg, var(--q-positive), #10b981);
 }
 
 .results-header.fail {
-  background: linear-gradient(135deg, #6b7280, #94a3b8);
+  background: linear-gradient(135deg, var(--app-text-soft), var(--app-text-muted));
 }
 
 .option-row {
@@ -143,8 +143,8 @@ function explanationForCorrect(q: QuizQuestion): string | undefined {
 .explanation {
   margin-top: 12px;
   padding: 10px 14px;
-  background: #fffbeb;
-  border-left: 4px solid #d97706;
+  background: var(--app-warning-soft);
+  border-left: 4px solid var(--q-warning);
   border-radius: 0 8px 8px 0;
   font-size: 0.875rem;
   color: #78350f;

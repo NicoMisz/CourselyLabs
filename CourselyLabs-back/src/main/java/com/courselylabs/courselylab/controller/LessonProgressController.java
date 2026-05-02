@@ -3,6 +3,7 @@ package com.courselylabs.courselylab.controller;
 import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -30,6 +31,7 @@ public class LessonProgressController {
     }
 
     @PostMapping("/lessons/{lessonId}/complete")
+    @PreAuthorize("@courseSecurityService.canAccessLesson(#lessonId, authentication)")
     public ResponseEntity<LessonProgressDTO> toggleComplete(
             @PathVariable UUID lessonId,
             Authentication auth) {
@@ -44,6 +46,7 @@ public class LessonProgressController {
     }
 
     @GetMapping("/lessons/{lessonId}")
+    @PreAuthorize("@courseSecurityService.canAccessLesson(#lessonId, authentication)")
     public ResponseEntity<LessonProgressDTO> getLessonProgress(
             @PathVariable UUID lessonId,
             Authentication auth) {
@@ -51,6 +54,7 @@ public class LessonProgressController {
     }
 
     @PatchMapping("/lessons/{lessonId}/position")
+    @PreAuthorize("@courseSecurityService.canAccessLesson(#lessonId, authentication)")
     public ResponseEntity<LessonProgressDTO> updatePosition(
             @PathVariable UUID lessonId,
             @Valid @RequestBody PositionUpdateDTO dto,

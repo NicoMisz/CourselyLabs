@@ -96,7 +96,7 @@
                 :course-slug="course.slug"
                 :enrolled="enrolled"
               />
-              <q-banner v-else class="bg-grey-2 text-grey-8" rounded>
+              <q-banner v-else class="app-banner-soft" rounded>
                 Este curso aún no tiene contenido publicado.
               </q-banner>
             </q-tab-panel>

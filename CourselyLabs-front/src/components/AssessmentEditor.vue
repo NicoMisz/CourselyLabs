@@ -490,16 +490,16 @@ onMounted(load)
 
 .empty-create {
   padding: 24px;
-  background: #f9fafb;
+  background: var(--app-bg-soft);
   border-radius: 8px;
   text-align: center;
 }
 
 .empty-hint {
   padding: 16px;
-  background: #f9fafb;
+  background: var(--app-bg-soft);
   border-radius: 8px;
-  color: #6b7280;
+  color: var(--app-text-soft);
   font-size: 0.875rem;
   text-align: center;
 }
@@ -516,7 +516,7 @@ onMounted(load)
 }
 
 .question-card.is-new {
-  border-color: #0f766e;
+  border-color: var(--q-primary);
   box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.08);
 }
 
@@ -524,7 +524,7 @@ onMounted(load)
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: #0f766e;
+  background: var(--q-primary);
   color: white;
   font-weight: 700;
   display: flex;
@@ -536,8 +536,8 @@ onMounted(load)
 .answer-box {
   white-space: pre-wrap;
   padding: 12px;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
+  background: var(--app-bg-soft);
+  border: 1px solid var(--app-border);
   border-radius: 8px;
   max-height: 300px;
   overflow-y: auto;

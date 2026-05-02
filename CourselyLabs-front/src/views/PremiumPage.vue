@@ -199,25 +199,25 @@ function formatPrice(amount: number | null | undefined, fallback: number): strin
 const benefits = [
   {
     icon: 'school',
-    bg: 'linear-gradient(135deg, #0f766e, #14b8a6)',
+    bg: 'linear-gradient(135deg, var(--q-primary), #14b8a6)',
     title: 'Todos los cursos premium',
     description: 'Acceso ilimitado a todos los cursos Premium. Nuevos cursos cada semana.',
   },
   {
     icon: 'add_circle',
-    bg: 'linear-gradient(135deg, #ea580c, #f59e0b)',
+    bg: 'linear-gradient(135deg, var(--q-accent), #f59e0b)',
     title: 'Crea hasta 10 cursos',
     description: 'Comparte tu conocimiento con 5 veces más cursos propios que en gratuito.',
   },
   {
     icon: 'workspace_premium',
-    bg: 'linear-gradient(135deg, #d97706, #fbbf24)',
+    bg: 'linear-gradient(135deg, var(--q-warning), #fbbf24)',
     title: 'Badge Premium',
     description: 'Muestra tu compromiso con un badge exclusivo en tu perfil.',
   },
   {
     icon: 'account_tree',
-    bg: 'linear-gradient(135deg, #059669, #10b981)',
+    bg: 'linear-gradient(135deg, var(--q-positive), #10b981)',
     title: 'Rutas de aprendizaje',
     description: 'Enlaza tus cursos con prerequisitos para crear rutas (proximamente).',
   },
@@ -284,7 +284,7 @@ onMounted(async () => {
 
 <style scoped>
 .hero-section {
-  background: linear-gradient(135deg, #0f766e 0%, #115e59 50%, #d97706 100%);
+  background: linear-gradient(135deg, var(--q-primary) 0%, #115e59 50%, var(--q-warning) 100%);
   padding: 4rem 1.5rem;
   position: relative;
   overflow: hidden;
@@ -328,7 +328,7 @@ onMounted(async () => {
 }
 
 .recommended-plan {
-  border: 2px solid #ea580c;
+  border: 2px solid var(--q-accent);
   box-shadow: 0 8px 20px rgba(234, 88, 12, 0.15);
 }
 
@@ -337,7 +337,7 @@ onMounted(async () => {
   top: 0;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: #ea580c;
+  background: var(--q-accent);
   color: white;
   padding: 6px 16px;
   border-radius: 999px;
@@ -355,14 +355,14 @@ onMounted(async () => {
 
 .benefit-card {
   padding: 1.5rem;
-  background: white;
-  border: 1px solid #e5e7eb;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
   border-radius: 12px;
   transition: border-color 0.2s ease, transform 0.2s ease;
 }
 
 .benefit-card:hover {
-  border-color: #0f766e;
+  border-color: var(--q-primary);
   transform: translateY(-2px);
 }
 

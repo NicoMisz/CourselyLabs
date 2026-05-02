@@ -259,16 +259,16 @@ async function autoSubmit() {
   font-size: 1.1rem;
   font-weight: 700;
   padding: 6px 12px;
-  background: #f0fdfa;
-  border: 1px solid #99f6e4;
+  background: var(--app-primary-soft);
+  border: 1px solid var(--app-primary-tint);
   border-radius: 6px;
-  color: #0f766e;
+  color: var(--q-primary);
 }
 
 .timer-warning {
-  background: #fef3c7;
+  background: var(--app-warning-soft);
   border-color: #fcd34d;
-  color: #92400e;
+  color: var(--app-warning-text);
 }
 
 .timer-critical {
@@ -288,7 +288,7 @@ async function autoSubmit() {
   flex-wrap: wrap;
   gap: 6px;
   padding: 12px;
-  background: #f9fafb;
+  background: var(--app-bg-soft);
   border-radius: 8px;
   margin-bottom: 16px;
 }

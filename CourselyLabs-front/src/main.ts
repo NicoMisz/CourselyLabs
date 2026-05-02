@@ -1,7 +1,5 @@
 // src/main.ts
-import './css/app.scss'  // Añade esta línea al inicio
-
-import './assets/main.css'
+import './css/app.scss'
 
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'

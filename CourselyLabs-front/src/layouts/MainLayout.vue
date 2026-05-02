@@ -1,14 +1,10 @@
 <template>
   <q-layout view="hHh Lpr fff" :class="$q.dark.isActive ? 'bg-grey-10' : 'bg-grey-1'">
-    <AppHeader
-      @toggle-drawer="leftDrawerOpen = !leftDrawerOpen"
-      @update:compact="headerCompact = $event"
-    />
+    <AppHeader @toggle-drawer="leftDrawerOpen = !leftDrawerOpen" />
 
     <AppSidebar
       v-model="leftDrawerOpen"
       :mini="miniState"
-      :header-hidden="headerCompact"
       @update:mini="miniState = $event"
     />
 
@@ -28,5 +24,4 @@ import AppFooter from './AppFooter.vue'
 
 const leftDrawerOpen = ref(true)
 const miniState = ref(true)
-const headerCompact = ref(false)
 </script>

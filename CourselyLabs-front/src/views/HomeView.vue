@@ -3,10 +3,10 @@
     <!-- Hero -->
     <section class="hero q-pa-xl text-center">
       <div style="max-width: 700px; margin: 0 auto">
-        <h1 class="text-h3 q-mt-none q-mb-sm" style="font-family: Monda, sans-serif">
+        <h1 class="text-h3 q-mt-none q-mb-sm hero-title">
           Aprende con CourselyLabs
         </h1>
-        <p class="text-body1 text-grey-8 q-mb-lg">
+        <p class="text-body1 q-mb-lg hero-subtitle">
           Cursos online para avanzar en tu carrera. Aprende a tu ritmo con instructores expertos.
         </p>
         <q-btn
@@ -78,7 +78,7 @@
         <h2 class="text-h5 q-mt-none q-mb-sm" style="font-family: Monda, sans-serif">
           ¿Quieres enseñar?
         </h2>
-        <p class="text-body1 text-grey-8 q-mb-md">
+        <p class="text-body1 text-grey-7 q-mb-md">
           Comparte tu conocimiento con miles de estudiantes. Crea tu primer curso hoy.
         </p>
         <q-btn unelevated rounded color="accent" label="Empieza aquí" icon="co_present" to="/instructor" />
@@ -152,7 +152,25 @@ onMounted(async () => {
   padding-top: 4rem;
   padding-bottom: 4rem;
 }
+:global(.body--dark) .hero {
+  background: linear-gradient(135deg, rgba(15, 118, 110, 0.18), rgba(234, 88, 12, 0.12));
+}
+.hero-title {
+  font-family: Monda, sans-serif;
+  color: var(--app-text-strong);
+}
+.hero-subtitle {
+  color: var(--app-text-soft);
+}
 .instructor-cta {
   background: linear-gradient(135deg, rgba(234, 88, 12, 0.06), rgba(15, 118, 110, 0.06));
+}
+:global(.body--dark) .instructor-cta {
+  background: linear-gradient(135deg, rgba(234, 88, 12, 0.16), rgba(15, 118, 110, 0.16));
+}
+
+.content-wrap {
+  max-width: 1200px;
+  margin: 0 auto;
 }
 </style>

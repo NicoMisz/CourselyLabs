@@ -37,6 +37,6 @@ const emit = defineEmits<{
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #0f766e, #16a34a);
+    background: linear-gradient(135deg, var(--q-primary), #16a34a);
 }
 </style>

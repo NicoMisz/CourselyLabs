@@ -53,10 +53,15 @@ const year = computed(() => new Date().getFullYear())
 </script>
 
 <style scoped>
+/* Footer siempre oscuro, en ambos modos. En modo oscuro lo bajamos un escalón
+   para que contraste con el fondo. */
 .app-footer {
   background: #1f2937;
   color: #d1d5db;
   padding: 32px 24px 12px;
+}
+:global(.body--dark) .app-footer {
+  background: #0a0a0a;
 }
 
 .footer-content {
@@ -92,7 +97,7 @@ const year = computed(() => new Date().getFullYear())
 }
 
 .footer-brand__labs {
-  color: #ea580c;
+  color: var(--q-accent);
 }
 
 .footer-columns {

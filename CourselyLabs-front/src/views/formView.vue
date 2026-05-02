@@ -1,5 +1,5 @@
 <template>
-    <div class="q-pa-md bg-white text-black">
+    <div class="q-pa-md form-view-wrap">
 
         <Form />
     
@@ -12,5 +12,9 @@ import Form from '@/components/formLogin.vue';
 </script>
 
 <style scoped>
-
+.form-view-wrap {
+  background: var(--app-bg);
+  color: var(--app-text);
+  min-height: calc(100vh - 64px);
+}
 </style>

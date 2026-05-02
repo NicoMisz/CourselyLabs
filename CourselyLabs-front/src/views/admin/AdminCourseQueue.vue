@@ -140,6 +140,6 @@ onMounted(async () => {
 .thumbnail-placeholder {
   height: 0;
   padding-bottom: 56.25%;
-  background: linear-gradient(135deg, #0f766e 0%, #ea580c 100%);
+  background: linear-gradient(135deg, var(--q-primary) 0%, var(--q-accent) 100%);
 }
 </style>
