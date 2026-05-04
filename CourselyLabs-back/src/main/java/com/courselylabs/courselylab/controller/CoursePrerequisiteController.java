@@ -73,15 +73,14 @@ public class CoursePrerequisiteController {
             return ResponseEntity.ok(prerequisiteService.findPrerequisiteStatus(id, currentUser.getUsername()));
     }
 
-    // Solo premium o admin - cursos relacionados (prerequisitos y cursos que requieren este curso)
+    // Público: información de la ficha del curso (prerequisitos y cursos que lo requieren).
+    // Útil para visitantes anónimos que quieren entender el grafo de cursos.
     @GetMapping("/{id}/related")
     public ResponseEntity<CourseRelatedResponseDTO> findRelated(
             @PathVariable UUID id,
             @AuthenticationPrincipal UserDetailsImpl currentUser) {
-        if (currentUser == null) {
-            throw new UnauthorizedException("Authentication required");
-        }
-        return ResponseEntity.ok(prerequisiteService.findRelatedCourses(id, currentUser.getUsername()));
+        String email = currentUser != null ? currentUser.getUsername() : null;
+        return ResponseEntity.ok(prerequisiteService.findRelatedCourses(id, email));
     }
 
     // Solo instructor del curso o admin
@@ -117,12 +116,10 @@ public class CoursePrerequisiteController {
             @PathVariable UUID id,
             @PathVariable UUID prereqId,
             @AuthenticationPrincipal UserDetailsImpl currentUser) {
-        prerequisiteService.deletePrerequisite(id, prereqId, currentUser.getUsername());
-
         if (currentUser == null) {
             throw new UnauthorizedException("Authentication required");
         }
-        
+        prerequisiteService.deletePrerequisite(id, prereqId, currentUser.getUsername());
         return ResponseEntity.noContent().build();
     }
 

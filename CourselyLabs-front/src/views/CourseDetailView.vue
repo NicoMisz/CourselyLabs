@@ -82,9 +82,11 @@
             <q-tab-panel name="prerequisitos">
               <div class="column q-gutter-md">
                 <CoursePrerequisitesTab
+                  :prerequisites="prerequisites"
                   :statuses="prerequisiteStatuses"
                   :required-by="requiredBy"
                   :loading="prerequisiteStatusInitialLoading"
+                  :is-logged-in="authStore.isLoggedIn"
                 />
               </div>
             </q-tab-panel>
@@ -328,6 +330,15 @@ async function fetchPrerequisites(courseId?: string) {
 async function fetchPrerequisiteStatus(courseId?: string, silent = false) {
   if (!courseId) {
     prerequisiteStatuses.value = []
+    return
+  }
+
+  // El endpoint requiere autenticación (devuelve progreso del usuario actual).
+  // Para visitantes anónimos basta con la lista plana cargada en `prerequisites`.
+  if (!authStore.isLoggedIn) {
+    prerequisiteStatuses.value = []
+    prerequisiteStatusInitialLoading.value = false
+    prerequisiteStatusRefreshing.value = false
     return
   }
 

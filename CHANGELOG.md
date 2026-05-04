@@ -23,6 +23,22 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es/1.1.0/).
 - Renombrado `/terminios` → `/terminos` en [`routes.ts`](CourselyLabs-front/src/router/routes.ts). El path antiguo redirige al nuevo para no romper enlaces externos.
 - Actualizado el footer y la doc de routing.
 
+### UX de la ficha del curso
+
+**Prerequisitos visibles para visitantes anónimos**:
+
+- [`CourseService.findBySlug`](CourselyLabs-back/src/main/java/com/courselylabs/courselylab/service/CourseService.java) ya no oculta los prerequisitos a usuarios no autenticados. La lista de cursos requeridos es información pública de la ficha (igual que la descripción o los instructores). Antes el visitante veía «Este curso no tiene prerequisitos» aunque sí los tuviera.
+- [`CoursePrerequisitesTab`](CourselyLabs-front/src/components/CoursePrerequisitesTab.vue) ahora acepta también la lista plana `prerequisites` y la renderiza cuando no hay `statuses` (es decir, cuando el visitante no está logueado o no está inscrito). Sin progreso, solo el listado con el umbral requerido.
+- Si el visitante no está logueado, aparece un banner con CTA a `/login` para «ver tu progreso en estos cursos».
+- Cuando no hay ningún tipo de relación (ni prerequisitos ni cursos que desbloquea), el mensaje pasa de «Este curso no tiene prerequisitos o no hay estado disponible» a «Este curso no tiene cursos relacionados» (más claro).
+
+**Mensaje guía en valoraciones**:
+
+- [`CourseTabReviews`](CourselyLabs-front/src/components/CourseTabReviews.vue) ahora explica las condiciones para poder valorar el curso cuando el formulario no aparece. Tres niveles según en qué condición falle el usuario:
+  - No logueado → «Inicia sesión e inscríbete al curso para poder valorarlo.»
+  - Logueado pero no inscrito → «Inscríbete al curso y completa al menos una lección para poder valorarlo.»
+  - Inscrito pero sin lecciones completadas → «Completa al menos una lección para poder valorar el curso.»
+
 ### Gestión de categorías (admin)
 
 **Backend**:

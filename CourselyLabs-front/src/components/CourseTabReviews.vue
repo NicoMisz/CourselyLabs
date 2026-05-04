@@ -141,6 +141,16 @@ const canReview = computed(() =>
   !myReview.value
 )
 
+// Mensaje guía cuando el usuario no puede dejar review aún.
+// Solo aplica si todavía no ha valorado (myReview === null).
+const reviewBlockedReason = computed<string | null>(() => {
+  if (myReview.value) return null
+  if (!props.isLoggedIn) return 'Inicia sesión e inscríbete al curso para poder valorarlo.'
+  if (!props.enrolled) return 'Inscríbete al curso y completa al menos una lección para poder valorarlo.'
+  if (props.completedLessons === 0) return 'Completa al menos una lección para poder valorar el curso.'
+  return null
+})
+
 // -----------------------------
 // CRUD
 // -----------------------------
@@ -220,6 +230,13 @@ function cancelEdit() {
         @submit="submitReview"
         @cancel="cancelEdit"
       />
+
+      <q-banner v-else-if="reviewBlockedReason" class="app-banner-soft" rounded>
+        <template v-slot:avatar>
+          <q-icon name="info" color="primary" />
+        </template>
+        {{ reviewBlockedReason }}
+      </q-banner>
     </div>
 
     <div class="q-mt-xl">

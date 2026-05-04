@@ -359,16 +359,13 @@ public class CourseService {
         dto.setSections(sectionMapper.toDTOList(
                 sectionRepository.findByCourseIdOrderByPositionAsc(entity.getId())));
 
-        // Prerequisitos: solo se cargan si hay usuario autenticado.
-        // La creación/edición está restringida a premium/admin.
-        if (currentUser != null) {
-            try {
-                dto.setPrerequisites(coursePrerequisiteService.findByCourseId(entity.getId(), currentUser.getEmail()));
-            } catch (Exception e) {
-                dto.setPrerequisites(List.of());
-            }
-        } else {
-            // Usuario anónimo: no se muestran prerequisitos
+        // Prerequisitos: información pública de la ficha del curso.
+        // Visitantes anónimos también deben verlos para evaluar si les interesa el curso.
+        // La creación/edición sigue restringida a instructor/premium/admin (en su endpoint dedicado).
+        try {
+            String email = currentUser != null ? currentUser.getEmail() : null;
+            dto.setPrerequisites(coursePrerequisiteService.findByCourseId(entity.getId(), email));
+        } catch (Exception e) {
             dto.setPrerequisites(List.of());
         }
         return dto;
