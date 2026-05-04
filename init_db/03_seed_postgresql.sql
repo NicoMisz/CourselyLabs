@@ -8,8 +8,8 @@ DECLARE
   s1 UUID; s2 UUID; s3 UUID; s4 UUID;
 BEGIN
 
-SELECT id INTO v_course FROM courses WHERE slug = 'introduccio-postgresql';
-IF v_course IS NULL THEN RAISE NOTICE 'Curso introduccio-postgresql no encontrado, saltando seed'; RETURN; END IF;
+SELECT id INTO v_course FROM courses WHERE slug = 'introduccion-postgresql';
+IF v_course IS NULL THEN RAISE NOTICE 'Curso introduccion-postgresql no encontrado, saltando seed'; RETURN; END IF;
 
 -- Seccion 1: Introduccion
 INSERT INTO sections (id, course_id, title, description, position)

@@ -8,6 +8,40 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es/1.1.0/).
 
 ---
 
+## [Sin versión] - 2026-05-02 — Recta final: seeds, terminos, recuperacion de contraseña `fix/loose-ends-pass`
+
+### Seeds en castellano
+
+- **`init_db/02_seed_base.sql`** reescrito a castellano correcto. Antes mezclaba catalán (`Programacio`, `disseny`, `Apren PostgreSQL des de zero`, etc.). Ahora todo en castellano con tildes y signos correctos.
+  - **Categorías**: `Programación`, `Diseño`, `Negocios`, `Marketing`, `Idiomas`, `Música`. Slugs ASCII: `programacion`, `diseno`, `negocios`, `marketing`, `idiomas`, `musica`.
+  - **Slugs de cursos** renombrados: `introduccio-postgresql` → `introduccion-postgresql`, `python-principiants` → `python-principiantes`, `vue3-desenvolupament-web` → `vue3-desarrollo-web`, `algorismes-estructures-dades` → `algoritmos-estructuras-datos`, `disseny-ui-ux` → `diseno-ui-ux`, `marketing-digital-negocis` → `marketing-digital-negocios`, `introduccio-ia` → `introduccion-ia`.
+  - Bios, descripciones, reviews — todos al castellano.
+- Actualizadas las referencias a los slugs nuevos en [`init_db/03_seed_postgresql.sql`](init_db/03_seed_postgresql.sql), [`init_db/05_seed_prerequisites.sql`](init_db/05_seed_prerequisites.sql) y [`CourselyLabs-back/src/main/resources/db/seed/seed_prerequisites_courses.sql`](CourselyLabs-back/src/main/resources/db/seed/seed_prerequisites_courses.sql).
+
+### Path `/terminos`
+
+- Renombrado `/terminios` → `/terminos` en [`routes.ts`](CourselyLabs-front/src/router/routes.ts). El path antiguo redirige al nuevo para no romper enlaces externos.
+- Actualizado el footer y la doc de routing.
+
+### Recuperación de contraseña (`feature/forgot-password`)
+
+**Backend**:
+
+- **Migración V12** [`V12__create_password_reset_tokens.sql`](CourselyLabs-back/src/main/resources/db/migration/V12__create_password_reset_tokens.sql) — tabla `password_reset_tokens` siguiendo el mismo patrón que `verification_tokens`.
+- Nueva entidad [`PasswordResetTokenEntity`](CourselyLabs-back/src/main/java/com/courselylabs/courselylab/entity/PasswordResetTokenEntity.java) y repositorio.
+- [`EmailService.sendPasswordResetEmail(user)`](CourselyLabs-back/src/main/java/com/courselylabs/courselylab/service/EmailService.java) genera token (UUID, 1 hora de validez) y envía email HTML con el enlace `/restablecer-contrasena?token=...`.
+- [`AuthService.requestPasswordReset(email)`](CourselyLabs-back/src/main/java/com/courselylabs/courselylab/service/AuthService.java): no revela si el email existe (siempre 204) por seguridad.
+- [`AuthService.resetPassword(token, newPassword)`](CourselyLabs-back/src/main/java/com/courselylabs/courselylab/service/AuthService.java): valida token, actualiza contraseña y **revoca todas las sesiones existentes** del usuario.
+- Endpoints `POST /api/auth/request-password-reset` y `POST /api/auth/reset-password` ([`AuthController`](CourselyLabs-back/src/main/java/com/courselylabs/courselylab/controller/AuthController.java)).
+
+**Frontend**:
+
+- Link «¿Olvidaste tu contraseña?» en [`formLogin.vue`](CourselyLabs-front/src/components/formLogin.vue).
+- Nueva vista [`RequestPasswordResetView.vue`](CourselyLabs-front/src/views/RequestPasswordResetView.vue) en `/recuperar-contrasena` — formulario para introducir email; muestra confirmación neutral tras envío (no revela existencia del email).
+- Nueva vista [`ResetPasswordView.vue`](CourselyLabs-front/src/views/ResetPasswordView.vue) en `/restablecer-contrasena?token=…` — formulario de nueva contraseña con confirmación.
+
+---
+
 ## [Sin versión] - 2026-04-30 — Modo oscuro completo `feature/dark-mode-polish`
 
 ### Sistema de temas

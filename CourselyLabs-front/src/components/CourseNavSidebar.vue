@@ -148,7 +148,7 @@ function canAccess(lesson: Lesson): boolean {
   return props.enrolled || !!lesson.isFree
 }
 
-function handleLockedClick(e: MouseEvent) {
+function handleLockedClick(e: Event) {
   e.preventDefault()
   e.stopPropagation()
   $q.notify({

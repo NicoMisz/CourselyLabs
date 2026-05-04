@@ -23,7 +23,7 @@
         <div class="footer-column">
           <div class="footer-column__title">Legal</div>
           <ul class="footer-column__list">
-            <li><router-link to="/terminios">Términos</router-link></li>
+            <li><router-link to="/terminos">Términos</router-link></li>
             <li><router-link to="/proximamente">Privacidad</router-link></li>
             <li><router-link to="/proximamente">Cookies</router-link></li>
           </ul>
