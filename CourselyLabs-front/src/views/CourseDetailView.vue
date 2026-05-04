@@ -52,6 +52,7 @@
             :is-free="course.isFree"
             :price="course.price"
             :thumbnail-url="course.thumbnailUrl"
+            :category-name="course.categoryName"
             :students-count="course.studentsCount"
             :updated-at="course.updatedAt"
           />

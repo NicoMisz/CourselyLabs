@@ -1,14 +1,12 @@
 <template>
   <q-card class="course-card cursor-pointer" @click="$router.push(`/cursos/${course.slug}`)">
-    <img
-      v-if="course.thumbnailUrl"
-      :src="course.thumbnailUrl"
-      :alt="course.title"
-      class="course-card__thumb"
+    <CourseThumbnail
+      :thumbnail-url="course.thumbnailUrl"
+      :title="course.title"
+      :category-name="course.categoryName"
+      class="course-card__thumb-wrapper"
+      :rounded="false"
     />
-    <div v-else class="course-card__thumb-fallback">
-      <q-icon name="sym_o_school" size="32px" color="white" />
-    </div>
 
     <q-card-section>
       <div class="text-h6 ellipsis card-title">{{ course.title }}</div>
@@ -32,6 +30,7 @@
 <script setup lang="ts">
 import LevelBadge from './LevelBadge.vue'
 import PriceBadge from './PriceBadge.vue'
+import CourseThumbnail from './CourseThumbnail.vue'
 import type { Course } from '@/types/course'
 
 defineProps<{ course: Course }>()
@@ -48,18 +47,8 @@ defineProps<{ course: Course }>()
   transform: translateY(-4px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
-.course-card__thumb {
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  object-fit: cover;
-}
-.course-card__thumb-fallback {
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, var(--q-primary), var(--q-accent));
+.course-card__thumb-wrapper {
+  border-radius: 0;
 }
 
 .card-title {

@@ -25,3 +25,14 @@ import AppFooter from './AppFooter.vue'
 const leftDrawerOpen = ref(true)
 const miniState = ref(true)
 </script>
+
+<style scoped>
+/*
+  El AppFooter vive fuera del q-layout, así que q-page-container no le reserva espacio.
+  Forzamos min-height para que en páginas con poco contenido el footer quede fuera de la
+  viewport (solo aparece al hacer scroll), evitando que destaque sobre páginas casi vacías.
+*/
+:deep(.q-page-container) {
+  min-height: calc(100vh - 64px);
+}
+</style>

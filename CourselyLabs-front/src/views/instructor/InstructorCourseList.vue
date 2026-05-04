@@ -55,12 +55,11 @@
     <div v-else class="row q-gutter-md">
       <div v-for="course in courses" :key="course.id" class="col-12 col-sm-6 col-md-4">
         <q-card class="course-card" flat bordered>
-          <q-img
-            v-if="course.thumbnailUrl"
-            :src="course.thumbnailUrl"
-            :ratio="16/9"
+          <CourseThumbnail
+            :thumbnail-url="course.thumbnailUrl"
+            :title="course.title"
+            :rounded="false"
           />
-          <div v-else class="thumbnail-placeholder" />
 
           <q-card-section>
             <div class="row items-center q-gutter-xs q-mb-sm">
@@ -220,6 +219,7 @@ import { getMyCreatedCourses, getMyCourseLimits, deleteCourse, submitForReview, 
 import { getCourseSections } from '../../api/lesson'
 import type { CourseLimits } from '../../api/instructor'
 import { useAuthStore } from '@/stores/auth'
+import CourseThumbnail from '@/components/CourseThumbnail.vue'
 
 const $q = useQuasar()
 const router = useRouter()
@@ -393,10 +393,5 @@ onMounted(loadData)
 }
 .course-card:hover {
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-.thumbnail-placeholder {
-  height: 0;
-  padding-bottom: 56.25%;
-  background: linear-gradient(135deg, var(--q-primary) 0%, var(--q-accent) 100%);
 }
 </style>

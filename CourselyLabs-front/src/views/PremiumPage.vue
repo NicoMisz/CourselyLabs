@@ -66,7 +66,7 @@
               <span class="text-h3 text-weight-bold" style="font-family: Monda, sans-serif">
                 {{ formatPrice(pricing?.annual?.amount, 60) }}
               </span>
-              <span class="text-subtitle1 text-grey-7"> EUR/ano</span>
+              <span class="text-subtitle1 text-grey-7"> EUR/año</span>
             </div>
             <div class="text-caption text-positive q-mb-xs">
               Solo {{ monthlyEquivalent }} EUR/mes efectivos

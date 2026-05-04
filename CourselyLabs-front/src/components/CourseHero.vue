@@ -2,10 +2,13 @@
   <section class="hero q-pa-md rounded-borders">
     <div class="row q-col-gutter-lg items-start">
       <div class="col-12 col-md-5">
-        <img v-if="thumbnailUrl" :src="thumbnailUrl" :alt="title" class="hero-thumb" />
-        <div v-else class="hero-fallback">
-          <q-icon name="sym_o_school" size="56px" color="white" />
-        </div>
+        <CourseThumbnail
+          :thumbnail-url="thumbnailUrl"
+          :title="title"
+          :category-name="categoryName"
+          icon-size="64px"
+          class="hero-thumb-wrapper"
+        />
       </div>
 
       <div class="col-12 col-md-7">
@@ -33,6 +36,7 @@
 import { computed } from 'vue';
 import LevelBadge from './LevelBadge.vue';
 import PriceBadge from './PriceBadge.vue';
+import CourseThumbnail from './CourseThumbnail.vue';
 
 const props = defineProps<{
   title: string;
@@ -41,6 +45,7 @@ const props = defineProps<{
   isFree?: boolean;
   price?: number;
   thumbnailUrl?: string;
+  categoryName?: string;
   studentsCount?: number;
   updatedAt?: string;
 }>();
@@ -78,19 +83,7 @@ const updatedLabel = computed(() => {
   overflow-wrap: anywhere;
   word-break: break-word;
 }
-.hero-thumb {
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  object-fit: cover;
+.hero-thumb-wrapper {
   border-radius: 12px;
-}
-.hero-fallback {
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, var(--q-primary), var(--q-accent));
 }
 </style>

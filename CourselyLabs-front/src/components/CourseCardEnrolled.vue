@@ -1,10 +1,11 @@
 <template>
     <q-card flat bordered class="course-card cursor-pointer" @click="goToCourse">
         <div class="thumb-wrap">
-        <img v-if="course.thumbnailUrl" :src="course.thumbnailUrl" :alt="course.title" class="thumb" />
-        <div v-else class="thumb-fallback">
-            <q-icon name="sym_o_school" size="44px" color="white" />
-        </div>
+        <CourseThumbnail
+            :thumbnail-url="course.thumbnailUrl"
+            :title="course.title"
+            :rounded="false"
+        />
 
         <div class="progress-bar-wrap">
             <q-linear-progress :value="normalizedProgress" color="primary" track-color="white" rounded />
@@ -31,6 +32,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
+import CourseThumbnail from './CourseThumbnail.vue';
 import type { EnrolledCourse } from '../types/enrollment';
 
 const props = defineProps<{ course: EnrolledCourse }>();
@@ -72,20 +74,6 @@ function goToCourse() {
 
 .thumb-wrap {
     position: relative;
-}
-
-.thumb,
-.thumb-fallback {
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    object-fit: cover;
-}
-
-.thumb-fallback {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, var(--q-primary), var(--q-accent));
 }
 
 .progress-bar-wrap {

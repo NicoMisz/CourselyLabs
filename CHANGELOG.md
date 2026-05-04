@@ -23,6 +23,25 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es/1.1.0/).
 - Renombrado `/terminios` → `/terminos` en [`routes.ts`](CourselyLabs-front/src/router/routes.ts). El path antiguo redirige al nuevo para no romper enlaces externos.
 - Actualizado el footer y la doc de routing.
 
+### Seeds limpios y curso Python completo
+
+- **Reescritos los seeds** para tener un punto de partida limpio:
+  - 1 solo usuario: `instructor@cursos.com` / `instructor123` (hash bcrypt `$2y$10` válido para Spring Security; el hash anterior estaba roto y no permitía login).
+  - 5 cursos en cadena de aprendizaje: **Python (entry, gratis) → PostgreSQL (gratis) → {Vue 3, Algoritmos, Diseño UI/UX} (Premium)**, todos asignados al instructor.
+  - Sin enrollments ni reviews preconfigurados — el flujo real lo prueban los alumnos al registrarse.
+- **Nuevo seed [`init_db/04_seed_python.sql`](init_db/04_seed_python.sql)** que pobla el curso de Python con **un bloque de cada tipo** (text, video, pdf, quiz, project, open_text), incluyendo cuestionario funcional con 3 preguntas y dos assessments (proyecto y open text) para demos completas del modelo multi-bloque.
+- **Seed de flamenco desactivado** (renombrado a `04_seed_flamenco.sql.disabled`); se puede reactivar renombrándolo cuando convenga.
+- Cadena de prerequisitos reflejada también en el seed homólogo del backend.
+
+### Placeholder de thumbnails
+
+- Nuevo componente reutilizable [`CourseThumbnail.vue`](CourselyLabs-front/src/components/CourseThumbnail.vue) que centraliza el render del thumbnail: si hay imagen, la muestra; si no, fallback con gradiente de marca (teal → orange) + emoji representativo de la categoría (💻 / 🎨 / 📈 / 📢 / 🌍 / 🎵 / 📚).
+- Reemplazado el patrón duplicado en [`CourseCard`](CourselyLabs-front/src/components/CourseCard.vue), [`CourseCardEnrolled`](CourselyLabs-front/src/components/CourseCardEnrolled.vue), [`CourseHero`](CourselyLabs-front/src/components/CourseHero.vue), [`InstructorCourseList`](CourselyLabs-front/src/views/instructor/InstructorCourseList.vue) y [`AdminCourseQueue`](CourselyLabs-front/src/views/admin/AdminCourseQueue.vue).
+
+### Sticky footer
+
+- [`MainLayout`](CourselyLabs-front/src/layouts/MainLayout.vue) fuerza `min-height: calc(100vh - 64px)` en `q-page-container` para que en páginas con poco contenido el footer no destaque (queda fuera de la viewport y solo aparece al hacer scroll de forma natural).
+
 ### UX de la ficha del curso
 
 **Prerequisitos visibles para visitantes anónimos**:

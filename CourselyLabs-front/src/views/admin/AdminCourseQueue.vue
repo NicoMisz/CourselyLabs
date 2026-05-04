@@ -15,13 +15,13 @@
     <div v-else>
       <q-card v-for="course in courses" :key="course.id" flat bordered class="q-mb-md">
         <q-card-section class="row items-start q-gutter-md">
-          <q-img
-            v-if="course.thumbnailUrl"
-            :src="course.thumbnailUrl"
-            :ratio="16/9"
-            style="width: 180px; border-radius: 8px"
-          />
-          <div v-else class="thumbnail-placeholder" style="width: 180px; border-radius: 8px" />
+          <div style="width: 180px">
+            <CourseThumbnail
+              :thumbnail-url="course.thumbnailUrl"
+              :title="course.title"
+              :category-name="course.categoryName"
+            />
+          </div>
 
           <div class="col">
             <div class="text-h6">{{ course.title }}</div>
@@ -78,6 +78,7 @@
 import { ref, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { getPendingCourses, approveCourse, rejectCourse as rejectCourseApi } from '../../api/admin'
+import CourseThumbnail from '@/components/CourseThumbnail.vue'
 
 const $q = useQuasar()
 const loading = ref(true)
@@ -137,9 +138,4 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.thumbnail-placeholder {
-  height: 0;
-  padding-bottom: 56.25%;
-  background: linear-gradient(135deg, var(--q-primary) 0%, var(--q-accent) 100%);
-}
 </style>
