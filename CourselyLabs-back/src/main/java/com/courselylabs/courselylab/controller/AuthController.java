@@ -3,6 +3,8 @@ package com.courselylabs.courselylab.controller;
 import com.courselylabs.courselylab.dto.ChangePasswordDTO;
 import com.courselylabs.courselylab.dto.auth.AuthResponseDTO;
 import com.courselylabs.courselylab.dto.auth.LoginRequestDTO;
+import com.courselylabs.courselylab.dto.auth.PasswordResetConfirmDTO;
+import com.courselylabs.courselylab.dto.auth.PasswordResetRequestDTO;
 import com.courselylabs.courselylab.dto.auth.RefreshRequestDTO;
 import com.courselylabs.courselylab.dto.auth.RegisterRequestDTO;
 import com.courselylabs.courselylab.service.AuthService;
@@ -62,6 +64,18 @@ public class AuthController {
     @PostMapping("/resend-verification")
     public ResponseEntity<Void> resendVerification(@RequestParam String email) {
         emailService.resendVerification(email);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/request-password-reset")
+    public ResponseEntity<Void> requestPasswordReset(@Valid @RequestBody PasswordResetRequestDTO dto) {
+        authService.requestPasswordReset(dto.getEmail());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Void> resetPassword(@Valid @RequestBody PasswordResetConfirmDTO dto) {
+        authService.resetPassword(dto.getToken(), dto.getNewPassword());
         return ResponseEntity.noContent().build();
     }
 }

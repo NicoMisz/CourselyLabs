@@ -28,7 +28,9 @@ Hay **tres layouts**:
 | `/cursos/:slug` | `CourseDetailView.vue` | Detalle de curso |
 | `/login` | `formView.vue` | Login |
 | `/register` | `formRegister.vue` | Registro |
-| `/terminios` | `cardTerminosCondiciones.vue` | (sí, está mal escrito el path — legacy) |
+| `/recuperar-contrasena` | `RequestPasswordResetView.vue` | Solicitar email de recuperación de contraseña |
+| `/restablecer-contrasena` | `ResetPasswordView.vue` | Formulario de nueva contraseña (con `?token=...`) |
+| `/terminos` | `cardTerminosCondiciones.vue` | Términos y condiciones (`/terminios` redirige aquí) |
 | `/verificar-email` | `VerifyEmailView.vue` | Confirmación tras click en email |
 | `/premium` | `PremiumPage.vue` | Landing de Premium |
 | `/pago/exito` | `PaymentSuccessView.vue` | Tras Stripe Checkout exitoso |
@@ -140,6 +142,4 @@ Cuando el guard bloquea acceso a una ruta autenticada, redirige a `/login?redire
 
 ## TODO conocidos
 
-- `/terminios` debería ser `/terminos` (faltó en el sweep) — pendiente cuando se rediseñe la página de T&C.
-- Falta página de "Olvidé mi contraseña" / reset.
 - El catch-all 404 no informa de qué ruta intentó visitar (nice-to-have).

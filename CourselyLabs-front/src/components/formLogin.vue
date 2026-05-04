@@ -41,6 +41,10 @@
                     <q-btn label="Regístrate" color="primary" flat class="q-ml-sm" @click="goRegister"/>
                 </span>
             </div>
+
+            <div class="row q-mt-sm">
+                <q-btn label="¿Olvidaste tu contraseña?" color="primary" flat dense no-caps @click="goForgotPassword" />
+            </div>
         </q-form>
     </div>
 </template>
@@ -91,6 +95,10 @@ async function onSubmit() {
 
 function goRegister() {
   router.push('/register')
+}
+
+function goForgotPassword() {
+  router.push('/recuperar-contrasena')
 }
 </script>
 

@@ -35,9 +35,23 @@ const routes: RouteRecordRaw[] = [
         meta: { title: 'Registro — CourselyLabs' },
       },
       {
-        path: 'terminios',
+        path: 'recuperar-contrasena',
+        component: () => import('@/views/RequestPasswordResetView.vue'),
+        meta: { title: 'Recuperar contraseña — CourselyLabs' },
+      },
+      {
+        path: 'restablecer-contrasena',
+        component: () => import('@/views/ResetPasswordView.vue'),
+        meta: { title: 'Restablecer contraseña — CourselyLabs' },
+      },
+      {
+        path: 'terminos',
         component: () => import('@/components/cardTerminosCondiciones.vue'),
-        meta: { title: 'Terminos y condiciones — CourselyLabs' },
+        meta: { title: 'Términos y condiciones — CourselyLabs' },
+      },
+      {
+        path: 'terminios',
+        redirect: '/terminos',
       },
       {
         path: 'profile',

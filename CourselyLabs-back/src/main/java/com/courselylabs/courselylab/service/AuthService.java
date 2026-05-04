@@ -4,11 +4,13 @@ import com.courselylabs.courselylab.dto.ChangePasswordDTO;
 import com.courselylabs.courselylab.dto.auth.AuthResponseDTO;
 import com.courselylabs.courselylab.dto.auth.LoginRequestDTO;
 import com.courselylabs.courselylab.dto.auth.RegisterRequestDTO;
+import com.courselylabs.courselylab.entity.PasswordResetTokenEntity;
 import com.courselylabs.courselylab.entity.RefreshTokenEntity;
 import com.courselylabs.courselylab.entity.UserEntity;
 import com.courselylabs.courselylab.exception.BadRequestException;
 import com.courselylabs.courselylab.exception.UnauthorizedException;
 import com.courselylabs.courselylab.mapper.UserMapper;
+import com.courselylabs.courselylab.repository.PasswordResetTokenRepository;
 import com.courselylabs.courselylab.repository.RefreshTokenRepository;
 import com.courselylabs.courselylab.repository.UserRepository;
 import com.courselylabs.courselylab.security.JwtService;
@@ -28,6 +30,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
@@ -37,6 +40,7 @@ public class AuthService {
 
     public AuthService(UserRepository userRepository,
                        RefreshTokenRepository refreshTokenRepository,
+                       PasswordResetTokenRepository passwordResetTokenRepository,
                        JwtService jwtService,
                        AuthenticationManager authenticationManager,
                        PasswordEncoder passwordEncoder,
@@ -45,6 +49,7 @@ public class AuthService {
                        @Value("${jwt.refresh-expiration}") long refreshExpiration) {
         this.userRepository = userRepository;
         this.refreshTokenRepository = refreshTokenRepository;
+        this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
         this.passwordEncoder = passwordEncoder;
@@ -125,6 +130,40 @@ public class AuthService {
             rt.setRevoked(true);
             refreshTokenRepository.save(rt);
         });
+    }
+
+    public void requestPasswordReset(String email) {
+        // No revelamos si el email existe o no por seguridad: respondemos OK siempre.
+        userRepository.findByEmail(email).ifPresent(user -> {
+            try {
+                emailService.sendPasswordResetEmail(user);
+            } catch (Exception e) {
+                // No bloquear si falla el envío de email.
+            }
+        });
+    }
+
+    public void resetPassword(String token, String newPassword) {
+        PasswordResetTokenEntity resetToken = passwordResetTokenRepository.findByToken(token)
+                .orElseThrow(() -> new BadRequestException("Token de restablecimiento inválido"));
+
+        if (Boolean.TRUE.equals(resetToken.getUsed())) {
+            throw new BadRequestException("Este enlace ya ha sido utilizado");
+        }
+
+        if (resetToken.getExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new BadRequestException("El enlace ha expirado. Solicita uno nuevo.");
+        }
+
+        UserEntity user = resetToken.getUser();
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        resetToken.setUsed(true);
+        passwordResetTokenRepository.save(resetToken);
+
+        // Invalidar todas las sesiones existentes del usuario por seguridad.
+        refreshTokenRepository.deleteByUser(user);
     }
 
     private AuthResponseDTO buildAuthResponse(UserDetailsImpl userDetails) {
