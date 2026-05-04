@@ -6,6 +6,7 @@ import com.courselylabs.courselylab.exception.BadRequestException;
 import com.courselylabs.courselylab.exception.ResourceNotFoundException;
 import com.courselylabs.courselylab.mapper.CategoriaMapper;
 import com.courselylabs.courselylab.repository.CategoriaRepository;
+import com.courselylabs.courselylab.repository.CourseRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,10 +17,14 @@ import java.util.List;
 public class CategoriaService {
 
     private final CategoriaRepository categoriaRepository;
+    private final CourseRepository courseRepository;
     private final CategoriaMapper categoriaMapper;
 
-    public CategoriaService(CategoriaRepository categoriaRepository, CategoriaMapper categoriaMapper) {
+    public CategoriaService(CategoriaRepository categoriaRepository,
+                            CourseRepository courseRepository,
+                            CategoriaMapper categoriaMapper) {
         this.categoriaRepository = categoriaRepository;
+        this.courseRepository = courseRepository;
         this.categoriaMapper = categoriaMapper;
     }
 
@@ -79,6 +84,11 @@ public class CategoriaService {
     public void delete(Integer id) {
         if (!categoriaRepository.existsById(id)) {
             throw new ResourceNotFoundException("Category", "id", id);
+        }
+        long coursesUsingCategory = courseRepository.countByCategoryId(id);
+        if (coursesUsingCategory > 0) {
+            throw new BadRequestException("No se puede borrar la categoría: " + coursesUsingCategory
+                    + (coursesUsingCategory == 1 ? " curso la usa" : " cursos la usan"));
         }
         categoriaRepository.deleteById(id);
     }

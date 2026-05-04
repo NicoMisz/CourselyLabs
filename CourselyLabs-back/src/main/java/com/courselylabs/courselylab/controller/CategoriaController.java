@@ -5,6 +5,7 @@ import com.courselylabs.courselylab.service.CategoriaService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -35,16 +36,19 @@ public class CategoriaController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('admin')")
     public ResponseEntity<CategoriaDTO> create(@Valid @RequestBody CategoriaDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(categoriaService.create(dto));
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('admin')")
     public ResponseEntity<CategoriaDTO> update(@PathVariable Integer id, @Valid @RequestBody CategoriaDTO dto) {
         return ResponseEntity.ok(categoriaService.update(id, dto));
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('admin')")
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
         categoriaService.delete(id);
         return ResponseEntity.noContent().build();

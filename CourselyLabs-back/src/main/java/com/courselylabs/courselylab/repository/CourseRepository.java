@@ -40,6 +40,8 @@ public interface CourseRepository extends JpaRepository<CourseEntity, UUID>, Jpa
 
     long countByCreatedById(UUID userId);
 
+    long countByCategoryId(Integer categoryId);
+
     List<CourseEntity> findByCreatedByIdOrderByCreatedAtDesc(UUID userId);
 
     Page<CourseEntity> findByIsFreeAndIsPublishedTrue(Boolean isFree, Pageable pageable);

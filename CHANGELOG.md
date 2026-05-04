@@ -23,6 +23,20 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es/1.1.0/).
 - Renombrado `/terminios` → `/terminos` en [`routes.ts`](CourselyLabs-front/src/router/routes.ts). El path antiguo redirige al nuevo para no romper enlaces externos.
 - Actualizado el footer y la doc de routing.
 
+### Gestión de categorías (admin)
+
+**Backend**:
+
+- [`CategoriaController`](CourselyLabs-back/src/main/java/com/courselylabs/courselylab/controller/CategoriaController.java): los endpoints `POST`, `PUT` y `DELETE` ahora requieren `@PreAuthorize("hasRole('admin')")`. Antes cualquier usuario autenticado podía crear/editar/borrar categorías.
+- [`CategoriaService.delete`](CourselyLabs-back/src/main/java/com/courselylabs/courselylab/service/CategoriaService.java) ahora bloquea el borrado si hay cursos asociados (en lugar de cascadear a NULL o romper la BD). Mensaje claro al admin con el número de cursos que la usan.
+- Nuevo método `CourseRepository.countByCategoryId(...)` para soportar la verificación.
+
+**Frontend**:
+
+- Nuevo cliente API [`api/category.ts`](CourselyLabs-front/src/api/category.ts) con `listCategories`, `createCategory`, `updateCategory`, `deleteCategory`.
+- Nueva vista [`AdminCategoryTable.vue`](CourselyLabs-front/src/views/admin/AdminCategoryTable.vue) en `/admin/categorias` — tabla con nombre, slug, descripción y acciones; diálogo único para crear/editar (autocompleta el slug a partir del nombre, con validación `^[a-z0-9-]+$`); confirmación de borrado.
+- Enlace «Categorías» en [`AdminLayout`](CourselyLabs-front/src/layouts/AdminLayout.vue).
+
 ### Recuperación de contraseña (`feature/forgot-password`)
 
 **Backend**:

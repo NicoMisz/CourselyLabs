@@ -37,6 +37,10 @@
           <q-item-section avatar><q-icon name="people" /></q-item-section>
           <q-item-section>Usuarios</q-item-section>
         </q-item>
+        <q-item clickable to="/admin/categorias" active-class="text-primary">
+          <q-item-section avatar><q-icon name="category" /></q-item-section>
+          <q-item-section>Categorías</q-item-section>
+        </q-item>
 
         <q-separator class="q-my-sm" />
 

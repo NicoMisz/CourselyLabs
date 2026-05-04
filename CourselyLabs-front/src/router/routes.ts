@@ -144,6 +144,11 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/admin/AdminUserTable.vue'),
         meta: { title: 'Usuarios — Admin' },
       },
+      {
+        path: 'categorias',
+        component: () => import('@/views/admin/AdminCategoryTable.vue'),
+        meta: { title: 'Categorías — Admin' },
+      },
     ],
   },
   {
