@@ -19,4 +19,9 @@ public class LessonBlockDTO {
     private String pdfUrl;
     /** Populated when the block has an associated assessment (quiz/project/open_text). */
     private UUID assessmentId;
+
+    // Campos del bloque tipo "lab" (entornos virtuales tipo echolab).
+    private String labProvider;
+    private Integer labTemplateId;
+    private String labInstructions;
 }

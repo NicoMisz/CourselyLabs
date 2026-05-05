@@ -49,6 +49,15 @@ public class LessonBlockEntity {
     @Column(name = "pdf_url", length = 500)
     private String pdfUrl;
 
+    @Column(name = "lab_provider", length = 20)
+    private String labProvider;
+
+    @Column(name = "lab_template_id")
+    private Integer labTemplateId;
+
+    @Column(name = "lab_instructions", columnDefinition = "TEXT")
+    private String labInstructions;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;

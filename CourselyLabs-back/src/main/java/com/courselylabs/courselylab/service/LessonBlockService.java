@@ -65,6 +65,9 @@ public class LessonBlockService {
         entity.setTextContent(dto.getTextContent());
         entity.setVideoUrl(dto.getVideoUrl());
         entity.setPdfUrl(dto.getPdfUrl());
+        entity.setLabProvider(dto.getLabProvider());
+        entity.setLabTemplateId(dto.getLabTemplateId());
+        entity.setLabInstructions(dto.getLabInstructions());
 
         return toDTO(blockRepository.save(entity));
     }
@@ -77,6 +80,9 @@ public class LessonBlockService {
         if (dto.getVideoUrl() != null) entity.setVideoUrl(dto.getVideoUrl());
         if (dto.getPdfUrl() != null) entity.setPdfUrl(dto.getPdfUrl());
         if (dto.getPosition() != null) entity.setPosition(dto.getPosition());
+        if (dto.getLabProvider() != null) entity.setLabProvider(dto.getLabProvider());
+        if (dto.getLabTemplateId() != null) entity.setLabTemplateId(dto.getLabTemplateId());
+        if (dto.getLabInstructions() != null) entity.setLabInstructions(dto.getLabInstructions());
 
         return toDTO(blockRepository.save(entity));
     }
@@ -108,6 +114,9 @@ public class LessonBlockService {
         dto.setTextContent(entity.getTextContent());
         dto.setVideoUrl(entity.getVideoUrl());
         dto.setPdfUrl(entity.getPdfUrl());
+        dto.setLabProvider(entity.getLabProvider());
+        dto.setLabTemplateId(entity.getLabTemplateId());
+        dto.setLabInstructions(entity.getLabInstructions());
 
         // Link assessment if exists
         if (isAssessmentType(entity.getType())) {
