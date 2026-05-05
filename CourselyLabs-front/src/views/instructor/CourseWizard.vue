@@ -445,6 +445,30 @@
                       :type="block.type"
                       :can-use-premium-features="canUsePremiumFeatures"
                     />
+
+                    <!-- Lab block (echo) -->
+                    <div v-else-if="block.type === 'lab'" class="q-gutter-md">
+                      <q-input
+                        v-model.number="block.labTemplateId"
+                        type="number"
+                        outlined
+                        dense
+                        label="ID de plantilla VM (en echo)"
+                        hint="Se obtiene del panel de echo. Cada alumno necesita un clone asignado de esta plantilla."
+                        :rules="[v => !!v || 'Obligatorio']"
+                      />
+                      <q-input
+                        v-model="block.labInstructions"
+                        outlined
+                        type="textarea"
+                        rows="4"
+                        label="Instrucciones para el alumno (markdown)"
+                        placeholder="¿Qué tiene que hacer en la VM? Ej: Conéctate por SSH a..."
+                      />
+                      <div class="row justify-end">
+                        <q-btn color="primary" unelevated no-caps size="sm" label="Guardar bloque" :loading="block._saving" @click="saveBlock(block)" />
+                      </div>
+                    </div>
                   </q-card-section>
                 </q-card>
               </template>
@@ -689,6 +713,7 @@ const contentBlockOptions: BlockOption[] = [
   { value: 'text', label: 'Texto', icon: 'article', color: 'primary', hint: 'Texto enriquecido que el alumno lee' },
   { value: 'video', label: 'Vídeo', icon: 'play_circle', color: 'primary', hint: 'Subir un MP4 reproducible' },
   { value: 'pdf', label: 'PDF', icon: 'picture_as_pdf', color: 'red-7', hint: 'Subir un PDF embebido' },
+  { value: 'lab', label: 'Laboratorio (echo)', icon: 'terminal', color: 'teal-8', hint: 'Entorno virtual sobre echo (Proxmox)' },
 ]
 
 const assessmentBlockOptions: BlockOption[] = [
@@ -1125,6 +1150,9 @@ async function saveBlock(block: EditableBlock) {
       videoUrl: block.videoUrl,
       pdfUrl: block.pdfUrl,
       position: block.position,
+      labProvider: block.type === 'lab' ? (block.labProvider || 'echo') : block.labProvider,
+      labTemplateId: block.labTemplateId,
+      labInstructions: block.labInstructions,
     })
     Object.assign(block, updated)
     $q.notify({ type: 'positive', message: 'Bloque guardado', position: 'bottom-right' })
