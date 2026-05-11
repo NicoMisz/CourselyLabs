@@ -1,6 +1,6 @@
 export type LessonType = 'video' | 'text' | 'pdf' | 'audio'
 
-export type BlockType = 'text' | 'video' | 'pdf' | 'quiz' | 'project' | 'open_text'
+export type BlockType = 'text' | 'video' | 'pdf' | 'quiz' | 'project' | 'open_text' | 'lab'
 
 export interface LessonBlock {
   id: string
@@ -12,6 +12,10 @@ export interface LessonBlock {
   pdfUrl?: string
   /** Populated for quiz/project/open_text blocks once the assessment exists. */
   assessmentId?: string
+  /** Populated for lab blocks. */
+  labProvider?: string
+  labTemplateId?: number
+  labInstructions?: string
 }
 
 export interface Lesson {

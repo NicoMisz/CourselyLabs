@@ -49,6 +49,12 @@ public class UserEntity {
     @Column(name = "is_active")
     private Boolean isActive = true;
 
+    @Column(name = "echo_token_encrypted", columnDefinition = "TEXT")
+    private String echoTokenEncrypted;
+
+    @Column(name = "echo_token_updated_at")
+    private LocalDateTime echoTokenUpdatedAt;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

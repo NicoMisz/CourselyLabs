@@ -84,6 +84,11 @@
                   v-else-if="isAssessmentBlockType(block.type)"
                   :block-id="block.id"
                 />
+                <LessonLabBlock
+                  v-else-if="block.type === 'lab'"
+                  :block-id="block.id"
+                  :instructions="block.labInstructions"
+                />
                 <div v-else class="text-grey-6 text-body2 q-pa-md">
                   Bloque sin contenido todavía.
                 </div>
@@ -184,6 +189,7 @@ import AssessmentLessonView from '../components/AssessmentLessonView.vue'
 import { isAssessmentBlockType } from '../api/lessonBlock'
 
 import LessonPdfViewer from '../components/LessonPdfViewer.vue'
+import LessonLabBlock from '../components/LessonLabBlock.vue'
 import LessonResources from '../components/LessonResources.vue'
 
 const route = useRoute()

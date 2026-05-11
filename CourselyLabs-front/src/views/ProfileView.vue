@@ -204,6 +204,9 @@
             </q-card-section>
           </q-card>
 
+          <!-- Conexión con echo (laboratorios) -->
+          <EchoConnectionCard class="q-mt-md" />
+
           <!-- Suscripción -->
           <q-card flat bordered>
             <q-card-section>
@@ -368,6 +371,7 @@ import { getSubscription, cancelSubscription, getPaymentHistory } from '@/api/pa
 import { getMyCreatedCourses } from '@/api/instructor'
 import type { SubscriptionInfo, PaymentRecord } from '@/api/payments'
 import type { EnrolledCourse } from '@/types/enrollment'
+import EchoConnectionCard from '@/components/EchoConnectionCard.vue'
 
 const $q = useQuasar()
 const authStore = useAuthStore()

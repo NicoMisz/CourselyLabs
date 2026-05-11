@@ -8,6 +8,67 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es/1.1.0/).
 
 ---
 
+## [Sin versión] - 2026-05-05 — Integración con echo lab `feature/echolab-labs`
+
+Nuevo bloque tipo **`lab`** que arranca máquinas virtuales sobre Proxmox vía la API de [echo](https://github.com/...) directamente desde una lección. Cada alumno conecta su cuenta echo personal una vez (token cifrado en BD), y desde el bloque puede iniciar/detener su VM y abrir la consola noVNC sin salir de la plataforma.
+
+### Backend
+
+- **Migración [V13__echo_lab_integration.sql](CourselyLabs-back/src/main/resources/db/migration/V13__echo_lab_integration.sql)**:
+  - `users.echo_token_encrypted` (TEXT) y `users.echo_token_updated_at`.
+  - Nuevo tipo `lab` en `lesson_blocks.type` + columnas `lab_provider`, `lab_template_id`, `lab_instructions`.
+  - Nueva tabla `lab_session_events` con índice por user/block/created_at — log de start/stop/console/error para auditoría.
+- **Cifrado at-rest** del token: nuevo [`SecretEncryptor`](CourselyLabs-back/src/main/java/com/courselylabs/courselylab/security/SecretEncryptor.java) (Spring `Encryptors.delux`, AES-256 con PBKDF2). Configurable con `APP_ENCRYPTION_SECRET` y `APP_ENCRYPTION_SALT` (env vars).
+- **Cliente HTTP** [`EchoLabClient`](CourselyLabs-back/src/main/java/com/courselylabs/courselylab/integration/echo/EchoLabClient.java) con métodos `me`, `listVms`, `getVmStatus`, `setVmAction`, `listClones`, `getConsoleTicket`. Endpoint base configurable con `ECHO_BASE_URL` (default `http://localhost`).
+- **Servicio [`LabService`](CourselyLabs-back/src/main/java/com/courselylabs/courselylab/service/LabService.java)** que orquesta cifrado + cliente echo + log de eventos. El frontend nunca recibe el token; el backend hace de proxy autenticado.
+- **Endpoints** (`LabController`):
+  - `GET /api/me/echo` — estado de conexión.
+  - `PUT /api/me/echo` — guardar token (validado contra `me.php` antes de persistir).
+  - `DELETE /api/me/echo` — desconectar.
+  - `GET /api/labs/{blockId}/status` — estado del lab (NO_TOKEN / NO_VM / STOPPED / RUNNING / ERROR).
+  - `POST /api/labs/{blockId}/start` y `/stop`.
+  - `POST /api/labs/{blockId}/console` — ticket VNC corto.
+
+### Cambios en echo (`/home/nmiszczak/echolab/api/`)
+
+Hasta ahora solo `me.php` y `vms.php` aceptaban Bearer token; el resto requería sesión cookie y no era utilizable desde otro servicio. Hemos extendido tres archivos para que acepten **token o sesión** uniformemente, siguiendo el mismo patrón que ya tenían los otros dos:
+
+- `vm_status.php` — start/stop/heartbeat ahora vía API.
+- `vm_console.php` — ticket VNC ahora vía API.
+- `vm_clones.php` — listar clones de plantilla ahora vía API. **Cambio funcional menor**: el check inicial `role < TEACHER` se ha relajado a "autenticado"; el filtrado fino se mantiene en GET/POST (solo ves/operas tu propio clone).
+
+### Frontend
+
+- Cliente API [`api/lab.ts`](CourselyLabs-front/src/api/lab.ts) con todas las operaciones.
+- Componente [`EchoConnectionCard`](CourselyLabs-front/src/components/EchoConnectionCard.vue) en `/profile`: pegas el token, se valida, queda conectado. Botón para desconectar y refrescar.
+- Componente [`LessonLabBlock`](CourselyLabs-front/src/components/LessonLabBlock.vue) que se renderiza dentro de `LessonView` cuando un bloque es de tipo `lab`. Estados claros: sin token → CTA al perfil; sin VM asignada → mensaje al instructor; VM parada → botón Iniciar; VM corriendo → consola noVNC en iframe + Detener. Polling suave cada 10s.
+- Editor de bloque `lab` integrado en [`CourseWizard`](CourselyLabs-front/src/views/instructor/CourseWizard.vue): campos para `template_id` e instrucciones markdown.
+- Tipo `BlockType` extendido con `lab`.
+
+### Seed
+
+- El curso de Python suma un bloque `lab` (placeholder con `template_id=1`) al final del proyecto, con instrucciones markdown que guían al alumno por la consola.
+
+### Configuración (env vars)
+
+```
+ECHO_BASE_URL=http://localhost
+ECHO_TIMEOUT_SECONDS=8
+APP_ENCRYPTION_SECRET=<openssl rand -hex 32>
+APP_ENCRYPTION_SALT=<hex>
+```
+
+Si no se proporcionan, se usan defaults solo aptos para dev (no para producción).
+
+### Pendiente para una próxima rama
+
+- **Auto-aprovisionamiento** de VMs por alumno (hoy el alumno necesita un clone ya asignado en echo).
+- **Heartbeat / shutdown** automático por inactividad.
+- **Vista admin/instructor** de los `lab_session_events` (auditoría desde la app).
+- **Selector de plantilla** en el wizard con autocomplete desde echo (en lugar de ID a mano).
+
+---
+
 ## [Sin versión] - 2026-05-02 — Recta final: seeds, terminos, recuperacion de contraseña `fix/loose-ends-pass`
 
 ### Seeds en castellano

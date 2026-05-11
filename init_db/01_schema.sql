@@ -20,6 +20,8 @@ CREATE TABLE users (
     profile_picture_url VARCHAR(500),
     is_verified BOOLEAN DEFAULT FALSE,
     is_active BOOLEAN DEFAULT TRUE,
+    echo_token_encrypted TEXT,                        -- token API de echo (cifrado AES-GCM)
+    echo_token_updated_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -303,16 +305,35 @@ CREATE INDEX idx_course_prerequisites_course_id ON course_prerequisites(course_i
 -- ============================================
 
 CREATE TABLE lesson_blocks (
-    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    lesson_id       UUID NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
-    type            VARCHAR(20) NOT NULL CHECK (type IN ('text', 'video', 'pdf', 'quiz', 'project', 'open_text')),
-    position        INTEGER NOT NULL DEFAULT 0,
-    text_content    TEXT,
-    video_url       VARCHAR(500),
-    pdf_url         VARCHAR(500),
-    created_at      TIMESTAMP NOT NULL DEFAULT now(),
-    updated_at      TIMESTAMP NOT NULL DEFAULT now()
+    id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    lesson_id         UUID NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
+    type              VARCHAR(20) NOT NULL CHECK (type IN ('text', 'video', 'pdf', 'quiz', 'project', 'open_text', 'lab')),
+    position          INTEGER NOT NULL DEFAULT 0,
+    text_content      TEXT,
+    video_url         VARCHAR(500),
+    pdf_url           VARCHAR(500),
+    lab_provider      VARCHAR(20),                  -- 'echo' (otros futuros)
+    lab_template_id   INTEGER,                      -- id de la VM plantilla en el proveedor
+    lab_instructions  TEXT,                         -- enunciado markdown del laboratorio
+    created_at        TIMESTAMP NOT NULL DEFAULT now(),
+    updated_at        TIMESTAMP NOT NULL DEFAULT now()
 );
+
+-- ============================================
+-- LAB SESSION EVENTS (auditoría de uso de laboratorios)
+-- ============================================
+CREATE TABLE lab_session_events (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    block_id    UUID NOT NULL REFERENCES lesson_blocks(id) ON DELETE CASCADE,
+    action      VARCHAR(20) NOT NULL CHECK (action IN ('start', 'stop', 'console', 'error')),
+    detail      TEXT,
+    created_at  TIMESTAMP NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_lab_session_events_user_id ON lab_session_events(user_id);
+CREATE INDEX idx_lab_session_events_block_id ON lab_session_events(block_id);
+CREATE INDEX idx_lab_session_events_created_at ON lab_session_events(created_at DESC);
 
 CREATE INDEX idx_lesson_blocks_lesson_id ON lesson_blocks(lesson_id);
 

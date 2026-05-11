@@ -242,5 +242,24 @@ VALUES (gen_random_uuid(), l4, b_project, 'project',
         1, 70)
 RETURNING id INTO a_project;
 
+-- Bloque 10 (lab): laboratorio echo (placeholder, instructor configura template_id real)
+-- Demo del nuevo bloque tipo "lab": entorno virtual sobre echo (Proxmox).
+-- El template_id es PLACEHOLDER (1): el instructor debe sustituirlo por el ID
+-- de la VM plantilla real en su instancia de echo. Cada alumno necesita un
+-- clone asignado de esa plantilla en echo para poder usarla.
+INSERT INTO lesson_blocks (lesson_id, type, position, lab_provider, lab_template_id, lab_instructions)
+VALUES (l4, 'lab', 2, 'echo', 1,
+'## Laboratorio: prueba tu calculadora en una VM Linux
+
+Este bloque arranca una máquina virtual Ubuntu en echo. Sigue estos pasos:
+
+1. Pulsa **Iniciar laboratorio** y espera a que la VM arranque (~10s).
+2. Pulsa **Abrir consola** para acceder por noVNC.
+3. Escribe tu programa en `~/calculadora.py` con `nano` o `vim`.
+4. Ejecútalo: `python3 ~/calculadora.py`.
+5. Cuando termines, pulsa **Detener** para liberar recursos.
+
+> **Nota**: si ves "No tienes una VM asignada", pide a tu instructor que te aprovisione una plantilla.');
+
 END;
 $$;
