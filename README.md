@@ -6,7 +6,9 @@ Plataforma de cursos online en castellano con autoría asistida, evaluaciones va
 
 ---
 
-## Quick start (5 comandos)
+## Quick start
+
+### Desarrollo local (con recarga en caliente)
 
 Requisitos: Java 21, Node 20.19+, Docker.
 
@@ -18,7 +20,17 @@ docker compose up -d                       # postgres + mailhog + minio
 (cd CourselyLabs-front && npm install && npm run dev)  # → :5173
 ```
 
-Login con un seeder: `admin@cursos.com` / `admin123` (ver [`docs/02-getting-started/seeders.md`](docs/02-getting-started/seeders.md) para más usuarios).
+### Despliegue en máquina Ubuntu nueva (todo en Docker)
+
+```bash
+git clone <url> /opt/courselylabs
+cd /opt/courselylabs
+./bootstrap.sh
+```
+
+El script instala Docker, genera secretos, construye y arranca toda la stack. Detalles en [DEPLOYMENT.md](DEPLOYMENT.md).
+
+Login con un seeder: `instructor@cursos.com` / `instructor123` (ver [`docs/02-getting-started/seeders.md`](docs/02-getting-started/seeders.md) para más usuarios).
 
 Detalles, env vars y troubleshooting: [`docs/02-getting-started/setup.md`](docs/02-getting-started/setup.md).
 

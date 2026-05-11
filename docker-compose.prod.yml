@@ -1,0 +1,142 @@
+# docker-compose.prod.yml — stack completo de CourselyLabs en producción/staging
+#
+# Levanta todo con un único comando en una máquina con Docker:
+#
+#   docker compose -f docker-compose.prod.yml --env-file .env up -d --build
+#
+# Servicios:
+#   - postgres : BD principal
+#   - mailhog  : capturador SMTP (sustituye por SMTP real en producción real)
+#   - minio    : almacenamiento S3-compatible (vídeos, PDFs, recursos)
+#   - backend  : Spring Boot
+#   - frontend : Vue/Quasar servido por nginx con proxy /api → backend
+#
+# Tras `up -d`, el frontend queda en http://<host>:${HTTP_PORT:-80}
+# y todo el tráfico /api lo proxya nginx al backend dentro de la red privada.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: courselylabs-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-cursos_db}
+      POSTGRES_USER: ${DB_USER:-myuser}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD es obligatorio}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init_db:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-myuser} -d ${DB_NAME:-cursos_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: courselylabs-mail
+    restart: unless-stopped
+    ports:
+      - "${MAILHOG_UI_PORT:-8025}:8025"  # UI web (útil en LAN para ver emails)
+    # Puerto SMTP no se expone fuera del compose; el backend lo usa internamente.
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8025"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  minio:
+    image: minio/minio:latest
+    container_name: courselylabs-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${STORAGE_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${STORAGE_SECRET_KEY:-minioadmin}
+    ports:
+      - "${MINIO_API_PORT:-9000}:9000"     # se expone para que el browser
+                                            # baje los archivos firmados
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"  # consola admin (opcional)
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  backend:
+    build:
+      context: ./CourselyLabs-back
+    container_name: courselylabs-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mailhog:
+        condition: service_started
+      minio:
+        condition: service_started
+    environment:
+      # ── BD ───────────────────────────────────────────────────────
+      DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-cursos_db}
+      DB_USER: ${DB_USER:-myuser}
+      DB_PASSWORD: ${DB_PASSWORD}
+
+      # ── Mail (interno) ───────────────────────────────────────────
+      MAIL_HOST: mailhog
+      MAIL_PORT: 1025
+      MAIL_FROM: ${MAIL_FROM:-noreply@courselylabs.local}
+
+      # ── Storage (MinIO) ──────────────────────────────────────────
+      STORAGE_ENDPOINT: http://minio:9000
+      STORAGE_PUBLIC_URL: ${STORAGE_PUBLIC_URL:-http://localhost:9000}
+      STORAGE_ACCESS_KEY: ${STORAGE_ACCESS_KEY:-minioadmin}
+      STORAGE_SECRET_KEY: ${STORAGE_SECRET_KEY:-minioadmin}
+      STORAGE_BUCKET: ${STORAGE_BUCKET:-courselylabs}
+
+      # ── Seguridad ────────────────────────────────────────────────
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET es obligatorio}
+      APP_ENCRYPTION_SECRET: ${APP_ENCRYPTION_SECRET:?APP_ENCRYPTION_SECRET es obligatorio}
+      APP_ENCRYPTION_SALT: ${APP_ENCRYPTION_SALT:?APP_ENCRYPTION_SALT es obligatorio}
+
+      # ── CORS ─────────────────────────────────────────────────────
+      # Como nginx hace proxy /api → backend, el origen efectivo es el
+      # mismo que el del frontend (mismo host:port). Aun así dejamos el
+      # control por env por si se accede al backend directamente desde fuera.
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost}
+
+      # ── Echo lab ─────────────────────────────────────────────────
+      ECHO_BASE_URL: ${ECHO_BASE_URL:-https://echo.lab}
+      ECHO_TRUST_ALL_CERTS: ${ECHO_TRUST_ALL_CERTS:-true}
+      ECHO_TIMEOUT_SECONDS: ${ECHO_TIMEOUT_SECONDS:-8}
+
+      # ── Stripe (opcional) ────────────────────────────────────────
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_PUBLIC_KEY: ${STRIPE_PUBLIC_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+
+      # ── Frontend URL (para emails con enlaces) ───────────────────
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
+
+      # En contenedor desactivamos la integración Docker-Compose de Spring Boot,
+      # que solo tiene sentido en desarrollo local.
+      SPRING_DOCKER_COMPOSE_ENABLED: "false"
+
+      # No exponemos puerto del backend al host: nginx llega por red interna.
+
+  frontend:
+    build:
+      context: ./CourselyLabs-front
+    container_name: courselylabs-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${HTTP_PORT:-80}:80"
+    # Si quieres TLS local, añade aquí un volumen de certificados
+    # y modifica nginx.conf con listen 443 ssl.
+
+volumes:
+  postgres_data:
+  minio_data:
