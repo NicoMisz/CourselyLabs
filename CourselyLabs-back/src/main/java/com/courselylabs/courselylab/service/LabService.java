@@ -1,10 +1,14 @@
 package com.courselylabs.courselylab.service;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,15 +48,18 @@ public class LabService {
     private final LabSessionEventRepository eventRepository;
     private final SecretEncryptor encryptor;
     private final EchoLabClient echo;
+    private final String echoBaseUrl;
 
     public LabService(UserRepository userRepository,
                       LessonBlockRepository blockRepository,
                       LabSessionEventRepository eventRepository,
                       SecretEncryptor encryptor,
-                      EchoLabClient echo) {
+                      EchoLabClient echo,
+                      @Value("${app.echo.base-url}") String echoBaseUrl) {
         this.userRepository = userRepository;
         this.blockRepository = blockRepository;
         this.eventRepository = eventRepository;
+        this.echoBaseUrl = echoBaseUrl.replaceAll("/$", "");
         this.encryptor = encryptor;
         this.echo = echo;
     }
@@ -159,9 +166,24 @@ public class LabService {
             return error("No tienes una VM asignada para este laboratorio.");
         }
         try {
-            Map<String, Object> ticket = echo.getConsoleTicket(token, myClone.get().getId().intValue());
-            log(user, block, "console", "vm_id=" + myClone.get().getId());
-            return new LabConsoleDTO(true, ticket, null);
+            int vmId = myClone.get().getId();
+            // Calentamos la VM y aseguramos el ticket VNC en echo (mismo flujo que vm_viewer.php
+            // realiza al cargarse) — así si por algún motivo falla podemos devolverlo aquí.
+            echo.getConsoleTicket(token, vmId);
+
+            // El iframe apunta a vm_viewer.php de echo, que parchamos para aceptar ?token=...
+            // El viewer carga noVNC con sesión efímera del token y se ocupa del WebSocket.
+            String viewerUrl = echoBaseUrl
+                    + "/vm_viewer.php?id=" + vmId
+                    + "&embedded=1"
+                    + "&token=" + URLEncoder.encode(token, StandardCharsets.UTF_8);
+
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("url", viewerUrl);
+            payload.put("vmId", vmId);
+
+            log(user, block, "console", "vm_id=" + vmId);
+            return new LabConsoleDTO(true, payload, null);
         } catch (Exception e) {
             log(user, block, "error", "console: " + e.getMessage());
             return error("No se pudo obtener el ticket de consola: " + e.getMessage());

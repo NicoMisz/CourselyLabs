@@ -95,7 +95,7 @@
         </template>
         {{ status?.message || 'Error al consultar el laboratorio.' }}
         <template v-slot:action>
-          <q-btn flat color="primary" label="Reintentar" no-caps :loading="loading" @click="refresh" />
+          <q-btn flat color="primary" label="Reintentar" no-caps :loading="loading" @click="() => refresh()" />
         </template>
       </q-banner>
     </q-card-section>
@@ -156,14 +156,14 @@ const renderedInstructions = computed(() => {
   return props.instructions ? marked.parse(props.instructions, { async: false }) as string : ''
 })
 
-async function refresh() {
-  loading.value = true
+async function refresh({ silent = false } = {}) {
+  if (!silent) loading.value = true
   try {
     status.value = await getLabStatus(props.blockId)
   } catch {
     status.value = { state: 'ERROR', message: 'No se pudo consultar el laboratorio.' }
   } finally {
-    loading.value = false
+    if (!silent) loading.value = false
   }
 }
 
@@ -173,6 +173,8 @@ async function onStart() {
     status.value = await startLab(props.blockId)
     if (state.value === 'RUNNING') {
       $q.notify({ type: 'positive', message: 'Laboratorio iniciado', position: 'bottom-right' })
+      // Abre consola automáticamente — el alumno casi siempre la quiere tras iniciar.
+      await onConsole()
     } else if (status.value?.message) {
       $q.notify({ type: 'warning', message: status.value.message, position: 'bottom-right' })
     }
@@ -213,28 +215,21 @@ async function onConsole() {
 }
 
 /**
- * Convierte el payload bruto del ticket de echo a una URL navegable.
- * El formato exacto del ticket lo decide echo+Proxmox; si trae una `url`
- * absoluta se usa tal cual, si no construimos un placeholder.
+ * El backend devuelve una URL absoluta al vm_viewer.php de echo lista para iframe
+ * (incluye token efímero y ?embedded=1). Se usa directamente.
  */
 function buildConsoleUrl(ticket: Record<string, unknown>): string {
   if (typeof ticket.url === 'string') return ticket.url
-  if (typeof ticket.viewer_url === 'string') return ticket.viewer_url as string
-  // Fallback: si echo devuelve { ticket, port, host }, montar una URL noVNC genérica.
-  // El ajuste exacto se hará cuando se vea el formato real.
-  const host = (ticket.host as string) ?? ''
-  const port = (ticket.port as number) ?? ''
-  const t = (ticket.ticket as string) ?? ''
-  if (host && port && t) {
-    return `https://${host}:${port}/?ticket=${encodeURIComponent(t)}&autoconnect=1`
-  }
   return ''
 }
 
 onMounted(() => {
   refresh()
-  // Polling suave cada 10s para reflejar cambios de estado externos.
-  pollTimer = setInterval(refresh, 10000)
+  // Polling suave cada 30s para reflejar cambios externos.
+  // Se pausa cuando hay consola abierta para no recargar el iframe.
+  pollTimer = setInterval(() => {
+    if (!consoleUrl.value) refresh({ silent: true })
+  }, 30000)
 })
 
 onBeforeUnmount(() => {
