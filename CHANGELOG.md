@@ -29,19 +29,22 @@ Nuevo bloque tipo **`lab`** que arranca máquinas virtuales sobre Proxmox vía l
   - `POST /api/labs/{blockId}/start` y `/stop`.
   - `POST /api/labs/{blockId}/console` — ticket VNC corto.
 
-### Cambios en echo (`/home/nmiszczak/echolab/api/`)
+### Cambios en echo (`/home/nmiszczak/echolab/`)
 
-Hasta ahora solo `me.php` y `vms.php` aceptaban Bearer token; el resto requería sesión cookie y no era utilizable desde otro servicio. Hemos extendido tres archivos para que acepten **token o sesión** uniformemente, siguiendo el mismo patrón que ya tenían los otros dos:
+Hasta ahora solo `me.php` y `vms.php` aceptaban Bearer token; el resto requería sesión cookie y no era utilizable desde otro servicio. Hemos extendido los siguientes archivos para que acepten **token o sesión** uniformemente:
 
-- `vm_status.php` — start/stop/heartbeat ahora vía API.
-- `vm_console.php` — ticket VNC ahora vía API.
-- `vm_clones.php` — listar clones de plantilla ahora vía API. **Cambio funcional menor**: el check inicial `role < TEACHER` se ha relajado a "autenticado"; el filtrado fino se mantiene en GET/POST (solo ves/operas tu propio clone).
+- `api/vm_status.php` — start/stop/heartbeat ahora vía API.
+- `api/vm_console.php` — ticket VNC ahora vía API.
+- `api/vm_clones.php` — listar clones de plantilla ahora vía API. **Cambio funcional menor**: el check inicial `role < TEACHER` se ha relajado a "autenticado"; el filtrado fino se mantiene en GET/POST (solo ves/operas tu propio clone). **Hardening**: ahora tolera clones con `assigned_to=null`, `assigned_students` como string JSON sin deserializar, y campos opcionales que la BD devuelve incoherentes. Handler envuelto en try/catch que devuelve la línea del error en JSON.
+- `vm_viewer.php` — acepta token vía query string (`?token=…`) para poder embeberse en iframe desde CourselyLabs. Sobreescribe `X-Frame-Options` y añade `Content-Security-Policy: frame-ancestors *;` para permitir embedding cross-origin (en producción restringir al dominio real).
+
+**Configuración nginx**: el vhost de echo tenía `add_header X-Frame-Options "SAMEORIGIN" always;` que bloqueaba el iframe. Reemplazar por `add_header Content-Security-Policy "frame-ancestors <dominio-courselylabs>;" always;` en el bloque `server` que sirve `echo.lab` puerto 443.
 
 ### Frontend
 
 - Cliente API [`api/lab.ts`](CourselyLabs-front/src/api/lab.ts) con todas las operaciones.
 - Componente [`EchoConnectionCard`](CourselyLabs-front/src/components/EchoConnectionCard.vue) en `/profile`: pegas el token, se valida, queda conectado. Botón para desconectar y refrescar.
-- Componente [`LessonLabBlock`](CourselyLabs-front/src/components/LessonLabBlock.vue) que se renderiza dentro de `LessonView` cuando un bloque es de tipo `lab`. Estados claros: sin token → CTA al perfil; sin VM asignada → mensaje al instructor; VM parada → botón Iniciar; VM corriendo → consola noVNC en iframe + Detener. Polling suave cada 10s.
+- Componente [`LessonLabBlock`](CourselyLabs-front/src/components/LessonLabBlock.vue) que se renderiza dentro de `LessonView` cuando un bloque es de tipo `lab`. Estados claros: sin token → CTA al perfil; sin VM asignada → mensaje al instructor; VM parada → botón Iniciar; VM corriendo → consola noVNC en iframe + Detener. Polling cada 30s **pausado cuando hay iframe abierto** para no recargar la consola. Tras iniciar, se abre la consola automáticamente (UX más directa).
 - Editor de bloque `lab` integrado en [`CourseWizard`](CourselyLabs-front/src/views/instructor/CourseWizard.vue): campos para `template_id` e instrucciones markdown.
 - Tipo `BlockType` extendido con `lab`.
 
@@ -49,19 +52,45 @@ Hasta ahora solo `me.php` y `vms.php` aceptaban Bearer token; el resto requería
 
 - El curso de Python suma un bloque `lab` (placeholder con `template_id=1`) al final del proyecto, con instrucciones markdown que guían al alumno por la consola.
 
+### Flujo final de la consola
+
+El endpoint `POST /api/labs/{block}/console` ya no devuelve el ticket VNC crudo (`PVEVNC:…` + host + port). En su lugar:
+
+1. Asegura el ticket en echo (lo precalienta) llamando a `vm_console.php`.
+2. Devuelve una URL absoluta al `vm_viewer.php` de echo con el token incluido en query string y `?embedded=1`.
+3. El frontend usa esa URL directamente como `src` del iframe.
+4. `vm_viewer.php` valida el token, abre sesión efímera y renderiza noVNC con su propia infraestructura (la que ya estaba probada).
+
+Ventaja: aprovechamos el visor noVNC de echo (sin reimplementar nada cliente-side) y no exponemos el puerto VNC interno al navegador.
+
 ### Configuración (env vars)
 
 ```
-ECHO_BASE_URL=http://localhost
+ECHO_BASE_URL=https://echo.lab          # default cambiado de http://localhost
 ECHO_TIMEOUT_SECONDS=8
+ECHO_TRUST_ALL_CERTS=true               # SSL self-signed en dev; false en prod
 APP_ENCRYPTION_SECRET=<openssl rand -hex 32>
 APP_ENCRYPTION_SALT=<hex>
 ```
 
-Si no se proporcionan, se usan defaults solo aptos para dev (no para producción).
+El `EchoLabClient` usa `JdkClientHttpRequestFactory` con SSLContext que confía en cualquier certificado **cuando `ECHO_TRUST_ALL_CERTS=true`**. Para producción ponerlo a `false` y obtener cert Let's Encrypt sobre el dominio público de echo.
+
+Los converters HTTP del cliente toleran `Content-Type: text/html` además de `application/json` (echo a veces devuelve JSON con cabecera incorrecta).
+
+### Notas de despliegue
+
+Cuando se mueva fuera de LAN (VPS público):
+
+1. **DNS público** para `echo.tudominio.com` (o subdominio en CourselyLabs).
+2. **Let's Encrypt** en ambos servicios; poner `ECHO_TRUST_ALL_CERTS=false`.
+3. **CORS/CSP restringidos** al dominio real (no `*`): editar nginx de echo.
+4. `APP_ENCRYPTION_SECRET` generado fuerte (no el default de dev).
+5. WebSocket de Proxmox accesible **solo desde el server de echo** (no exponer Proxmox a internet); `proxy.js` ya está pensado para esto.
+6. Firewall: solo 443 y 22 desde fuera.
 
 ### Pendiente para una próxima rama
 
+- **Ticket de un solo uso** en lugar de token en URL del iframe (hoy queda en logs de nginx y DevTools — aceptable en LAN, riesgo en producción).
 - **Auto-aprovisionamiento** de VMs por alumno (hoy el alumno necesita un clone ya asignado en echo).
 - **Heartbeat / shutdown** automático por inactividad.
 - **Vista admin/instructor** de los `lab_session_events` (auditoría desde la app).
