@@ -1,4 +1,4 @@
-# Documentación de CourselyLabs
+yes# Documentación de CourselyLabs
 
 Índice navegable de toda la documentación técnica del proyecto.
 
