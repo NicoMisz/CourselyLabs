@@ -1,30 +1,42 @@
 <template>
     <q-card flat bordered class="course-card cursor-pointer" @click="goToCourse">
         <div class="thumb-wrap">
-        <CourseThumbnail
-            :thumbnail-url="course.thumbnailUrl"
-            :title="course.title"
-            :rounded="false"
-        />
+            <CourseThumbnail
+                :thumbnail-url="course.thumbnailUrl"
+                :title="course.title"
+                :rounded="false"
+            />
 
-        <div class="progress-bar-wrap">
-            <q-linear-progress :value="normalizedProgress" color="primary" track-color="white" rounded />
-        </div>
+            <!-- Status badge: overlay arriba a la derecha -->
+            <q-chip dense :color="statusColor" text-color="white" class="status-chip">
+                <q-icon :name="statusIcon" size="14px" class="q-mr-xs" />
+                {{ statusLabel }}
+            </q-chip>
+
+            <!-- Progress bar: overlay abajo -->
+            <div class="progress-bar-wrap">
+                <q-linear-progress
+                    :value="normalizedProgress"
+                    color="primary"
+                    track-color="rgba(255,255,255,0.4)"
+                    rounded
+                    size="6px"
+                />
+            </div>
         </div>
 
         <q-card-section>
-        <div class="row items-start justify-between q-col-gutter-sm">
-            <div class="col">
-            <div class="text-subtitle1 text-weight-medium">{{ course.title }}</div>
-            <div class="text-body2 text-grey-7 q-mt-xs">{{ course.shortDescription || 'Continúa con tu aprendizaje.' }}</div>
+            <div class="text-subtitle1 text-weight-medium card-title">{{ course.title }}</div>
+            <div class="text-body2 q-mt-xs card-description">
+                {{ course.shortDescription || 'Continúa con tu aprendizaje.' }}
             </div>
-            <q-chip dense :color="statusColor" text-color="white">{{ statusLabel }}</q-chip>
-        </div>
 
-        <div class="row items-center justify-between q-mt-md">
-            <div class="text-caption text-grey-7">{{ lastAccessLabel }}</div>
-            <div class="text-caption text-weight-medium">{{ course.progressPercent }}%</div>
-        </div>
+            <div class="row items-center justify-between q-mt-md card-meta">
+                <div class="text-caption">{{ lastAccessLabel }}</div>
+                <div class="text-caption text-weight-medium percent-label">
+                    {{ course.progressPercent }}%
+                </div>
+            </div>
         </q-card-section>
     </q-card>
 </template>
@@ -49,7 +61,13 @@ const statusLabel = computed(() => {
 const statusColor = computed(() => {
     if (props.course.progressPercent >= 100) return 'positive';
     if (props.course.progressPercent > 0) return 'warning';
-    return 'grey-7';
+    return 'primary';
+});
+
+const statusIcon = computed(() => {
+    if (props.course.progressPercent >= 100) return 'check_circle';
+    if (props.course.progressPercent > 0) return 'play_circle';
+    return 'auto_awesome';
 });
 
 const lastAccessLabel = computed(() => {
@@ -65,6 +83,7 @@ function goToCourse() {
 <style scoped>
 .course-card {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+    overflow: hidden;
 }
 
 .course-card:hover {
@@ -76,10 +95,40 @@ function goToCourse() {
     position: relative;
 }
 
+/* Chip de estado: overlay arriba a la derecha del thumbnail */
+.status-chip {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    margin: 0;
+    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(2px);
+}
+
+/* Barra de progreso: overlay abajo */
 .progress-bar-wrap {
     position: absolute;
-    left: 12px;
-    right: 12px;
-    bottom: 12px;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+}
+
+.card-title {
+    color: var(--app-text-strong);
+}
+.card-description {
+    color: var(--app-text-soft);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.card-meta {
+    color: var(--app-text-soft);
+}
+.percent-label {
+    color: var(--app-text-strong);
 }
 </style>

@@ -39,7 +39,7 @@
       </q-banner>
 
       <p class="text-caption text-grey-7 q-mb-sm">
-        Genera un token desde echo (<code>docs.php → Mis tokens</code>) y pégalo aquí. Tu token se guarda cifrado y nunca se muestra al frontend.
+        Genera un token desde echo (<code>API Docs → My tokens</code>) y pégalo aquí. Tu token se guarda cifrado y nunca se muestra al frontend.
       </p>
 
       <q-form @submit.prevent="onConnect" class="q-gutter-md">

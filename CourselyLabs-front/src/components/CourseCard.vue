@@ -15,13 +15,14 @@
       </div>
     </q-card-section>
 
-    <q-card-section class="q-pt-none row items-center q-gutter-sm">
-      <LevelBadge :level="course.level" />
-      <PriceBadge :is-free="course.isFree" :price="course.price" />
-      <q-space />
-      <div v-if="course.averageRating" class="text-caption row items-center no-wrap rating-text">
-        <q-icon name="star" color="warning" size="16px" class="q-mr-xs" />
-        {{ course.averageRating.toFixed(1) }}
+    <q-card-section class="q-pt-none card-footer">
+      <div class="card-footer__tags">
+        <LevelBadge :level="course.level" />
+        <PriceBadge :is-free="course.isFree" :price="course.price" />
+      </div>
+      <div v-if="course.averageRating" class="card-footer__rating">
+        <q-icon name="star" color="warning" size="16px" />
+        <span>{{ course.averageRating.toFixed(1) }}</span>
       </div>
     </q-card-section>
   </q-card>
@@ -57,7 +58,29 @@ defineProps<{ course: Course }>()
 .card-description {
   color: var(--app-text-soft);
 }
-.rating-text {
+
+/* Footer con tags a la izquierda y rating a la derecha, ambos centrados verticalmente
+   y con wrap limpio cuando la card es estrecha. */
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto; /* empuja el footer al fondo de la card */
+}
+.card-footer__tags {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.card-footer__rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
   color: var(--app-text-soft);
+  flex-shrink: 0;
 }
 </style>
