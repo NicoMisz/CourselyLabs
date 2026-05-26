@@ -46,12 +46,42 @@ const routes: RouteRecordRaw[] = [
       },
       {
         path: 'terminos',
-        component: () => import('@/components/cardTerminosCondiciones.vue'),
+        component: () => import('@/views/TermsView.vue'),
         meta: { title: 'Términos y condiciones — CourselyLabs' },
       },
       {
         path: 'terminios',
         redirect: '/terminos',
+      },
+      {
+        path: 'privacidad',
+        component: () => import('@/views/PrivacyView.vue'),
+        meta: { title: 'Política de privacidad — CourselyLabs' },
+      },
+      {
+        path: 'cookies',
+        component: () => import('@/views/CookiesView.vue'),
+        meta: { title: 'Política de cookies — CourselyLabs' },
+      },
+      {
+        path: 'faq',
+        component: () => import('@/views/FaqView.vue'),
+        meta: { title: 'Preguntas frecuentes — CourselyLabs' },
+      },
+      {
+        path: 'contacto',
+        component: () => import('@/views/ContactView.vue'),
+        meta: { title: 'Contacto — CourselyLabs' },
+      },
+      {
+        path: 'estado',
+        component: () => import('@/views/StatusView.vue'),
+        meta: { title: 'Estado del servicio — CourselyLabs' },
+      },
+      {
+        path: 'sobre-nosotros',
+        component: () => import('@/views/AboutView.vue'),
+        meta: { title: 'Sobre nosotros — CourselyLabs' },
       },
       {
         path: 'profile',

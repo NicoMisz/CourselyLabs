@@ -73,6 +73,76 @@
         </div>
       </section>
 
+      <!-- Sección destacada: Laboratorios virtuales -->
+      <section class="labs-feature q-pa-lg q-pa-md-xl rounded-borders q-mb-xl">
+        <div class="row q-col-gutter-xl items-center">
+          <div class="col-12 col-md-6">
+            <q-chip dense color="primary" text-color="white" icon="bolt" class="q-mb-md">
+              Novedad
+            </q-chip>
+            <h2 class="text-h4 q-mt-none q-mb-sm labs-title">
+              Laboratorios virtuales en la lección
+            </h2>
+            <p class="text-body1 q-mb-lg labs-subtitle">
+              Conecta a una máquina Linux real desde el navegador y prueba lo que aprendes en segundos. Sin instalar nada, sin configurar entornos.
+            </p>
+
+            <ul class="labs-bullets q-mb-lg">
+              <li>
+                <q-icon name="terminal" size="22px" color="primary" />
+                <span><strong>Entorno real</strong> — un Linux completo, no un simulador.</span>
+              </li>
+              <li>
+                <q-icon name="dns" size="22px" color="primary" />
+                <span><strong>Una VM por alumno</strong> — tu propio entorno aislado, asignado por tu instructor.</span>
+              </li>
+              <li>
+                <q-icon name="open_in_full" size="22px" color="primary" />
+                <span><strong>Consola embebida</strong> — abre el terminal sin salir de la lección.</span>
+              </li>
+              <li>
+                <q-icon name="bolt" size="22px" color="primary" />
+                <span><strong>Arranca al instante</strong> — un clic y estás dentro.</span>
+              </li>
+            </ul>
+
+            <q-btn
+              unelevated
+              rounded
+              color="primary"
+              icon="play_circle"
+              label="Ver un laboratorio"
+              to="/cursos/python-principiantes"
+              size="md"
+            />
+          </div>
+
+          <div class="col-12 col-md-6">
+            <!-- Mockup decorativo de terminal -->
+            <div class="terminal-mock">
+              <div class="terminal-mock__bar">
+                <span class="terminal-mock__dot dot-red" />
+                <span class="terminal-mock__dot dot-yellow" />
+                <span class="terminal-mock__dot dot-green" />
+                <span class="terminal-mock__title">student@curso-python</span>
+              </div>
+              <pre class="terminal-mock__body"><span class="t-prompt">$</span> <span class="t-cmd">python3 calculadora.py</span>
+<span class="t-text">¿Cuántas asignaturas tienes?</span> <span class="t-user">3</span>
+<span class="t-text">Nombre:</span> <span class="t-user">Matemáticas</span>
+<span class="t-text">Nota:</span> <span class="t-user">8.5</span>
+<span class="t-text">Nombre:</span> <span class="t-user">Historia</span>
+<span class="t-text">Nota:</span> <span class="t-user">6.0</span>
+<span class="t-text">Nombre:</span> <span class="t-user">Lengua</span>
+<span class="t-text">Nota:</span> <span class="t-user">7.5</span>
+
+<span class="t-ok">─────────────────────</span>
+<span class="t-ok">Media: 7.33  ✓ Aprobada</span>
+<span class="t-prompt">$</span> <span class="t-cursor">▊</span></pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- CTA Instructor -->
       <section class="instructor-cta q-pa-lg rounded-borders text-center q-mb-lg">
         <h2 class="text-h5 q-mt-none q-mb-sm" style="font-family: Monda, sans-serif">
@@ -172,5 +242,91 @@ onMounted(async () => {
 .content-wrap {
   max-width: 1200px;
   margin: 0 auto;
+}
+
+/* ── Sección Laboratorios ────────────────────────────────────── */
+.labs-feature {
+  background: linear-gradient(135deg, rgba(15, 118, 110, 0.10), rgba(234, 88, 12, 0.08));
+  border: 1px solid var(--app-border);
+}
+:global(.body--dark) .labs-feature {
+  background: linear-gradient(135deg, rgba(15, 118, 110, 0.22), rgba(234, 88, 12, 0.14));
+}
+.labs-title {
+  font-family: Monda, sans-serif;
+  color: var(--app-text-strong);
+  line-height: 1.2;
+}
+.labs-subtitle {
+  color: var(--app-text-soft);
+  font-size: 1.05rem;
+}
+.labs-bullets {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.labs-bullets li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 8px 0;
+  color: var(--app-text);
+}
+.labs-bullets li strong {
+  color: var(--app-text-strong);
+}
+
+/* Terminal mockup */
+.terminal-mock {
+  background: #1a1d21;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.25);
+  font-family: 'Fira Code', 'JetBrains Mono', Menlo, Consolas, monospace;
+}
+.terminal-mock__bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  background: #2a2f36;
+  border-bottom: 1px solid #000;
+}
+.terminal-mock__dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.dot-red    { background: #ff5f56; }
+.dot-yellow { background: #ffbd2e; }
+.dot-green  { background: #27c93f; }
+.terminal-mock__title {
+  margin-left: 12px;
+  color: #c0c0c0;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+.terminal-mock__body {
+  margin: 0;
+  padding: 16px 18px;
+  color: #d8d8d8;
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.t-prompt { color: #27c93f; font-weight: bold; }
+.t-cmd    { color: #61dafb; }
+.t-text   { color: #c0c0c0; }
+.t-user   { color: #f6c177; }
+.t-ok     { color: #9ece6a; }
+.t-cursor {
+  color: #d8d8d8;
+  animation: blink 1s steps(1) infinite;
+}
+@keyframes blink {
+  50% { opacity: 0; }
 }
 </style>

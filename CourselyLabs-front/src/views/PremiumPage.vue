@@ -37,7 +37,7 @@
             <div class="text-overline text-grey-6">MENSUAL</div>
             <div class="q-my-md">
               <span class="text-h3 text-weight-bold" style="font-family: Monda, sans-serif">
-                {{ formatPrice(pricing?.monthly?.amount, 7) }}
+                {{ formatPrice(pricing?.monthly?.amount, 6.99) }}
               </span>
               <span class="text-subtitle1 text-grey-7"> EUR/mes</span>
             </div>
@@ -64,7 +64,7 @@
             <div class="text-overline text-grey-6">ANUAL</div>
             <div class="q-my-md">
               <span class="text-h3 text-weight-bold" style="font-family: Monda, sans-serif">
-                {{ formatPrice(pricing?.annual?.amount, 60) }}
+                {{ formatPrice(pricing?.annual?.amount, 59.99) }}
               </span>
               <span class="text-subtitle1 text-grey-7"> EUR/año</span>
             </div>
@@ -137,23 +137,11 @@
         </q-markup-table>
       </q-card>
 
-      <!-- FAQ -->
-      <div class="text-center q-mb-md">
-        <h2 class="text-h4 q-my-none" style="font-family: Monda, sans-serif">Preguntas frecuentes</h2>
+      <!-- Link a FAQ -->
+      <div class="text-center q-mb-xl">
+        <p class="text-body2 text-grey-7 q-mb-sm">¿Dudas sobre cómo funciona la suscripción?</p>
+        <q-btn flat color="primary" icon="help_center" label="Ver preguntas frecuentes" no-caps to="/faq" />
       </div>
-      <q-card flat bordered class="q-mb-xl">
-        <q-expansion-item
-          v-for="faq in faqs"
-          :key="faq.q"
-          :label="faq.q"
-          header-class="text-weight-medium text-body1"
-        >
-          <q-card flat>
-            <q-card-section class="text-body2 text-grey-7">{{ faq.a }}</q-card-section>
-          </q-card>
-          <q-separator />
-        </q-expansion-item>
-      </q-card>
 
       <!-- Trust -->
       <div class="text-center text-grey-6">
@@ -179,13 +167,13 @@ const loadingAnnual = ref(false)
 const pricing = ref<PricingInfo | null>(null)
 
 const monthlyEquivalent = computed(() => {
-  const annual = pricing.value?.annual?.amount ?? 60
+  const annual = pricing.value?.annual?.amount ?? 59.99
   return (annual / 12).toFixed(2)
 })
 
 const savingsPct = computed(() => {
-  const monthly = pricing.value?.monthly?.amount ?? 7
-  const annual = pricing.value?.annual?.amount ?? 60
+  const monthly = pricing.value?.monthly?.amount ?? 6.99
+  const annual = pricing.value?.annual?.amount ?? 59.99
   const annualFromMonthly = monthly * 12
   if (annualFromMonthly === 0) return 0
   return Math.round(((annualFromMonthly - annual) / annualFromMonthly) * 100)
@@ -243,13 +231,6 @@ const comparison = [
   { feature: 'Badge Premium', free: false, premium: true },
   { feature: 'Soporte prioritario', free: false, premium: true },
   { feature: 'Acceso anticipado', free: false, premium: true },
-]
-
-const faqs = [
-  { q: '¿Puedo cancelar en cualquier momento?', a: 'Sí, puedes cancelar tu suscripción cuando quieras desde tu perfil. Mantendrás acceso hasta el final del periodo de facturación.' },
-  { q: '¿Que pasa con mis cursos si cancelo?', a: 'Perderas acceso a los cursos premium. Los cursos gratuitos, tu progreso y los cursos que hayas creado se mantienen.' },
-  { q: '¿Los pagos son seguros?', a: 'Sí, todos los pagos se procesan a través de Stripe, una de las plataformas de pago más seguras y utilizadas del mundo.' },
-  { q: '¿Puedo cambiar de plan mensual a anual?', a: 'Sí, contacta con soporte y te ayudaremos a cambiar de plan.' },
 ]
 
 async function handleCheckout(plan: 'monthly' | 'annual') {

@@ -70,6 +70,10 @@ services:
       context: ./CourselyLabs-back
     container_name: courselylabs-backend
     restart: unless-stopped
+    # Resolver echo.lab dentro del contenedor cuando el host no lo tiene en DNS.
+    # Ajustar ECHO_LAB_IP en el .env del server según la IP real del server de echo.
+    extra_hosts:
+      - "echo.lab:${ECHO_LAB_IP:-192.168.248.48}"
     depends_on:
       postgres:
         condition: service_healthy
@@ -115,6 +119,8 @@ services:
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
       STRIPE_PUBLIC_KEY: ${STRIPE_PUBLIC_KEY:-}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      STRIPE_MONTHLY_PRICE_ID: ${STRIPE_MONTHLY_PRICE_ID:-}
+      STRIPE_ANNUAL_PRICE_ID: ${STRIPE_ANNUAL_PRICE_ID:-}
 
       # ── Frontend URL (para emails con enlaces) ───────────────────
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost}

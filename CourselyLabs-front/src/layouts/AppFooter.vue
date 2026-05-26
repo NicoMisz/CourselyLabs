@@ -24,17 +24,26 @@
           <div class="footer-column__title">Legal</div>
           <ul class="footer-column__list">
             <li><router-link to="/terminos">Términos</router-link></li>
-            <li><router-link to="/proximamente">Privacidad</router-link></li>
-            <li><router-link to="/proximamente">Cookies</router-link></li>
+            <li><router-link to="/privacidad">Privacidad</router-link></li>
+            <li><router-link to="/cookies">Cookies</router-link></li>
           </ul>
         </div>
 
         <div class="footer-column">
           <div class="footer-column__title">Soporte</div>
           <ul class="footer-column__list">
-            <li><router-link to="/proximamente">Contacto</router-link></li>
-            <li><router-link to="/proximamente">FAQ</router-link></li>
-            <li><router-link to="/proximamente">Estado del servicio</router-link></li>
+            <li><router-link to="/contacto">Contacto</router-link></li>
+            <li><router-link to="/faq">FAQ</router-link></li>
+            <li><router-link to="/estado">Estado del servicio</router-link></li>
+          </ul>
+        </div>
+
+        <div class="footer-column">
+          <div class="footer-column__title">Empresa</div>
+          <ul class="footer-column__list">
+            <li><router-link to="/sobre-nosotros">Sobre nosotros</router-link></li>
+            <li><router-link to="/instructor">Enseñar en CourselyLabs</router-link></li>
+            <li><router-link to="/premium">Premium</router-link></li>
           </ul>
         </div>
       </div>

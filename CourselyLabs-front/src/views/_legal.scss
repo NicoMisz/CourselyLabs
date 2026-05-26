@@ -1,0 +1,60 @@
+// Estilos compartidos por las páginas tipo legal/info:
+// FAQ, Privacidad, Cookies, Contacto, Estado del servicio, Sobre nosotros.
+
+.legal-page {
+  background: var(--app-bg);
+  color: var(--app-text);
+}
+
+.legal-wrap {
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.page-title {
+  font-family: 'Monda', sans-serif;
+  color: var(--app-text-strong);
+}
+
+.page-subtitle {
+  color: var(--app-text-soft);
+}
+
+.prose {
+  color: var(--app-text);
+  line-height: 1.7;
+}
+
+.prose h2 {
+  font-family: 'Monda', sans-serif;
+  font-size: 1.25rem;
+  color: var(--app-text-strong);
+  margin-top: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.prose p, .prose ul {
+  color: var(--app-text-soft);
+  margin: 0.5rem 0;
+}
+
+.prose ul {
+  padding-left: 1.25rem;
+}
+
+.prose li {
+  margin-bottom: 0.3rem;
+}
+
+.prose a {
+  color: var(--q-primary);
+  text-decoration: none;
+}
+
+.prose a:hover {
+  text-decoration: underline;
+}
+
+.prose strong {
+  color: var(--app-text-strong);
+}
